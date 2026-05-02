@@ -1,0 +1,121 @@
+name: far_ish_bor
+description: "Far Ish Bor"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Local database
+  shared_preferences:
+
+  # State management
+  formz:
+  dartz:
+  bloc:
+  flutter_bloc:
+  equatable:
+
+  # Dependency injection
+  get_it:
+
+  # Network
+  shimmer:
+  overlay_support: ^2.1.0
+  json_annotation:
+  dio:
+
+  flutter_localizations:
+    sdk: flutter
+
+  # File & image
+  image_picker: ^1.0.0
+  file_picker:
+  path_provider: ^2.1.3
+  path: ^1.8.3
+
+  # Media preview
+  cached_network_image:
+  flutter_svg:
+
+  # UI components
+  auto_size_text:
+  cherry_toast:
+  mask_text_input_formatter: ^2.4.0
+  infinite_scroll_pagination:
+
+  # Audio & Video
+  just_audio:
+  video_player:
+
+  # Utils
+  intl:
+  connectivity_plus:
+  url_launcher:
+  permission_handler:
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  json_serializable:
+  build_runner:
+  intl_utils: ^2.8.5
+  flutter_lints: ^5.0.0
+
+flutter_intl:
+  enabled: true
+  arb_dir: lib/l10n
+  output_dir: lib/generated/l10n
+  main_locale: ru
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/audio/
+    - assets/icons/navbar_icons/
+    - assets/fonts/gotham_pro/
+    - assets/fonts/montserrat/
+
+  fonts:
+    - family: GothamPro
+      fonts:
+        - asset: assets/fonts/gotham_pro/gothampro.ttf
+        - asset: assets/fonts/gotham_pro/gothampro_black.ttf
+          weight: 900
+        - asset: assets/fonts/gotham_pro/gothampro_bold.ttf
+          weight: 700
+        - asset: assets/fonts/gotham_pro/gothampro_light.ttf
+          weight: 300
+        - asset: assets/fonts/gotham_pro/gothampro_medium.ttf
+          weight: 500
+
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/montserrat/Montserrat-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/montserrat/Montserrat-Black.ttf
+          weight: 900
+        - asset: assets/fonts/montserrat/Montserrat-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/montserrat/Montserrat-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/montserrat/Montserrat-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/montserrat/Montserrat-Light.ttf
+          weight: 300
+        - asset: assets/fonts/montserrat/Montserrat-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/montserrat/Montserrat-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/montserrat/Montserrat-Thin.ttf
+          weight: 100
