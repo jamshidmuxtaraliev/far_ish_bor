@@ -1,132 +1,154 @@
-import 'package:far_ish_bor/core/theme/app_theme.dart';
-import 'package:far_ish_bor/core/utils/utils.dart';
-import 'package:far_ish_bor/generated/l10n/l10n.dart';
-import 'package:far_ish_bor/generated/assets.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:formz/formz.dart';
-
 import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
-import '../../data/datasource/local/user_local_data_source.dart';
-import '../logic/auth_bloc.dart';
+import '../../../auth/data/datasource/local/user_local_data_source.dart';
+import '../../../main/presentation/screens/main_screen.dart';
+import 'language_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  UserLocalDatasource localDatasource = getIt<UserLocalDatasource>();
-  DateTime? _startTime;
-  bool _isNavigated = false;
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _fadeAnim;
 
   @override
   void initState() {
     super.initState();
-    _startTime = DateTime.now();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _scaleAnim = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller.forward();
 
-    if (localDatasource.getToken() != '') {
-      context.read<AuthBloc>().add(GetUserEvent('fcmToken'));
-    } else {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (!_isNavigated && mounted) {
-          _isNavigated = true;
-          _goToSelectLanguage();
-        }
-      });
-    }
+    Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      final token = getIt<UserLocalDatasource>().getToken();
+      final role = getIt<UserLocalDatasource>().getRole();
+      if (token.isNotEmpty) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => MainScreen(isEmployer: role == 'employer')),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LanguageScreen()),
+        );
+      }
+    });
   }
 
-  void _goToSelectLanguage() {
-    // TODO: replace with your SelectLanguageScreen
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const _PlaceholderScreen(title: 'Til tanlash')),
-    );
-  }
-
-  Future<void> _navigateAfterMinimumTime(Widget screen) async {
-    if (_isNavigated) return;
-
-    final elapsed = DateTime.now().difference(_startTime!);
-    const minimumDuration = Duration(seconds: 2);
-
-    if (elapsed < minimumDuration) {
-      await Future.delayed(minimumDuration - elapsed);
-    }
-
-    if (mounted && !_isNavigated) {
-      _isNavigated = true;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => screen));
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state.getUserStatus.isFailure) {
-          showError(context, state.error?.errorMessage ?? S.of(context).error);
-        } else if (state.getUserStatus.isSuccess) {
-          // TODO: navigate by role
-          _navigateAfterMinimumTime(const _PlaceholderScreen(title: 'Home'));
-        }
-      },
-      builder: (context, state) {
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: const SystemUiOverlayStyle(
-            systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarContrastEnforced: false,
-            systemNavigationBarIconBrightness: Brightness.dark,
-          ),
-          child: Scaffold(
-            backgroundColor: YELLOW_COLOR,
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                return Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Container(
-                      height: constraints.maxHeight * 0.6,
-                      padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 50),
-                      child: Image.asset(Assets.imagesLogoAuth),
-                    ),
-                    Container(
-                      width: getScreenWidth(context),
-                      height: constraints.maxHeight * 0.4,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(topLeft: Radius.circular(40), topRight: Radius.circular(40)),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const CircularProgressIndicator(color: Colors.yellow),
-                          Text(S.of(context).loading, style: lightTheme().textTheme.displayMedium),
-                          Text(S.of(context).preparingMaterials, style: lightTheme().textTheme.bodyLarge),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: PRIMARY_BLUE,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        body: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2563FF), Color(0xFF3B82F6), Color(0xFF2563FF)],
             ),
           ),
-        );
-      },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ScaleTransition(
+                scale: _scaleAnim,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 30, offset: const Offset(0, 10))],
+                    ),
+                    child: const Icon(Icons.work_outline, color: PRIMARY_BLUE, size: 48),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              FadeTransition(
+                opacity: _fadeAnim,
+                child: const Text('FARISHBOR', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 2)),
+              ),
+              const SizedBox(height: 12),
+              FadeTransition(
+                opacity: _fadeAnim,
+                child: const Text("Ish topishning yangi usuli", style: TextStyle(color: Colors.white, fontSize: 16)),
+              ),
+              const SizedBox(height: 48),
+              const _PulsingDots(),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const _PlaceholderScreen({required this.title});
+class _PulsingDots extends StatefulWidget {
+  const _PulsingDots();
+
+  @override
+  State<_PulsingDots> createState() => _PulsingDotsState();
+}
+
+class _PulsingDotsState extends State<_PulsingDots> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text(title)), body: Center(child: Text(title)));
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (i) {
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (_, __) {
+            final delay = i * 0.3;
+            final t = ((_controller.value - delay) % 1.0).clamp(0.0, 1.0);
+            final opacity = (0.3 + 0.7 * (1 - (t - 0.5).abs() * 2)).clamp(0.3, 1.0);
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: opacity), shape: BoxShape.circle),
+            );
+          },
+        );
+      }),
+    );
   }
 }

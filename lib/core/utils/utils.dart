@@ -33,7 +33,7 @@ int calculateAge(String isoDateString) {
 }
 
 int roleId() {
-  return getIt<UserLocalDatasource>().getCachedUser()?.role_id ?? -1;
+  return -1;
 }
 
 String keywordByRole(String keyword) {

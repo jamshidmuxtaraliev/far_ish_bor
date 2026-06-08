@@ -29,3 +29,11 @@ const Color DARK_CHART_LINE_COLOR = Color(0xFF575757);
 
 
 const Color DARK_TEXT_COLOR = Color(0xFFFFFFFF);
+
+// ==================== FARISHBOR BRAND ====================
+const Color PRIMARY_BLUE = Color(0xFF2563FF);
+const Color SECONDARY_BLUE = Color(0xFF3B82F6);
+const Color DARK_NAVY = Color(0xFF0F172A);
+const Color LIGHT_GRAY_BG = Color(0xFFF3F4F6);
+const Color GRAY_TEXT = Color(0xFF6B7280);
+const Color GREEN_COLOR = Color(0xFF22C55E);

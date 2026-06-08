@@ -5,7 +5,10 @@ import '../error/base_model.dart';
 import '../error/error_model.dart';
 
 extension DioWrapper on Dio {
-  Future<Either<ErrorModel, T>> wrapResponse<T>(Future<Response> Function() request, T Function(Object? json) fromJsonT) async {
+  Future<Either<ErrorModel, T>> wrapResponse<T>(
+    Future<Response> Function() request,
+    T Function(Object? json) fromJsonT,
+  ) async {
     try {
       final response = await request();
       return _parseBaseModel<T>(response.data, fromJsonT);
@@ -14,34 +17,51 @@ extension DioWrapper on Dio {
       if (data is Map<String, dynamic>) {
         try {
           final base = BaseData<T?>.fromJson(data, (_) => null);
-          return Left(ErrorModel(errorCode: base.error_code, base.message ?? 'Xatolik yuz berdi'));
+          return Left(ErrorModel(
+            base.message ?? 'Xatolik yuz berdi',
+            errorCode: base.errorCode,
+          ));
         } catch (_) {
-          return Left(ErrorModel(errorCode: dioError.response?.statusCode, 'BaseModel parse bo‘lmadi'));
+          return Left(ErrorModel(
+            'Javob parse qilinmadi',
+            errorCode: dioError.response?.statusCode,
+          ));
         }
       } else {
-        return Left(ErrorModel(errorCode: dioError.response?.statusCode, dioError.message ?? 'Tarmoq xatoligi'));
+        return Left(ErrorModel(
+          dioError.message ?? 'Tarmoq xatoligi',
+          errorCode: dioError.response?.statusCode,
+        ));
       }
     } catch (e) {
-      return Left(ErrorModel(errorCode: -1, 'Kutilmagan xatolik: ${e.toString()}'));
+      return Left(ErrorModel('Kutilmagan xatolik: ${e.toString()}', errorCode: -1));
     }
   }
 
-  Either<ErrorModel, T> _parseBaseModel<T>(dynamic data, T Function(Object? json) fromJsonT) {
+  Either<ErrorModel, T> _parseBaseModel<T>(
+    dynamic data,
+    T Function(Object? json) fromJsonT,
+  ) {
     try {
       if (data is Map<String, dynamic>) {
         final baseModel = BaseData<T>.fromJson(data, fromJsonT);
-        if (baseModel.error) {
-          return Left(ErrorModel(errorCode: baseModel.error_code, baseModel.message ?? 'Xatolik mavjud'));
+        if (!baseModel.success) {
+          return Left(ErrorModel(
+            baseModel.message ?? 'Xatolik mavjud',
+            errorCode: baseModel.errorCode,
+          ));
         }
-        if (baseModel.data == null && (200 <= (baseModel.error_code ?? 200) && (baseModel.error_code ?? 200) < 300)) {
+        if (baseModel.data == null) {
+          // ignore: null_check_on_nullable_type_parameter
           return Right(true as T);
         }
-        return Right(baseModel.data!);
+        // ignore: null_check_on_nullable_type_parameter
+        return Right(baseModel.data as T);
       } else {
-        return Left(ErrorModel(errorCode: -1, 'Yaroqsiz formatdagi javob'));
+        return Left(ErrorModel('Yaroqsiz formatdagi javob', errorCode: -1));
       }
     } catch (e) {
-      return Left(ErrorModel(errorCode: -1, 'fromJson parse xatosi: ${e.toString()}'));
+      return Left(ErrorModel('fromJson xatosi: ${e.toString()}', errorCode: -1));
     }
   }
 }

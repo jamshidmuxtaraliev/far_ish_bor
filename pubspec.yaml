@@ -29,6 +29,7 @@ dependencies:
   overlay_support: ^2.1.0
   json_annotation:
   dio:
+  flutter_alice: ^2.0.1
 
   flutter_localizations:
     sdk: flutter
@@ -46,6 +47,7 @@ dependencies:
   # UI components
   auto_size_text:
   cherry_toast:
+  iconsax:
   mask_text_input_formatter: ^2.4.0
   infinite_scroll_pagination:
 

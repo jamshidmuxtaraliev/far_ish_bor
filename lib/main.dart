@@ -1,7 +1,7 @@
-import 'package:far_ish_bor/features/auth/presentation/logic/auth_bloc.dart';
-import 'package:far_ish_bor/features/auth/presentation/screens/splash_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_alice/alice.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:far_ish_bor/generated/l10n/l10n.dart';
@@ -12,13 +12,16 @@ import 'core/services/connection_service.dart';
 import 'core/services/get_it.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
+import 'features/auth/presentation/logic/auth_bloc.dart';
+import 'features/auth/presentation/screens/splash_screen.dart';
+import 'features/main/presentation/logic/vacancy_bloc.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  await setupDI();
+  await setupDI(alice: MyApp.alice);
   WidgetsBinding.instance.addPostFrameCallback((_) {
     getIt<InternetCheckerService>().start();
   });
@@ -26,6 +29,12 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
+  static final alice = Alice(
+    showNotification: kDebugMode,
+    showInspectorOnShake: kDebugMode,
+    navigatorKey: rootNavigatorKey,
+  );
+
   const MyApp({super.key});
 
   @override
@@ -34,12 +43,13 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<ThemeCubit>.value(value: getIt<ThemeCubit>()),
         BlocProvider<LocaleCubit>.value(value: getIt<LocaleCubit>()),
-        BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()),
+        BlocProvider<AuthBloc>.value(value: getIt<AuthBloc>()),
+        BlocProvider<VacancyBloc>.value(value: getIt<VacancyBloc>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) => BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, themeMode) => MaterialApp(
-            title: 'Far Ish Bor',
+            title: 'FARISHBOR',
             debugShowCheckedModeBanner: false,
             theme: lightTheme(),
             darkTheme: darkTheme(),
@@ -52,12 +62,28 @@ class MyApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
             ],
-            navigatorKey: rootNavigatorKey,
+            navigatorKey: MyApp.alice.getNavigatorKey(),
             home: const SplashScreen(),
             builder: (context, child) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
-                child: child!,
+                data: MediaQuery.of(context).copyWith(
+                    textScaler: const TextScaler.linear(1.0)),
+                child: Stack(
+                  children: [
+                    child!,
+                    if (kDebugMode)
+                      Positioned(
+                        bottom: 100,
+                        right: 16,
+                        child: FloatingActionButton.small(
+                          heroTag: 'alice_inspector_btn',
+                          onPressed: () => MyApp.alice.showInspector(),
+                          backgroundColor: Colors.red,
+                          child: const Icon(Icons.bug_report, color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
               );
             },
           ),

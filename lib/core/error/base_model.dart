@@ -1,21 +1,23 @@
-//============================================================================================
-
 class BaseData<T> {
-  final bool error;
+  final bool success;
   final String? message;
-  final int? error_code;
+  final int? errorCode;
   final T? data;
 
-  BaseData({required this.error, this.message, this.error_code, this.data});
+  BaseData({required this.success, this.message, this.errorCode, this.data});
 
-  factory BaseData.fromJson(Map<String, dynamic> json, T Function(Object? json)? fromJsonT) {
-    final isError = json['error'] as bool? ?? true;
-
+  factory BaseData.fromJson(
+    Map<String, dynamic> json,
+    T Function(Object? json)? fromJsonT,
+  ) {
+    final isSuccess = json['success'] as bool? ?? false;
     return BaseData<T>(
-      error: isError,
+      success: isSuccess,
       message: json['message'] as String?,
-      error_code: json['error_code'] as int?,
-      data: (!isError && fromJsonT != null && json['data'] != null) ? fromJsonT(json['data']) : null,
+      errorCode: json['error_code'] as int?,
+      data: (isSuccess && fromJsonT != null && json['data'] != null)
+          ? fromJsonT(json['data'])
+          : null,
     );
   }
 }

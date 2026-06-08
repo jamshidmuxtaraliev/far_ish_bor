@@ -3,39 +3,25 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../core/constants/constants.dart';
-import '../../models/map_item_model.dart';
 import '../../models/user_model.dart';
 
 abstract class UserLocalDatasource {
   String getToken();
-
   Future<void> saveToken(String token);
 
-  String getFcmToken();
-
-  Future<void> setFcmToken(String token);
-
-  UserModel? getCachedUser();
-
-  Future<void> saveUser(UserModel user);
-
-  Future<void> clearCache();
-
-  Future<void> setFirstRun(bool value);
-
-  bool isFirstRun();
+  String getRole();
+  Future<void> saveRole(String role);
 
   String getLang();
-
   Future<void> setLang(String locale);
 
-  Future<void> setCurrentAddress(MapItemModel currentAddress);
+  UserModel? getCachedUser();
+  Future<void> saveUser(UserModel user);
 
-  MapItemModel? getCurrentAddress();
+  bool isFirstRun();
+  Future<void> setFirstRun(bool value);
 
-  Future<bool> setActiveChildId(int id);
-
-  int getActiveChildId();
+  Future<void> clearCache();
 }
 
 class UserLocalDataSourceImpl implements UserLocalDatasource {
@@ -44,87 +30,44 @@ class UserLocalDataSourceImpl implements UserLocalDatasource {
   UserLocalDataSourceImpl(this.sharedPreferences);
 
   @override
-  Future<void> clearCache() async {
-    await sharedPreferences.clear();
-  }
+  String getToken() => sharedPreferences.getString(PREF_TOKEN) ?? '';
 
   @override
-  Future<void> setCurrentAddress(MapItemModel currentAddress) {
-    return sharedPreferences.setString(PREF_LOCATION, jsonEncode(currentAddress.toJson()));
-  }
+  Future<void> saveToken(String token) =>
+      sharedPreferences.setString(PREF_TOKEN, token);
 
   @override
-  MapItemModel? getCurrentAddress() {
-    if (sharedPreferences.getString(PREF_LOCATION) == null) {
-      return null;
-    } else {
-      return MapItemModel.fromJson(jsonDecode(sharedPreferences.getString(PREF_LOCATION) ?? ""));
-    }
-  }
+  String getRole() => sharedPreferences.getString(PREF_ROLE) ?? '';
 
   @override
-  Future<void> saveUser(UserModel user) {
-    return sharedPreferences.setString(PREF_USER, jsonEncode(user.toJson()));
-  }
+  Future<void> saveRole(String role) =>
+      sharedPreferences.setString(PREF_ROLE, role);
+
+  @override
+  String getLang() => sharedPreferences.getString(PREF_LANG) ?? UZ_LANG_KEY;
+
+  @override
+  Future<void> setLang(String value) =>
+      sharedPreferences.setString(PREF_LANG, value);
 
   @override
   UserModel? getCachedUser() {
-    if (sharedPreferences.getString(PREF_USER) == null) {
-      return null;
-    } else {
-      return UserModel.fromJson(jsonDecode(sharedPreferences.getString(PREF_USER) ?? ""));
-    }
+    final str = sharedPreferences.getString(PREF_USER);
+    if (str == null) return null;
+    return UserModel.fromJson(jsonDecode(str));
   }
 
   @override
-  String getToken() {
-    String? token = sharedPreferences.getString(PREF_TOKEN);
-    return token ?? "";
-  }
+  Future<void> saveUser(UserModel user) =>
+      sharedPreferences.setString(PREF_USER, jsonEncode(user.toJson()));
 
   @override
-  Future<void> saveToken(String token) {
-    return sharedPreferences.setString(PREF_TOKEN, token);
-  }
+  bool isFirstRun() => sharedPreferences.getBool(FIRST_RUN) ?? true;
 
   @override
-  String getFcmToken() {
-    String? token = sharedPreferences.getString(FCM_TOKEN);
-    return token ?? "";
-  }
+  Future<void> setFirstRun(bool value) =>
+      sharedPreferences.setBool(FIRST_RUN, value);
 
   @override
-  Future<void> setFcmToken(String token) {
-    return sharedPreferences.setString(FCM_TOKEN, token);
-  }
-
-  @override
-  Future<bool> setFirstRun(bool value) async {
-    return sharedPreferences.setBool(FIRST_RUN, value);
-  }
-
-  @override
-  bool isFirstRun() {
-    return sharedPreferences.getBool(FIRST_RUN) ?? true;
-  }
-
-  @override
-  String getLang() {
-    return sharedPreferences.getString(PREF_LANG) ?? 'ru';
-  }
-
-  @override
-  Future<bool?> setLang(String value) async {
-    return sharedPreferences.setString(PREF_LANG, value);
-  }
-
-  @override
-  Future<bool> setActiveChildId(int id) async {
-    return sharedPreferences.setInt(PREF_ACTIVE_CHILD_ID, id);
-  }
-
-  @override
-  int getActiveChildId() {
-    return sharedPreferences.getInt(PREF_ACTIVE_CHILD_ID) ?? -1;
-  }
+  Future<void> clearCache() => sharedPreferences.clear();
 }

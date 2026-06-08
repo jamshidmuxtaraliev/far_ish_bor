@@ -1,14 +1,3 @@
-import 'package:far_ish_bor/core/extensions/extensions.dart';
-import 'package:far_ish_bor/core/theme/app_theme.dart';
-import 'package:far_ish_bor/generated/l10n/l10n.dart';
-import 'package:far_ish_bor/core/utils/custom_button.dart';
-import 'package:far_ish_bor/core/utils/custom_switch.dart';
-import 'package:far_ish_bor/core/utils/custom_textfield.dart';
-import 'package:far_ish_bor/core/utils/utils.dart';
-import 'package:far_ish_bor/features/auth/data/models/role_info_model.dart';
-import 'package:far_ish_bor/generated/assets.dart';
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,139 +5,271 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
-import '../../data/datasource/local/user_local_data_source.dart';
-import '../../data/models/signin_params.dart';
+import '../../../auth/data/datasource/local/user_local_data_source.dart';
+import '../../../main/presentation/screens/main_screen.dart';
 import '../logic/auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
-  final RoleInfoModel? roleInfo;
+  final String language;
 
-  const LoginScreen({super.key, this.roleInfo});
+  const LoginScreen({super.key, required this.language});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  UserLocalDatasource localDatasource = getIt<UserLocalDatasource>();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool isConfirmData = false;
+  final _phoneController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _phoneFocus = FocusNode();
+  final _codeFocus = FocusNode();
+
+  int _step = 0; // 0 = phone, 1 = otp
+
+  bool get isUz => widget.language == 'uz';
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _codeController.dispose();
+    _phoneFocus.dispose();
+    _codeFocus.dispose();
+    super.dispose();
+  }
+
+  void _onSendCode(BuildContext context) {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) return;
+    context.read<AuthBloc>().add(SendCodeEvent(phone));
+  }
+
+  void _onLogin(BuildContext context) {
+    final phone = _phoneController.text.trim();
+    final code = _codeController.text.trim();
+    if (phone.isEmpty || code.isEmpty) return;
+    context.read<AuthBloc>().add(LoginEvent(phone, code));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final l10n = S.of(context);
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarContrastEnforced: false,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: YELLOW_COLOR,
-        body: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: screenHeight * 0.45,
-                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 40),
-                child: Image.asset(Assets.imagesLogoAuth, fit: BoxFit.contain),
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                width: getScreenWidth(context),
-                height: screenHeight * 0.55,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                decoration: const BoxDecoration(
-                  color: LIGHT_BACKGROUND_COLOR,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(40), topRight: Radius.circular(40)),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state.sendCodeStatus == FormzSubmissionStatus.success) {
+          setState(() => _step = 1);
+          Future.delayed(const Duration(milliseconds: 100), () => _codeFocus.requestFocus());
+        }
+        if (state.sendCodeStatus == FormzSubmissionStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.error?.errorMessage ?? 'Xato yuz berdi'), backgroundColor: Colors.red),
+          );
+        }
+        if (state.loginStatus == FormzSubmissionStatus.success) {
+          final role = getIt<UserLocalDatasource>().getRole();
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => MainScreen(isEmployer: role == 'employer')),
+            (route) => false,
+          );
+        }
+        if (state.loginStatus == FormzSubmissionStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.error?.errorMessage ?? 'Kirish amalga oshmadi'), backgroundColor: Colors.red),
+          );
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.white,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          if (_step == 1) {
+                            setState(() => _step = 0);
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
+                        icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: DARK_NAVY),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    40.height,
-                    AutoSizeText(l10n.signInTitle, maxLines: 1, style: lightTheme().textTheme.displayMedium?.copyWith(fontSize: 24)),
-                    AutoSizeText(l10n.signInDescription, maxLines: 1, style: lightTheme().textTheme.bodyLarge),
-                    20.height,
-                    CustomTextField(
-                      controller: _usernameController,
-                      title: l10n.loginOrEmail,
-                      hint: l10n.loginHint,
-                      fillColor: WHITE,
-                      prefixIcon: const Icon(CupertinoIcons.mail),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [BoxShadow(color: PRIMARY_BLUE.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
+                          ),
+                          child: const Icon(Icons.lock_open_outlined, color: Colors.white, size: 32),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          _step == 0
+                              ? (isUz ? 'Kirish' : 'Войти')
+                              : (isUz ? 'SMS kodni kiriting' : 'Введите SMS код'),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _step == 0
+                              ? (isUz ? 'Telefon raqamingizni kiriting' : 'Введите номер телефона')
+                              : (isUz
+                                  ? '${_phoneController.text} ga yuborilgan 6 raqamli kodni kiriting'
+                                  : 'Введите 6-значный код, отправленный на ${_phoneController.text}'),
+                          style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
+                        ),
+                        const SizedBox(height: 40),
+                        if (_step == 0) _buildPhoneStep(context),
+                        if (_step == 1) _buildOtpStep(context),
+                        const SizedBox(height: 32),
+                      ],
                     ),
-                    12.height,
-                    CustomTextField(
-                      controller: _passwordController,
-                      title: l10n.password,
-                      hint: l10n.passwordHint,
-                      fillColor: WHITE,
-                      obscureText: true,
-                      prefixIcon: const Icon(CupertinoIcons.padlock),
-                    ),
-                    const Spacer(),
-                    CustomCheckbox(
-                      isChecked: isConfirmData,
-                      label: l10n.personalDataConsent,
-                      onChanged: () => setState(() => isConfirmData = !isConfirmData),
-                    ),
-                    20.height,
-                    BlocConsumer<AuthBloc, AuthState>(
-                      listener: (context, state) {
-                        if (state.signInStatus.isFailure) {
-                          showError(context, state.error?.errorMessage ?? l10n.authError);
-                        } else if (state.signInStatus == FormzSubmissionStatus.success) {
-                          // TODO: navigate to home screen by role
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const _HomePlaceholder()),
-                          );
-                        }
-                      },
-                      builder: (context, state) {
-                        return CustomButton(
-                          title: l10n.signInButton,
-                          onPressed: () {
-                            if (!isConfirmData) {
-                              showError(context, l10n.confirmConsentError);
-                              return;
-                            }
-                            if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-                              showError(context, l10n.fillAllFieldsError);
-                              return;
-                            }
-                            context.read<AuthBloc>().add(SignInEvent(SignInParams(_usernameController.text, _passwordController.text)));
-                          },
-                          backgroundColor: isConfirmData ? BUTTON_COLOR : BUTTON_COLOR.withOpacity(.3),
-                          isInProgress: state.signInStatus.isInProgress,
-                        );
-                      },
-                    ),
-                    40.height,
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
-}
 
-class _HomePlaceholder extends StatelessWidget {
-  const _HomePlaceholder();
+  Widget _buildPhoneStep(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state.sendCodeStatus.isInProgress;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(isUz ? 'Telefon raqami' : 'Номер телефона', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY)),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: LIGHT_GRAY_BG,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: TextField(
+                controller: _phoneController,
+                focusNode: _phoneFocus,
+                keyboardType: TextInputType.phone,
+                autofocus: true,
+                style: const TextStyle(fontSize: 16, color: DARK_NAVY),
+                decoration: InputDecoration(
+                  hintText: '+998 XX XXX XX XX',
+                  hintStyle: const TextStyle(color: GRAY_TEXT),
+                  prefixIcon: const Icon(Icons.phone_outlined, color: GRAY_TEXT, size: 20),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : () => _onSendCode(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: PRIMARY_BLUE,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    : Text(isUz ? 'Kodni yuborish' : 'Отправить код', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Home')), body: const Center(child: Text('Bosh sahifa')));
+  Widget _buildOtpStep(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state.loginStatus.isInProgress;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(isUz ? 'Tasdiqlash kodi' : 'Код подтверждения', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY)),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: LIGHT_GRAY_BG,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: TextField(
+                controller: _codeController,
+                focusNode: _codeFocus,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: DARK_NAVY, letterSpacing: 8),
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  hintText: '------',
+                  hintStyle: TextStyle(color: GRAY_TEXT, letterSpacing: 8),
+                  border: InputBorder.none,
+                  counterText: '',
+                  contentPadding: EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : () => _onLogin(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: PRIMARY_BLUE,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    : Text(isUz ? 'Kirish' : 'Войти', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: TextButton(
+                onPressed: isLoading ? null : () => _onSendCode(context),
+                child: Text(
+                  isUz ? 'Kodni qayta yuborish' : 'Отправить код повторно',
+                  style: const TextStyle(color: PRIMARY_BLUE, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
