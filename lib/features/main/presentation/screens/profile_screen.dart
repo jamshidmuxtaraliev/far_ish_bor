@@ -10,6 +10,10 @@ import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../auth/presentation/screens/anketa_screen.dart';
 import '../../../auth/presentation/screens/language_screen.dart';
+import '../../../billing/presentation/screens/premium_screen.dart';
+import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../chat/presentation/screens/support_chat_screen.dart';
+import '../../../notifications/presentation/screens/notifications_screen.dart';
 import 'my_applications_screen.dart';
 import 'settings_screen.dart';
 
@@ -32,30 +36,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _logout() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Chiqish', style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY)),
-        content: const Text('Hisobingizdan chiqmoqchimisiz?', style: TextStyle(color: GRAY_TEXT)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Bekor qilish', style: TextStyle(color: GRAY_TEXT)),
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'Chiqish',
+              style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY),
+            ),
+            content: const Text(
+              'Hisobingizdan chiqmoqchimisiz?',
+              style: TextStyle(color: GRAY_TEXT),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Bekor qilish',
+                  style: TextStyle(color: GRAY_TEXT),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await getIt<UserLocalDatasource>().clearCache();
+                  if (mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LanguageScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+                child: const Text(
+                  'Chiqish',
+                  style: TextStyle(
+                    color: Color(0xFFDC2626),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await getIt<UserLocalDatasource>().clearCache();
-              if (mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LanguageScreen()),
-                  (route) => false,
-                );
-              }
-            },
-            child: const Text('Chiqish', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -77,7 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final isLoading = state.getMeStatus.isInProgress && user == null;
             return CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(child: _buildHeader(context, user, isLoading)),
+                SliverToBoxAdapter(
+                  child: _buildHeader(context, user, isLoading),
+                ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverList(
@@ -103,10 +127,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildHeader(BuildContext context, UserModel? user, bool isLoading) {
-    final displayName = user?.displayName ?? (widget.isEmployer ? 'Kompaniya' : 'Foydalanuvchi');
-    final subtitle = widget.isEmployer
-        ? (user?.contactPerson ?? 'Ish beruvchi')
-        : (user?.jobTypeName ?? 'Ish izlovchi');
+    final displayName =
+        user?.displayName ??
+        (widget.isEmployer ? 'Kompaniya' : 'Foydalanuvchi');
+    final subtitle =
+        widget.isEmployer
+            ? (user?.contactPerson ?? 'Ish beruvchi')
+            : (user?.jobTypeName ?? 'Ish izlovchi');
 
     return Container(
       width: double.infinity,
@@ -117,10 +144,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         bottom: 28,
       ),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+        color: Color(0xFF0F172A),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Column(
@@ -129,9 +156,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                ),
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    ),
                 child: Container(
                   width: 38,
                   height: 38,
@@ -139,7 +167,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.settings_outlined, color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -150,18 +182,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 88,
             height: 88,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+              gradient: const LinearGradient(
+                colors: [PRIMARY_BLUE, SECONDARY_BLUE],
+              ),
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: PRIMARY_BLUE.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 4))],
+              boxShadow: [
+                BoxShadow(
+                  color: PRIMARY_BLUE.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Center(
-                    child: Text(
-                      user?.initials ?? '?',
-                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+            child:
+                isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : Center(
+                      child: Text(
+                        user?.initials ?? '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
           ),
           const SizedBox(height: 14),
           Row(
@@ -169,7 +219,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 displayName,
-                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 6),
               Container(
@@ -182,7 +236,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Icon(Icons.verified, color: GREEN_COLOR, size: 12),
                     SizedBox(width: 3),
-                    Text('Tasdiqlangan', style: TextStyle(color: GREEN_COLOR, fontSize: 10, fontWeight: FontWeight.w600)),
+                    Text(
+                      'Tasdiqlangan',
+                      style: TextStyle(
+                        color: GREEN_COLOR,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -190,12 +251,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            widget.isEmployer ? 'Ish beruvchi • $subtitle' : 'Ish qidiruvchi • $subtitle',
+            widget.isEmployer
+                ? 'Ish beruvchi • $subtitle'
+                : 'Ish qidiruvchi • $subtitle',
             style: const TextStyle(color: Colors.white60, fontSize: 13),
           ),
           if (user?.phone != null) ...[
             const SizedBox(height: 4),
-            Text(user!.phone!, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+            Text(
+              user!.phone!,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            ),
           ],
         ],
       ),
@@ -208,22 +274,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           if (user.phone != null) ...[
-            _InfoRow(icon: Icons.phone_outlined, label: 'Telefon', value: user.phone!),
+            _InfoRow(
+              icon: Icons.phone_outlined,
+              label: 'Telefon',
+              value: user.phone!,
+            ),
             const Divider(height: 20, color: Color(0xFFF3F4F6)),
           ],
           if (user.jobTypeName != null) ...[
-            _InfoRow(icon: Icons.work_outline, label: 'Kasb', value: user.jobTypeName!),
+            _InfoRow(
+              icon: Icons.work_outline,
+              label: 'Kasb',
+              value: user.jobTypeName!,
+            ),
             const Divider(height: 20, color: Color(0xFFF3F4F6)),
           ],
           _InfoRow(
             icon: Icons.history_outlined,
             label: 'Tajriba',
-            value: user.experienceYear != null ? '${user.experienceYear} yil' : "Ko'rsatilmagan",
+            value:
+                user.experienceYear != null
+                    ? '${user.experienceYear} yil'
+                    : "Ko'rsatilmagan",
           ),
           if (user.expectedSalary != null) ...[
             const Divider(height: 20, color: Color(0xFFF3F4F6)),
@@ -235,7 +318,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           if (user.workStatus != null) ...[
             const Divider(height: 20, color: Color(0xFFF3F4F6)),
-            _InfoRow(icon: Icons.circle_outlined, label: 'Holati', value: user.workStatus!),
+            _InfoRow(
+              icon: Icons.circle_outlined,
+              label: 'Holati',
+              value: user.workStatus!,
+            ),
           ],
         ],
       ),
@@ -260,26 +347,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icons.person_outline,
         label: "Anketa to'ldirish",
         color: PRIMARY_BLUE,
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AnketaScreen())),
+        onTap:
+            () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AnketaScreen())),
       ),
       _MenuItem(
         icon: Icons.folder_open_outlined,
         label: 'Mening arizalarim',
         color: const Color(0xFF7C3AED),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const MyApplicationsScreen()),
-        ),
+        onTap:
+            () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const MyApplicationsScreen()),
+            ),
+      ),
+      _MenuItem(
+        icon: Icons.workspace_premium_outlined,
+        label: 'Premium',
+        color: const Color(0xFFD97706),
+        onTap:
+            () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const PremiumScreen())),
       ),
     ];
 
     final List<_MenuItem> employerItems = [
-      _MenuItem(icon: Icons.work_outline, label: 'Vakansiyalar', color: PRIMARY_BLUE, onTap: () {}),
-      _MenuItem(icon: Icons.people_outline, label: 'Nomzodlarni kuzatish', color: const Color(0xFF7C3AED), onTap: () {}),
+      _MenuItem(
+        icon: Icons.work_outline,
+        label: 'Vakansiyalar',
+        color: PRIMARY_BLUE,
+        onTap: () {},
+      ),
+      _MenuItem(
+        icon: Icons.people_outline,
+        label: 'Nomzodlarni kuzatish',
+        color: const Color(0xFF7C3AED),
+        onTap: () {},
+      ),
     ];
 
     final List<_MenuItem> commonItems = [
-      _MenuItem(icon: Icons.notifications_outlined, label: 'Bildirishnomalar', color: const Color(0xFFEA580C), onTap: () {}),
-      _MenuItem(icon: Icons.help_outline, label: 'Yordam', color: GRAY_TEXT, onTap: () {}),
+      _MenuItem(
+        icon: Icons.account_balance_wallet_outlined,
+        label: 'Balans va to\'lov',
+        color: const Color(0xFF16A34A),
+        onTap:
+            () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TopUpScreen(isEmployer: widget.isEmployer),
+              ),
+            ),
+      ),
+      _MenuItem(
+        icon: Icons.notifications_outlined,
+        label: 'Bildirishnomalar',
+        color: const Color(0xFFEA580C),
+        onTap:
+            () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+            ),
+      ),
+      _MenuItem(
+        icon: Icons.support_agent_outlined,
+        label: 'Qo\'llab-quvvatlash',
+        color: PRIMARY_BLUE,
+        onTap:
+            () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+            ),
+      ),
+      _MenuItem(
+        icon: Icons.help_outline,
+        label: 'Yordam',
+        color: GRAY_TEXT,
+        onTap: () {},
+      ),
     ];
 
     final roleItems = widget.isEmployer ? employerItems : jobSeekerItems;
@@ -288,23 +431,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          ...List.generate(roleItems.length, (i) => Column(
-            children: [
-              _MenuItemTile(item: roleItems[i]),
-              if (i < roleItems.length - 1) const Divider(height: 1, indent: 56, color: Color(0xFFF3F4F6)),
-            ],
-          )),
+          ...List.generate(
+            roleItems.length,
+            (i) => Column(
+              children: [
+                _MenuItemTile(item: roleItems[i]),
+                if (i < roleItems.length - 1)
+                  const Divider(
+                    height: 1,
+                    indent: 56,
+                    color: Color(0xFFF3F4F6),
+                  ),
+              ],
+            ),
+          ),
           const Divider(height: 1, color: Color(0xFFF3F4F6)),
-          ...List.generate(commonItems.length, (i) => Column(
-            children: [
-              _MenuItemTile(item: commonItems[i]),
-              if (i < commonItems.length - 1) const Divider(height: 1, indent: 56, color: Color(0xFFF3F4F6)),
-            ],
-          )),
+          ...List.generate(
+            commonItems.length,
+            (i) => Column(
+              children: [
+                _MenuItemTile(item: commonItems[i]),
+                if (i < commonItems.length - 1)
+                  const Divider(
+                    height: 1,
+                    indent: 56,
+                    color: Color(0xFFF3F4F6),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -320,14 +485,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFDC2626), width: 1.5),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.logout, color: Color(0xFFDC2626), size: 20),
             SizedBox(width: 8),
-            Text('Chiqish', style: TextStyle(color: Color(0xFFDC2626), fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(
+              'Chiqish',
+              style: TextStyle(
+                color: Color(0xFFDC2626),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -340,7 +518,11 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -349,7 +531,10 @@ class _InfoRow extends StatelessWidget {
         Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(color: PRIMARY_BLUE.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(9)),
+          decoration: BoxDecoration(
+            color: PRIMARY_BLUE.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(9),
+          ),
           child: Icon(icon, color: PRIMARY_BLUE, size: 18),
         ),
         const SizedBox(width: 12),
@@ -357,7 +542,14 @@ class _InfoRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: const TextStyle(fontSize: 11, color: GRAY_TEXT)),
-            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: DARK_NAVY)),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: DARK_NAVY,
+              ),
+            ),
           ],
         ),
       ],
@@ -371,7 +563,12 @@ class _MenuItem {
   final Color color;
   final VoidCallback onTap;
 
-  const _MenuItem({required this.icon, required this.label, required this.color, required this.onTap});
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 }
 
 class _MenuItemTile extends StatelessWidget {
@@ -391,11 +588,23 @@ class _MenuItemTile extends StatelessWidget {
             Container(
               width: 38,
               height: 38,
-              decoration: BoxDecoration(color: item.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: item.color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Icon(item.icon, color: item.color, size: 20),
             ),
             const SizedBox(width: 14),
-            Expanded(child: Text(item.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: DARK_NAVY))),
+            Expanded(
+              child: Text(
+                item.label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: DARK_NAVY,
+                ),
+              ),
+            ),
             const Icon(Icons.chevron_right, color: GRAY_TEXT, size: 20),
           ],
         ),

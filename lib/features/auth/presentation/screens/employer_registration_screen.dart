@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:formz/formz.dart';
 import '../../../../core/constants/colors.dart';
+import '../../data/models/anketa_models.dart';
 import '../logic/auth_bloc.dart';
 import 'verification_success_screen.dart';
 
@@ -21,28 +23,40 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
 
   final _companyName = TextEditingController();
   final _phone = TextEditingController();
+  final _phoneMask = MaskTextInputFormatter(
+    mask: '+998 (##) ### ## ##',
+    filter: {'#': RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
   final _sms = TextEditingController();
-  final _district = TextEditingController();
   final _contactPerson = TextEditingController();
   final _email = TextEditingController();
-  String _region = '';
+  RegionModel? _region;
+  DistrictModel? _district;
   String _activityType = '';
 
   bool get isUz => widget.language == 'uz';
-
-  final _regions = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', "Farg'ona", 'Namangan'];
 
   List<String> get _activities => isUz
       ? ['IT va texnologiya', 'Savdo', 'Qurilish', 'Moliya', "Ta'lim", 'Boshqa']
       : ['IT и технологии', 'Торговля', 'Строительство', 'Финансы', 'Образование', 'Другое'];
 
+  // Strips spaces and parentheses, e.g. "+998 (90) 123 45 67" -> "+998901234567"
+  String get _cleanPhone => _phone.text.replaceAll(RegExp(r'[\s()]'), '');
+
   // Phone entry is on step 1, SMS on step 2
   static const int _phoneStep = 1;
   static const int _lastStep = _total - 1;
 
+  @override
+  void initState() {
+    super.initState();
+    context.read<AuthBloc>().add(LoadRegionsEvent());
+  }
+
   void _next() {
     if (_step == _phoneStep) {
-      final phone = _phone.text.trim();
+      final phone = _cleanPhone;
       if (phone.isEmpty) {
         _showError(isUz ? 'Telefon raqam kiriting' : 'Введите номер телефона');
         return;
@@ -67,11 +81,13 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
   void _doRegister() {
     final data = <String, dynamic>{
       'role': 'employer',
-      'phone': _phone.text.trim(),
+      'phone': _cleanPhone,
       'sms_code': _sms.text.trim(),
     };
     if (_companyName.text.trim().isNotEmpty) data['company_name'] = _companyName.text.trim();
     if (_contactPerson.text.trim().isNotEmpty) data['name'] = _contactPerson.text.trim();
+    if (_region != null) data['region_id'] = _region!.id;
+    if (_district != null) data['district_id'] = _district!.id;
     context.read<AuthBloc>().add(RegisterEvent(data));
   }
 
@@ -103,7 +119,6 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     _companyName.dispose();
     _phone.dispose();
     _sms.dispose();
-    _district.dispose();
     _contactPerson.dispose();
     _email.dispose();
     super.dispose();
@@ -158,6 +173,64 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 2)),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 2)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 2)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _modelDropdown<T>(String label, List<T> items, T? value, String Function(T) display, ValueChanged<T?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: DARK_NAVY)),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            if (items.isEmpty) return;
+            final result = await showModalBottomSheet<T>(
+              context: context,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+              builder: (ctx) => Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView(
+                      children: items.map((item) {
+                        final isSelected = value != null && display(value) == display(item);
+                        return ListTile(
+                          title: Text(display(item), style: TextStyle(fontSize: 14, color: isSelected ? PRIMARY_BLUE : DARK_NAVY, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
+                          trailing: isSelected ? const Icon(Icons.check, color: PRIMARY_BLUE) : null,
+                          onTap: () => Navigator.pop(ctx, item),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            if (result != null) onChanged(result);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: value != null ? PRIMARY_BLUE : const Color(0xFFE5E7EB), width: 2),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value != null ? display(value) : (isUz ? 'Tanlang' : 'Выберите'),
+                    style: TextStyle(fontSize: 15, color: value != null ? DARK_NAVY : GRAY_TEXT),
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down_rounded, color: GRAY_TEXT),
+              ],
+            ),
           ),
         ),
       ],
@@ -257,8 +330,9 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         child: TextField(
                           controller: _phone,
                           keyboardType: TextInputType.phone,
+                          inputFormatters: [_phoneMask],
                           style: const TextStyle(fontSize: 16, color: DARK_NAVY),
-                          decoration: _inputDeco('+998 XX XXX XX XX'),
+                          decoration: _inputDeco('+998 (90) 123 45 67'),
                         ),
                       ),
                       _page(
@@ -277,14 +351,34 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                       _page(
                         icon: Icons.location_on_outlined,
                         title: isUz ? 'Joylashuv va faoliyat' : 'Местоположение и деятельность',
-                        child: Column(
-                          children: [
-                            _dropdownField(isUz ? 'Viloyat' : 'Область', _regions, _region, (v) => setState(() => _region = v ?? '')),
-                            const SizedBox(height: 16),
-                            _labelField(isUz ? 'Tuman/Shahar' : 'Район/Город', _district),
-                            const SizedBox(height: 16),
-                            _dropdownField(isUz ? 'Faoliyat turi' : 'Вид деятельности', _activities, _activityType, (v) => setState(() => _activityType = v ?? '')),
-                          ],
+                        child: BlocBuilder<AuthBloc, AuthState>(
+                          buildWhen: (p, c) => p.regions != c.regions || p.regionsStatus != c.regionsStatus,
+                          builder: (context, state) {
+                            if (state.regionsStatus.isInProgress) {
+                              return const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2)));
+                            }
+                            return Column(
+                              children: [
+                                _modelDropdown<RegionModel>(
+                                  isUz ? 'Viloyat' : 'Область',
+                                  state.regions,
+                                  _region,
+                                  (r) => r.name,
+                                  (v) => setState(() { _region = v; _district = null; }),
+                                ),
+                                const SizedBox(height: 16),
+                                _modelDropdown<DistrictModel>(
+                                  isUz ? 'Tuman/Shahar' : 'Район/Город',
+                                  _region?.districts ?? [],
+                                  _district,
+                                  (d) => d.name,
+                                  (v) => setState(() => _district = v),
+                                ),
+                                const SizedBox(height: 16),
+                                _dropdownField(isUz ? 'Faoliyat turi' : 'Вид деятельности', _activities, _activityType, (v) => setState(() => _activityType = v ?? '')),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       _page(

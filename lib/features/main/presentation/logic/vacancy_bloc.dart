@@ -148,13 +148,10 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
 
   Future<void> _onSave(SaveVacancyEvent event, Emitter<VacancyState> emit) async {
     final result = await dataSource.saveVacancy(event.mobileUserId, event.vacancyId);
-    result.fold(
-      (_) {},
-      (_) async {
-        final refresh = await dataSource.getSavedVacancies(event.mobileUserId);
-        refresh.fold((_) {}, (list) => emit(state.copyWith(savedVacancies: list)));
-      },
-    );
+    if (result.isRight()) {
+      final refresh = await dataSource.getSavedVacancies(event.mobileUserId);
+      refresh.fold((_) {}, (list) => emit(state.copyWith(savedVacancies: list)));
+    }
   }
 
   Future<void> _onUnsave(UnsaveVacancyEvent event, Emitter<VacancyState> emit) async {

@@ -1,33 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../chat/presentation/screens/support_chat_screen.dart';
 
 class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
 
   static const _conversations = [
     {
-      'name': 'TechCorp Uzbekistan',
-      'last': "Sizning arizangiz ko'rib chiqilmoqda",
-      'time': '10:30',
-      'unread': 2,
-    },
-    {
-      'name': 'Digital Agency',
-      'last': 'Suhbat uchun vaqt belgiladik',
-      'time': 'Kecha',
-      'unread': 0,
-    },
-    {
-      'name': 'Creative Studio',
-      'last': "Portfolio ko'rishni xohlaymiz",
-      'time': '2 kun oldin',
-      'unread': 1,
-    },
-    {
-      'name': 'StartupHub',
-      'last': 'Rahmat, arizangiz uchun',
-      'time': '3 kun oldin',
+      'name': 'Qo\'llab-quvvatlash markazi',
+      'last': 'Savolingiz bo\'lsa, bemalol yozing',
+      'time': '',
       'unread': 0,
     },
   ];
@@ -55,10 +38,10 @@ class MessagesScreen extends StatelessWidget {
                 bottom: 20,
               ),
               decoration: const BoxDecoration(
-                color: Colors.black,
+                color: Color(0xFF0F172A),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
               ),
               child: Column(
@@ -102,7 +85,9 @@ class MessagesScreen extends StatelessWidget {
                   final c = _conversations[i];
                   final unread = c['unread'] as int;
                   return InkWell(
-                    onTap: () {},
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+                    ),
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

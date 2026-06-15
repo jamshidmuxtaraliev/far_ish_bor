@@ -57,11 +57,7 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
                 bottom: 20,
               ),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                ),
+                color: Color(0xFF0F172A),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
@@ -146,12 +142,14 @@ class _SavedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isActive = item.status == 'active';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
@@ -160,16 +158,43 @@ class _SavedCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Icon(Icons.work_outline_rounded, size: 26, color: DARK_NAVY),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.jobTypeName ?? 'Kasb ko\'rsatilmagan',
+                      'Vakansiya #${item.vacancyId}',
                       style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
                     ),
-                    if (item.companyName != null)
-                      Text(item.companyName!, style: const TextStyle(fontSize: 13, color: PRIMARY_BLUE, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 3),
+                    if (item.status != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isActive ? 'Faol' : 'Nofaol',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isActive ? const Color(0xFF16A34A) : GRAY_TEXT,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -183,43 +208,62 @@ class _SavedCard extends StatelessWidget {
                     color: const Color(0xFFFFF1F2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.bookmark_remove_outlined, color: Color(0xFFF43F5E), size: 20),
+                  child: const Icon(Icons.bookmark_remove_rounded, color: Color(0xFFF43F5E), size: 20),
                 ),
               ),
             ],
           ),
+          if (item.comment != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              item.comment!,
+              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.4),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
           const SizedBox(height: 10),
           Row(
             children: [
-              if (item.regionName != null) ...[
-                const Icon(Icons.location_on_outlined, size: 14, color: GRAY_TEXT),
-                const SizedBox(width: 4),
-                Text(item.regionName!, style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
-                const SizedBox(width: 12),
-              ],
-              const Icon(Icons.attach_money, size: 14, color: Color(0xFF10B981)),
-              const SizedBox(width: 2),
+              const Icon(Icons.attach_money_rounded, size: 16, color: Color(0xFF10B981)),
+              const SizedBox(width: 3),
               Text(
                 item.salaryDisplay,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
               ),
+              if (item.ageDisplay.isNotEmpty) ...[
+                const SizedBox(width: 14),
+                const Icon(Icons.person_outline_rounded, size: 15, color: GRAY_TEXT),
+                const SizedBox(width: 3),
+                Text(item.ageDisplay, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+              ],
             ],
           ),
-          if (item.savedAt != null) ...[
+          if (item.deadline != null || item.savedAt != null) ...[
             const SizedBox(height: 8),
-            Row(children: [
-              const Icon(Icons.bookmark_added_outlined, size: 14, color: GRAY_TEXT),
-              const SizedBox(width: 4),
-              Text('Saqlangan: ${item.savedAtDisplay}', style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
-            ]),
-          ],
-          if (item.deadline != null) ...[
-            const SizedBox(height: 4),
-            Row(children: [
-              const Icon(Icons.schedule_outlined, size: 14, color: Color(0xFFF59E0B)),
-              const SizedBox(width: 4),
-              Text('Muddat: ${item.deadline}', style: const TextStyle(fontSize: 12, color: Color(0xFFF59E0B))),
-            ]),
+            Row(
+              children: [
+                if (item.deadline != null) ...[
+                  const Icon(Icons.schedule_outlined, size: 15, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 3),
+                  Text(
+                    'Muddat: ${item.deadline}',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFFF59E0B)),
+                  ),
+                ],
+                if (item.deadline != null && item.savedAt != null) const Spacer(),
+                if (item.savedAt != null) ...[
+                  const Icon(Icons.bookmark_added_outlined, size: 15, color: GRAY_TEXT),
+                  const SizedBox(width: 3),
+                  Text(
+                    item.savedAtDisplay,
+                    style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+                  ),
+                ],
+              ],
+            ),
           ],
         ],
       ),

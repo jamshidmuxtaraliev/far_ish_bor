@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
 
@@ -135,6 +136,29 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     v.jobTypeName ?? 'Vakansiya',
                     style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                   ),
+                  actions: [
+                    BlocBuilder<VacancyBloc, VacancyState>(
+                      buildWhen: (p, c) => p.savedVacancies != c.savedVacancies,
+                      builder: (context, state) {
+                        final isSaved = state.savedVacancies.any((s) => s.vacancyId == v.id);
+                        return IconButton(
+                          onPressed: () {
+                            final userId = context.read<AuthBloc>().state.user?.id;
+                            if (userId == null) return;
+                            if (isSaved) {
+                              context.read<VacancyBloc>().add(UnsaveVacancyEvent(userId, v.id));
+                            } else {
+                              context.read<VacancyBloc>().add(SaveVacancyEvent(userId, v.id));
+                            }
+                          },
+                          icon: Icon(
+                            isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                            color: isSaved ? const Color(0xFFFBBF24) : Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 24, 20, bottomPad + 80),

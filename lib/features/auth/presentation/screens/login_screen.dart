@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
@@ -23,6 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _codeController = TextEditingController();
   final _phoneFocus = FocusNode();
   final _codeFocus = FocusNode();
+  final _phoneMask = MaskTextInputFormatter(
+    mask: '+998 (##) ### ## ##',
+    filter: {'#': RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  // Strips spaces and parentheses, e.g. "+998 (90) 123 45 67" -> "+998901234567"
+  String get _cleanPhone => _phoneController.text.replaceAll(RegExp(r'[\s()]'), '');
 
   int _step = 0; // 0 = phone, 1 = otp
 
@@ -38,13 +47,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onSendCode(BuildContext context) {
-    final phone = _phoneController.text.trim();
+    final phone = _cleanPhone;
     if (phone.isEmpty) return;
     context.read<AuthBloc>().add(SendCodeEvent(phone));
   }
 
   void _onLogin(BuildContext context) {
-    final phone = _phoneController.text.trim();
+    final phone = _cleanPhone;
     final code = _codeController.text.trim();
     if (phone.isEmpty || code.isEmpty) return;
     context.read<AuthBloc>().add(LoginEvent(phone, code));
@@ -175,9 +184,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 focusNode: _phoneFocus,
                 keyboardType: TextInputType.phone,
                 autofocus: true,
+                inputFormatters: [_phoneMask],
                 style: const TextStyle(fontSize: 16, color: DARK_NAVY),
                 decoration: InputDecoration(
-                  hintText: '+998 XX XXX XX XX',
+                  hintText: '+998 (90) 123 45 67',
                   hintStyle: const TextStyle(color: GRAY_TEXT),
                   prefixIcon: const Icon(Icons.phone_outlined, color: GRAY_TEXT, size: 20),
                   border: InputBorder.none,

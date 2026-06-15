@@ -6,6 +6,7 @@ import 'package:formz/formz.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../auth/data/models/anketa_models.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
+import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../data/models/create_vacancy_request.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
@@ -79,7 +80,8 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
     final request = CreateVacancyRequest(
       id: widget.existing?.id,
       jobTypeId: _selectedJobType?.id ?? widget.existing?.jobTypeId,
-      anketaCount: int.tryParse(_anketaCountController.text.trim()),
+      // anketa_count = kerakli xodimlar soni (default 1, spec §3).
+      anketaCount: int.tryParse(_anketaCountController.text.trim()) ?? 1,
       salary: int.tryParse(_salaryController.text.trim()),
       deadline: _deadline != null
           ? '${_deadline!.year}-${_deadline!.month.toString().padLeft(2, '0')}-${_deadline!.day.toString().padLeft(2, '0')}'
@@ -95,6 +97,43 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
     } else {
       context.read<VacancyBloc>().add(CreateVacancyEvent(request));
     }
+  }
+
+  void _showInsufficientBalanceDialog(String? message) {
+    showDialog(
+      context: context,
+      builder: (dCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.account_balance_wallet_outlined, color: PRIMARY_BLUE, size: 22),
+            SizedBox(width: 10),
+            Text('Balans / Tarif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+          ],
+        ),
+        content: Text(
+          message ?? 'Balans yetarli emas. Davom etish uchun balansni to\'ldiring yoki tarifni faollashtiring.',
+          style: const TextStyle(fontSize: 14, color: GRAY_TEXT, height: 1.4),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PRIMARY_BLUE,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(dCtx);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TopUpScreen(isEmployer: true)),
+              );
+            },
+            child: const Text('Balansni to\'ldirish'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showJobTypePicker() {
@@ -128,13 +167,19 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
           Navigator.pop(context, true);
         }
         if (state.manageVacancyStatus.isFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error?.errorMessage ?? 'Xatolik yuz berdi'),
-              backgroundColor: RED_COLOR,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          // Gate (spec §3/§0): 402 = balans yetmadi / "avval tarifni faollashtiring"
+          // → foydalanuvchini balans to'ldirish ekraniga yo'naltir.
+          if (state.error?.errorCode == 402) {
+            _showInsufficientBalanceDialog(state.error?.errorMessage);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error?.errorMessage ?? 'Xatolik yuz berdi'),
+                backgroundColor: RED_COLOR,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -184,10 +229,10 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
         bottom: 16,
       ),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0D1B2A), Color(0xFF1A2F4A)],
+        color: Color(0xFF0F172A),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Row(

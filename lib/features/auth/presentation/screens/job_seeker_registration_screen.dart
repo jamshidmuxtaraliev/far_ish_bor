@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../data/models/anketa_models.dart';
@@ -23,6 +24,14 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
 
   // Step 1 – phone
   final _phone = TextEditingController();
+  final _phoneMask = MaskTextInputFormatter(
+    mask: '+998 (##) ### ## ##',
+    filter: {'#': RegExp(r'[0-9]')},
+    type: MaskAutoCompletionType.lazy,
+  );
+
+  // Strips spaces and parentheses, e.g. "+998 (90) 123 45 67" -> "+998901234567"
+  String get _cleanPhone => _phone.text.replaceAll(RegExp(r'[\s()]'), '');
   // Step 2 – sms code
   final _sms = TextEditingController();
   // Step 3 – name + gender
@@ -91,7 +100,7 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
   String? _validateStep() {
     switch (_step) {
       case 0:
-        final p = _phone.text.trim();
+        final p = _cleanPhone;
         if (p.isEmpty) return 'Telefon raqam kiriting';
         if (!p.startsWith('+998') || p.length < 13) return 'To\'g\'ri telefon raqam kiriting (+998...)';
         return null;
@@ -141,7 +150,7 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
       return;
     }
     if (_step == 0) {
-      context.read<AuthBloc>().add(SendCodeEvent(_phone.text.trim()));
+      context.read<AuthBloc>().add(SendCodeEvent(_cleanPhone));
       return;
     }
     if (_step == _total - 1) {
@@ -174,7 +183,7 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
 
     final data = <String, dynamic>{
       'role': 'seeker',
-      'phone': _phone.text.trim(),
+      'phone': _cleanPhone,
       'sms_code': _sms.text.trim(),
       'fullname': _fullname.text.trim(),
       'gender': _gender,
@@ -251,7 +260,7 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
                     controller: _pageCtrl,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
-                      _StepPhone(ctrl: _phone, isUz: isUz),
+                      _StepPhone(ctrl: _phone, mask: _phoneMask, isUz: isUz),
                       _StepSms(ctrl: _sms, phone: _phone.text, isUz: isUz),
                       _StepNameGender(
                         ctrl: _fullname,
@@ -418,8 +427,9 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
 
 class _StepPhone extends StatelessWidget {
   final TextEditingController ctrl;
+  final MaskTextInputFormatter mask;
   final bool isUz;
-  const _StepPhone({required this.ctrl, required this.isUz});
+  const _StepPhone({required this.ctrl, required this.mask, required this.isUz});
 
   @override
   Widget build(BuildContext context) {
@@ -427,7 +437,7 @@ class _StepPhone extends StatelessWidget {
       icon: Icons.phone_outlined,
       title: isUz ? 'Telefon raqami' : 'Номер телефона',
       subtitle: isUz ? '+998 bilan boshlang' : 'Начните с +998',
-      child: _Field(ctrl: ctrl, hint: '+998 90 123 45 67', keyboardType: TextInputType.phone, autofocus: true),
+      child: _Field(ctrl: ctrl, hint: '+998 (90) 123 45 67', keyboardType: TextInputType.phone, autofocus: true, inputFormatters: [mask]),
     );
   }
 }

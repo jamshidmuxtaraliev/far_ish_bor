@@ -5,8 +5,8 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../data/models/employer_vacancy_model.dart';
-import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
+import '../widgets/vacancy_job_card.dart';
 import 'create_vacancy_screen.dart';
 import 'job_detail_screen.dart';
 
@@ -41,12 +41,27 @@ class _JobsScreenState extends State<JobsScreen> {
 
 // ── Seeker view ────────────────────────────────────────────────────────────────
 
-class _SeekerJobsView extends StatelessWidget {
+class _SeekerJobsView extends StatefulWidget {
   final VoidCallback onRefresh;
   const _SeekerJobsView({required this.onRefresh});
 
   @override
+  State<_SeekerJobsView> createState() => _SeekerJobsViewState();
+}
+
+class _SeekerJobsViewState extends State<_SeekerJobsView> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final topPad = MediaQuery.of(context).padding.top;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -59,24 +74,64 @@ class _SeekerJobsView extends StatelessWidget {
         backgroundColor: LIGHT_GRAY_BG,
         body: Column(
           children: [
+            // ── Dark header ──
             Container(
               width: double.infinity,
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 12,
-                left: 16,
-                right: 16,
-                bottom: 16,
+              padding: EdgeInsets.only(top: topPad + 16, left: 16, right: 16, bottom: 20),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F172A),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
               ),
-              color: const Color(0xFF0F172A),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Mos vakansiyalar', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Text('Sizga mos ishlar', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                  const Text(
+                    'Ishlar',
+                    style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: TextField(
+                            controller: _searchCtrl,
+                            onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                            style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                            decoration: const InputDecoration(
+                              hintText: 'Qidirish...',
+                              hintStyle: TextStyle(color: GRAY_TEXT, fontSize: 14),
+                              prefixIcon: Icon(Icons.search, color: GRAY_TEXT, size: 20),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: PRIMARY_BLUE,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
+            // ── Results count row ──
             Expanded(
               child: BlocBuilder<VacancyBloc, VacancyState>(
                 builder: (context, state) {
@@ -84,21 +139,63 @@ class _SeekerJobsView extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE));
                   }
                   if (state.vacanciesStatus == FormzSubmissionStatus.failure) {
-                    return _ErrorView(message: state.error?.errorMessage ?? 'Xato yuz berdi', onRetry: onRefresh);
+                    return _ErrorView(message: state.error?.errorMessage ?? 'Xato yuz berdi', onRetry: widget.onRefresh);
                   }
-                  final vacancies = state.seekerVacancies;
-                  if (vacancies.isEmpty) {
-                    return _EmptyView(message: "Hozircha mos vakansiya yo'q", onRefresh: onRefresh);
-                  }
-                  return RefreshIndicator(
-                    color: PRIMARY_BLUE,
-                    onRefresh: () async => onRefresh(),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: vacancies.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) => _SeekerVacancyCard(vacancy: vacancies[index]),
-                    ),
+                  final all = state.seekerVacancies;
+                  final vacancies = _query.isEmpty
+                      ? all
+                      : all.where((v) {
+                          final name = (v.jobTypeName ?? '').toLowerCase();
+                          final company = (v.companyName ?? '').toLowerCase();
+                          return name.contains(_query) || company.contains(_query);
+                        }).toList();
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${vacancies.length} ta ish topildi',
+                              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, fontWeight: FontWeight.w500),
+                            ),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () {},
+                              child: const Text(
+                                'Saralash',
+                                style: TextStyle(fontSize: 13, color: PRIMARY_BLUE, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: vacancies.isEmpty
+                            ? _EmptyView(message: "Hozircha mos vakansiya yo'q", onRefresh: widget.onRefresh)
+                            : RefreshIndicator(
+                                color: PRIMARY_BLUE,
+                                onRefresh: () async => widget.onRefresh(),
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                                  itemCount: vacancies.length,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                  itemBuilder: (context, index) => VacancyJobCard(
+                                    vacancy: vacancies[index],
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => BlocProvider.value(
+                                          value: context.read<VacancyBloc>(),
+                                          child: JobDetailScreen(vacancy: vacancies[index]),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -146,7 +243,13 @@ class _EmployerJobsView extends StatelessWidget {
                   right: 16,
                   bottom: 16,
                 ),
-                color: const Color(0xFF0F172A),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0F172A),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
+                  ),
+                ),
                 child: Row(
                   children: [
                     const Expanded(
@@ -215,101 +318,6 @@ class _EmployerJobsView extends StatelessWidget {
   }
 }
 
-// ── Seeker vacancy card ────────────────────────────────────────────────────────
-
-class _SeekerVacancyCard extends StatelessWidget {
-  final VacancyModel vacancy;
-  const _SeekerVacancyCard({required this.vacancy});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => BlocProvider.value(
-          value: context.read<VacancyBloc>(),
-          child: JobDetailScreen(vacancy: vacancy),
-        )),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(color: LIGHT_GRAY_BG, borderRadius: BorderRadius.circular(12)),
-                  child: Center(
-                    child: Text(
-                      (vacancy.companyName?.isNotEmpty == true) ? vacancy.companyName![0].toUpperCase() : '?',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: DARK_NAVY),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        vacancy.jobTypeName ?? 'Kasb #${vacancy.jobTypeId}',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(vacancy.companyName ?? 'Kompaniya', style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
-                    ],
-                  ),
-                ),
-                if (vacancy.matchScore != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _matchColor(vacancy.matchPercent).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${vacancy.matchPercent}%',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _matchColor(vacancy.matchPercent)),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(Icons.attach_money, size: 14, color: GRAY_TEXT),
-                const SizedBox(width: 4),
-                Text(vacancy.salaryDisplay, style: const TextStyle(fontSize: 13, color: GRAY_TEXT, fontWeight: FontWeight.w500)),
-                if (vacancy.minAge != null || vacancy.maxAge != null) ...[
-                  const SizedBox(width: 16),
-                  const Icon(Icons.person_outline, size: 14, color: GRAY_TEXT),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${vacancy.minAge ?? "?"}–${vacancy.maxAge ?? "?"} yosh',
-                    style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _matchColor(int percent) {
-    if (percent >= 80) return const Color(0xFF16A34A);
-    if (percent >= 60) return PRIMARY_BLUE;
-    return const Color(0xFFF97316);
-  }
-}
 
 // ── Employer vacancy card ─────────────────────────────────────────────────────
 
@@ -317,7 +325,20 @@ class _EmployerVacancyCard extends StatelessWidget {
   final EmployerVacancyModel vacancy;
   const _EmployerVacancyCard({required this.vacancy});
 
-  String _formatDate(String iso) {
+  String _timeAgo(String? iso) {
+    if (iso == null) return '';
+    try {
+      final d = DateTime.parse(iso);
+      final diff = DateTime.now().difference(d);
+      if (diff.inDays == 0) return 'Bugun';
+      if (diff.inDays == 1) return '1 kun oldin';
+      return '${diff.inDays} kun oldin';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _formatDeadline(String iso) {
     try {
       final d = DateTime.parse(iso);
       return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
@@ -330,6 +351,7 @@ class _EmployerVacancyCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("O'chirish"),
         content: const Text("Bu vakansiyani o'chirishni tasdiqlaysizmi?"),
         actions: [
@@ -339,44 +361,69 @@ class _EmployerVacancyCard extends StatelessWidget {
               Navigator.pop(ctx);
               context.read<VacancyBloc>().add(DeleteVacancyEvent(vacancy.id));
             },
-            child: const Text("O'chirish", style: TextStyle(color: Colors.red)),
+            child: const Text("O'chirish", style: TextStyle(color: Color(0xFFDC2626))),
           ),
         ],
       ),
     );
   }
 
-  void _showEditScreen(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CreateVacancyScreen(existing: vacancy)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final title = vacancy.jobTypeName ?? 'Kasb #${vacancy.jobTypeId}';
+    final initial = title.isNotEmpty ? title[0].toUpperCase() : '?';
+    final timeAgo = _timeAgo(vacancy.createdAt);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Logo + title + status ──
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  vacancy.jobTypeName ?? 'Kasb #${vacancy.jobTypeId}',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Kompaniyam',
+                      style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                    ),
+                  ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: (vacancy.isActive ? const Color(0xFF16A34A) : GRAY_TEXT).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   vacancy.isActive ? 'Faol' : 'Nofaol',
@@ -389,51 +436,83 @@ class _EmployerVacancyCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.attach_money, size: 14, color: GRAY_TEXT),
-              const SizedBox(width: 4),
-              Text(vacancy.salaryDisplay, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
-              if (vacancy.anketaCount != null) ...[
-                const SizedBox(width: 16),
-                const Icon(Icons.people_outline, size: 14, color: GRAY_TEXT),
-                const SizedBox(width: 4),
-                Text('${vacancy.anketaCount} ta xodim', style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
-              ],
-            ],
-          ),
+          const SizedBox(height: 14),
+          // ── Info rows ──
+          _InfoRow(icon: Icons.attach_money_outlined, text: vacancy.salaryDisplay),
           if (vacancy.deadline != null) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_outlined, size: 14, color: GRAY_TEXT),
-                const SizedBox(width: 4),
-                Text(
-                  'Muddat: ${_formatDate(vacancy.deadline!)}',
-                  style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
-                ),
-              ],
-            ),
+            const SizedBox(height: 7),
+            _InfoRow(icon: Icons.calendar_today_outlined, text: 'Muddat: ${_formatDeadline(vacancy.deadline!)}'),
+          ],
+          if (timeAgo.isNotEmpty) ...[
+            const SizedBox(height: 7),
+            _InfoRow(icon: Icons.access_time_outlined, text: timeAgo),
+          ],
+          if (vacancy.applicationsCount != null && vacancy.applicationsCount! > 0) ...[
+            const SizedBox(height: 7),
+            _InfoRow(icon: Icons.people_outline, text: '${vacancy.applicationsCount} ta ariza'),
           ],
           if (vacancy.comment != null && vacancy.comment!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const Divider(height: 1, color: Color(0xFFF3F4F6)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 10),
             Text(
               vacancy.comment!,
-              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.4),
+              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.45),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          // ── Action buttons ──
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _ActionBtn(icon: Icons.edit_outlined, label: 'Tahrirlash', color: PRIMARY_BLUE, onTap: () => _showEditScreen(context)),
-              const SizedBox(width: 8),
-              _ActionBtn(icon: Icons.delete_outline, label: "O'chirish", color: Colors.red, onTap: () => _confirmDelete(context)),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => CreateVacancyScreen(existing: vacancy)),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.edit_outlined, color: Colors.white, size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          'Tahrirlash',
+                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => _confirmDelete(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFECACA)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        "O'chirish",
+                        style: TextStyle(color: Color(0xFFDC2626), fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -442,28 +521,19 @@ class _EmployerVacancyCard extends StatelessWidget {
   }
 }
 
-class _ActionBtn extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
   final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _ActionBtn({required this.icon, required this.label, required this.color, required this.onTap});
+  final String text;
+  const _InfoRow({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-        child: Row(
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
-          ],
-        ),
-      ),
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: GRAY_TEXT),
+        const SizedBox(width: 6),
+        Text(text, style: const TextStyle(fontSize: 13, color: GRAY_TEXT, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 }

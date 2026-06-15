@@ -14,7 +14,10 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/logic/auth_bloc.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
+import 'features/billing/presentation/logic/billing_bloc.dart';
+import 'features/chat/presentation/logic/chat_bloc.dart';
 import 'features/main/presentation/logic/vacancy_bloc.dart';
+import 'features/notifications/presentation/logic/notification_bloc.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -45,49 +48,58 @@ class MyApp extends StatelessWidget {
         BlocProvider<LocaleCubit>.value(value: getIt<LocaleCubit>()),
         BlocProvider<AuthBloc>.value(value: getIt<AuthBloc>()),
         BlocProvider<VacancyBloc>.value(value: getIt<VacancyBloc>()),
+        BlocProvider<BillingBloc>.value(value: getIt<BillingBloc>()),
+        BlocProvider<ChatBloc>.value(value: getIt<ChatBloc>()),
+        BlocProvider<NotificationBloc>.value(value: getIt<NotificationBloc>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
-        builder: (context, locale) => BlocBuilder<ThemeCubit, ThemeMode>(
-          builder: (context, themeMode) => MaterialApp(
-            title: 'FARISHBOR',
-            debugShowCheckedModeBanner: false,
-            theme: lightTheme(),
-            darkTheme: darkTheme(),
-            themeMode: themeMode,
-            locale: locale,
-            supportedLocales: S.delegate.supportedLocales,
-            localizationsDelegates: const [
-              S.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-            ],
-            navigatorKey: MyApp.alice.getNavigatorKey(),
-            home: const SplashScreen(),
-            builder: (context, child) {
-              return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                    textScaler: const TextScaler.linear(1.0)),
-                child: Stack(
-                  children: [
-                    child!,
-                    if (kDebugMode)
-                      Positioned(
-                        bottom: 100,
-                        right: 16,
-                        child: FloatingActionButton.small(
-                          heroTag: 'alice_inspector_btn',
-                          onPressed: () => MyApp.alice.showInspector(),
-                          backgroundColor: Colors.red,
-                          child: const Icon(Icons.bug_report, color: Colors.white),
+        builder:
+            (context, locale) => BlocBuilder<ThemeCubit, ThemeMode>(
+              builder:
+                  (context, themeMode) => MaterialApp(
+                    title: 'FARISHBOR',
+                    debugShowCheckedModeBanner: false,
+                    theme: lightTheme(),
+                    darkTheme: darkTheme(),
+                    themeMode: themeMode,
+                    locale: locale,
+                    supportedLocales: S.delegate.supportedLocales,
+                    localizationsDelegates: const [
+                      S.delegate,
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                    ],
+                    navigatorKey: MyApp.alice.getNavigatorKey(),
+                    home: const SplashScreen(),
+                    builder: (context, child) {
+                      return MediaQuery(
+                        data: MediaQuery.of(
+                          context,
+                        ).copyWith(textScaler: const TextScaler.linear(1.0)),
+                        child: Stack(
+                          children: [
+                            child!,
+                            if (kDebugMode)
+                              Positioned(
+                                bottom: 100,
+                                right: 16,
+                                child: FloatingActionButton.small(
+                                  heroTag: 'alice_inspector_btn',
+                                  onPressed: () => MyApp.alice.showInspector(),
+                                  backgroundColor: Colors.red,
+                                  child: const Icon(
+                                    Icons.bug_report,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
+                      );
+                    },
+                  ),
+            ),
       ),
     );
   }

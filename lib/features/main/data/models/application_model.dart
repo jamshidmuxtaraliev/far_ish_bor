@@ -3,9 +3,12 @@ class ApplicationModel {
   final String status;
   final String? jobTypeName;
   final String? companyName;
-  final String? regionName;
-  final String? districtName;
+  final String? companyPhone;
   final int? salary;
+  final String? deadline;
+  final int? minAge;
+  final int? maxAge;
+  final String? requirementComment;
   final DateTime? createdAt;
   final DateTime? interviewDatetime;
   final String? coverMessage;
@@ -15,9 +18,12 @@ class ApplicationModel {
     required this.status,
     this.jobTypeName,
     this.companyName,
-    this.regionName,
-    this.districtName,
+    this.companyPhone,
     this.salary,
+    this.deadline,
+    this.minAge,
+    this.maxAge,
+    this.requirementComment,
     this.createdAt,
     this.interviewDatetime,
     this.coverMessage,
@@ -25,24 +31,30 @@ class ApplicationModel {
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
     final req = json['requirement'] as Map<String, dynamic>? ?? {};
+    final jobType = req['job_type'] as Map<String, dynamic>?;
     final employer = json['employer'] as Map<String, dynamic>? ?? {};
-    final region = req['region'] as Map<String, dynamic>? ?? {};
-    final district = req['district'] as Map<String, dynamic>? ?? {};
 
     DateTime? parseDate(dynamic v) {
       if (v == null) return null;
-      try { return DateTime.parse(v as String); } catch (_) { return null; }
+      try {
+        return DateTime.parse(v as String).toLocal();
+      } catch (_) {
+        return null;
+      }
     }
 
     return ApplicationModel(
       id: json['id'] as int? ?? 0,
       status: json['status'] as String? ?? 'pending',
-      jobTypeName: req['job_type_name'] as String?,
+      jobTypeName: jobType?['name_uz'] as String? ?? jobType?['name'] as String?,
       companyName: employer['name'] as String?,
-      regionName: region['name_uz'] as String?,
-      districtName: district['name_uz'] as String?,
+      companyPhone: employer['phone'] as String?,
       salary: req['salary'] as int?,
-      createdAt: parseDate(json['created_at']),
+      deadline: req['deadline'] as String?,
+      minAge: req['min_age'] as int?,
+      maxAge: req['max_age'] as int?,
+      requirementComment: req['comment'] as String?,
+      createdAt: parseDate(json['createdAt']),
       interviewDatetime: parseDate(json['interview_datetime']),
       coverMessage: json['cover_message'] as String?,
     );
@@ -52,38 +64,43 @@ class ApplicationModel {
 
   String get statusLabel {
     switch (status) {
-      case 'pending': return 'Kutilmoqda';
-      case 'viewed': return "Ko'rildi";
-      case 'invited': return 'Taklif qilindi';
-      case 'scheduled': return 'Suhbat belgilandi';
-      case 'confirmed': return 'Tasdiqlandi';
-      case 'on_way': return "Yo'ldaman";
-      case 'arrived': return 'Keldi';
-      case 'hired': return 'Ishga olindi';
-      case 'missed': return 'Kelmadi';
-      case 'rejected': return 'Rad etildi';
-      default: return status;
+      case 'pending':    return 'Kutilmoqda';
+      case 'viewed':     return "Ko'rildi";
+      case 'invited':    return 'Taklif qilindi';
+      case 'scheduled':  return 'Suhbatga chaqirildi';
+      case 'confirmed':  return 'Tasdiqlandi';
+      case 'on_way':     return "Yo'ldaman";
+      case 'arrived':    return 'Keldi';
+      case 'hired':      return 'Ishga olindi';
+      case 'missed':     return 'Kelmadi';
+      case 'rejected':   return 'Rad etildi';
+      default:           return status;
     }
   }
 
-  // Can seeker update this status to 'confirmed'?
-  bool get canConfirm => status == 'scheduled' || status == 'invited';
-  // Can seeker update this status to 'on_way'?
-  bool get canGoOnWay => status == 'scheduled' || status == 'confirmed';
+  bool get canConfirm  => status == 'scheduled' || status == 'invited';
+  bool get canGoOnWay  => status == 'confirmed';
 
-  String get locationDisplay {
-    final parts = [regionName, districtName].where((v) => v != null && v.isNotEmpty).toList();
-    return parts.join(', ');
+  String get salaryDisplay {
+    if (salary == null) return '';
+    final n = salary!;
+    if (n >= 1000000) return "${(n / 1000000).toStringAsFixed(1)} mln so'm";
+    return "$n so'm";
   }
 
   String get createdAtDisplay {
     if (createdAt == null) return '';
-    return '${createdAt!.year}-${createdAt!.month.toString().padLeft(2, '0')}-${createdAt!.day.toString().padLeft(2, '0')}';
+    final d = createdAt!;
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   String get interviewDisplay {
     if (interviewDatetime == null) return '';
     final d = interviewDatetime!;
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} - ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    final date =
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final time =
+        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    return '$date • $time';
   }
 }

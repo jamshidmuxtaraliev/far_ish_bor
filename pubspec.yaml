@@ -29,6 +29,7 @@ dependencies:
   overlay_support: ^2.1.0
   json_annotation:
   dio:
+  socket_io_client: ^3.1.4
   flutter_alice: ^2.0.1
 
   flutter_localizations:

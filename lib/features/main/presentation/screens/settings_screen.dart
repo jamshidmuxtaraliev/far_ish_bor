@@ -35,7 +35,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 right: 20,
                 bottom: 16,
               ),
-              color: Colors.black,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F172A),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
               child: Row(
                 children: [
                   IconButton(

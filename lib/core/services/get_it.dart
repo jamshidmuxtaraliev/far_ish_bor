@@ -5,6 +5,12 @@ import 'package:far_ish_bor/core/theme/theme_cubit.dart';
 import 'package:far_ish_bor/features/auth/domain/auth_repository/auth_repository.dart';
 import 'package:far_ish_bor/features/auth/domain/auth_repository/auth_repository_impl.dart';
 import 'package:far_ish_bor/features/auth/presentation/logic/auth_bloc.dart';
+import 'package:far_ish_bor/features/billing/data/datasource/remote/billing_remote_data_source.dart';
+import 'package:far_ish_bor/features/billing/presentation/logic/billing_bloc.dart';
+import 'package:far_ish_bor/features/chat/data/datasource/chat_realtime_datasource.dart';
+import 'package:far_ish_bor/features/chat/presentation/logic/chat_bloc.dart';
+import 'package:far_ish_bor/features/notifications/data/datasource/remote/notification_remote_data_source.dart';
+import 'package:far_ish_bor/features/notifications/presentation/logic/notification_bloc.dart';
 import 'package:far_ish_bor/features/main/data/datasource/remote/vacancy_remote_data_source.dart';
 import 'package:far_ish_bor/features/main/presentation/logic/vacancy_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -23,12 +29,32 @@ Future<void> setupDI({required Alice alice}) async {
     ..registerLazySingleton(() => sharedPreferences)
     ..registerLazySingleton<ThemeCubit>(() => ThemeCubit(getIt()))
     ..registerLazySingleton<LocaleCubit>(() => LocaleCubit(getIt()))
-    ..registerLazySingleton<UserLocalDatasource>(() => UserLocalDataSourceImpl(getIt()))
+    ..registerLazySingleton<UserLocalDatasource>(
+      () => UserLocalDataSourceImpl(getIt()),
+    )
     ..registerLazySingleton(() => DioClient(Dio(), getIt(), alice))
-    ..registerLazySingleton<InternetCheckerService>(() => InternetCheckerService())
-    ..registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(getIt()))
+    ..registerLazySingleton<InternetCheckerService>(
+      () => InternetCheckerService(),
+    )
+    ..registerLazySingleton<AuthRemoteDataSource>(
+      () => AuthRemoteDataSourceImpl(getIt()),
+    )
     ..registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(getIt()))
     ..registerLazySingleton<AuthBloc>(() => AuthBloc(getIt()))
-    ..registerLazySingleton<VacancyRemoteDataSource>(() => VacancyRemoteDataSourceImpl(getIt()))
-    ..registerLazySingleton<VacancyBloc>(() => VacancyBloc(getIt()));
+    ..registerLazySingleton<VacancyRemoteDataSource>(
+      () => VacancyRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<VacancyBloc>(() => VacancyBloc(getIt()))
+    ..registerLazySingleton<BillingRemoteDataSource>(
+      () => BillingRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<BillingBloc>(() => BillingBloc(getIt()))
+    ..registerLazySingleton<ChatRealtimeDatasource>(
+      () => ChatRealtimeDatasource(),
+    )
+    ..registerLazySingleton<ChatBloc>(() => ChatBloc(getIt()))
+    ..registerLazySingleton<NotificationRemoteDataSource>(
+      () => NotificationRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<NotificationBloc>(() => NotificationBloc(getIt()));
 }
