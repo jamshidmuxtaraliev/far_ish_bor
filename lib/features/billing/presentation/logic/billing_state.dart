@@ -22,6 +22,10 @@ class BillingState extends Equatable {
   final FormzSubmissionStatus premiumStatus;
   final FormzSubmissionStatus buyPremiumStatus;
 
+  final List<InvoiceModel> invoices;
+  final InvoiceModel? pendingInvoice;
+  final FormzSubmissionStatus invoicesStatus;
+
   final ErrorModel? error;
 
   const BillingState({
@@ -38,6 +42,9 @@ class BillingState extends Equatable {
     this.premiumTariffs = const [],
     this.premiumStatus = FormzSubmissionStatus.initial,
     this.buyPremiumStatus = FormzSubmissionStatus.initial,
+    this.invoices = const [],
+    this.pendingInvoice,
+    this.invoicesStatus = FormzSubmissionStatus.initial,
     this.error,
   });
 
@@ -55,9 +62,13 @@ class BillingState extends Equatable {
     List<PremiumTariffModel>? premiumTariffs,
     FormzSubmissionStatus? premiumStatus,
     FormzSubmissionStatus? buyPremiumStatus,
+    List<InvoiceModel>? invoices,
+    InvoiceModel? pendingInvoice,
+    FormzSubmissionStatus? invoicesStatus,
     ErrorModel? error,
     bool clearCheckout = false,
     bool clearPayment = false,
+    bool clearPendingInvoice = false,
   }) {
     return BillingState(
       balance: balance ?? this.balance,
@@ -73,6 +84,9 @@ class BillingState extends Equatable {
       premiumTariffs: premiumTariffs ?? this.premiumTariffs,
       premiumStatus: premiumStatus ?? this.premiumStatus,
       buyPremiumStatus: buyPremiumStatus ?? this.buyPremiumStatus,
+      invoices: invoices ?? this.invoices,
+      pendingInvoice: clearPendingInvoice ? null : (pendingInvoice ?? this.pendingInvoice),
+      invoicesStatus: invoicesStatus ?? this.invoicesStatus,
       error: error ?? this.error,
     );
   }
@@ -92,6 +106,9 @@ class BillingState extends Equatable {
     premiumTariffs,
     premiumStatus,
     buyPremiumStatus,
+    invoices,
+    pendingInvoice,
+    invoicesStatus,
     error,
   ];
 }

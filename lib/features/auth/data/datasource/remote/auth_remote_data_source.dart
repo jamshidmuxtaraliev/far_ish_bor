@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:far_ish_bor/core/network/dio_response_extension.dart';
 
 import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';
 import '../../models/anketa_models.dart';
 import '../../models/auth_response_model.dart';
+import '../../models/employer_model.dart';
 import '../../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -17,6 +19,9 @@ abstract class AuthRemoteDataSource {
   Future<Either<ErrorModel, List<RegionModel>>> getRegions();
   Future<Either<ErrorModel, List<JobTypeModel>>> getJobTypes({String? text});
   Future<Either<ErrorModel, List<LanguageModel>>> getLanguages();
+  Future<Either<ErrorModel, EmployerModel>> getEmployer();
+  Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data);
+  Future<Either<ErrorModel, String>> uploadLogo(String filePath);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -93,6 +98,42 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return dioClient.dio.wrapResponse<List<LanguageModel>>(
       () => dioClient.dio.get('mobile/languages'),
       (json) => (json as List).map((e) => LanguageModel.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, EmployerModel>> getEmployer() {
+    return dioClient.dio.wrapResponse<EmployerModel>(
+      () => dioClient.dio.get('mobile/employer/me'),
+      (json) => EmployerModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data) {
+    return dioClient.dio.wrapResponse<EmployerModel>(
+      () => dioClient.dio.post('mobile/employer', data: data),
+      (json) => EmployerModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, String>> uploadLogo(String filePath) {
+    return dioClient.dio.wrapResponse<String>(
+      () async {
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(
+            filePath,
+            filename: filePath.split('/').last,
+          ),
+        });
+        return dioClient.dio.post(
+          'mobile/employer/logo',
+          data: formData,
+          options: Options(contentType: 'multipart/form-data'),
+        );
+      },
+      (json) => (json as Map<String, dynamic>)['logo'] as String,
     );
   }
 }

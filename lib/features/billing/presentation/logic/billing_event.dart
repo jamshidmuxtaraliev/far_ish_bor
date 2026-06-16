@@ -80,3 +80,7 @@ class BuyPremiumEvent extends BillingEvent {
 class ResetCheckoutEvent extends BillingEvent {
   const ResetCheckoutEvent();
 }
+
+class LoadEmployerInvoicesEvent extends BillingEvent {
+  const LoadEmployerInvoicesEvent();
+}

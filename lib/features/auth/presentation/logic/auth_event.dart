@@ -36,3 +36,15 @@ class LoadJobTypesEvent extends AuthEvent {
 }
 
 class LoadLanguagesEvent extends AuthEvent {}
+
+class LoadEmployerEvent extends AuthEvent {}
+
+class UpdateEmployerEvent extends AuthEvent {
+  final Map<String, dynamic> data;
+  UpdateEmployerEvent(this.data);
+}
+
+class UploadLogoEvent extends AuthEvent {
+  final String filePath;
+  UploadLogoEvent(this.filePath);
+}

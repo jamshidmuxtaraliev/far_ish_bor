@@ -63,6 +63,25 @@ class UnsaveVacancyEvent extends VacancyEvent {
 // Employer applications
 class LoadEmployerApplicationsEvent extends VacancyEvent {}
 
+// Contact unlock
+class LoadRecommendedCandidatesEvent extends VacancyEvent {}
+
+class LoadContactAccessEvent extends VacancyEvent {}
+
+class UnlockContactEvent extends VacancyEvent {
+  final int anketaId;
+  final int? vacancyId;
+  final String trigger;
+  UnlockContactEvent({required this.anketaId, this.vacancyId, this.trigger = 'phone_view'});
+}
+
+class LoadUnlockHistoryEvent extends VacancyEvent {}
+
+class LoadCandidateDetailEvent extends VacancyEvent {
+  final int id;
+  LoadCandidateDetailEvent(this.id);
+}
+
 class UpdateEmployerApplicationStatusEvent extends VacancyEvent {
   final int applicationId;
   final String status;

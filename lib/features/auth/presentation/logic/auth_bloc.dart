@@ -7,6 +7,7 @@ import '../../../../core/error/error_model.dart';
 import '../../../../core/services/get_it.dart';
 import '../../data/datasource/local/user_local_data_source.dart';
 import '../../data/models/anketa_models.dart';
+import '../../data/models/employer_model.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/auth_repository/auth_repository.dart';
 
@@ -26,6 +27,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoadRegionsEvent>(_onLoadRegions);
     on<LoadJobTypesEvent>(_onLoadJobTypes);
     on<LoadLanguagesEvent>(_onLoadLanguages);
+    on<LoadEmployerEvent>(_onLoadEmployer);
+    on<UpdateEmployerEvent>(_onUpdateEmployer);
+    on<UploadLogoEvent>(_onUploadLogo);
   }
 
   Future<void> _onSendCode(SendCodeEvent event, Emitter<AuthState> emit) async {
@@ -132,5 +136,43 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (list) => emit(state.copyWith(languagesStatus: FormzSubmissionStatus.success, languages: list)),
     );
     emit(state.copyWith(languagesStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onLoadEmployer(LoadEmployerEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(employerStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.getEmployer();
+    result.fold(
+      (failure) => emit(state.copyWith(employerStatus: FormzSubmissionStatus.failure, error: failure)),
+      (employer) => emit(state.copyWith(employerStatus: FormzSubmissionStatus.success, employer: employer)),
+    );
+    emit(state.copyWith(employerStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onUploadLogo(UploadLogoEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.uploadLogo(event.filePath);
+    result.fold(
+      (failure) => emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
+        emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.success));
+        final refresh = await repository.getEmployer();
+        refresh.fold((_) {}, (employer) => emit(state.copyWith(employer: employer)));
+      },
+    );
+    emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onUpdateEmployer(UpdateEmployerEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.updateEmployer(event.data);
+    result.fold(
+      (failure) => emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.failure, error: failure)),
+      (employer) async {
+        emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.success, employer: employer));
+        final meRefresh = await repository.getMe();
+        meRefresh.fold((_) {}, (user) => emit(state.copyWith(user: user)));
+      },
+    );
+    emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.initial));
   }
 }

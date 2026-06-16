@@ -42,6 +42,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
     final bloc = context.read<BillingBloc>();
     bloc.add(LoadBalanceEvent(widget.isEmployer));
     bloc.add(const LoadPaymentSystemsEvent());
+    if (widget.isEmployer) {
+      bloc.add(const LoadEmployerInvoicesEvent());
+    }
   }
 
   @override
@@ -286,6 +289,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         if (!widget.isEmployer) _buildBlacklistBanner(),
+                        if (widget.isEmployer) _buildInvoiceBanner(),
                         _sectionTitle('Summa'),
                         const SizedBox(height: 10),
                         _buildPresets(),
@@ -515,6 +519,117 @@ class _TopUpScreenState extends State<TopUpScreen> {
         );
       },
     );
+  }
+
+  Widget _buildInvoiceBanner() {
+    return BlocBuilder<BillingBloc, BillingState>(
+      buildWhen: (p, c) => p.pendingInvoice != c.pendingInvoice,
+      builder: (context, state) {
+        final pending = state.pendingInvoice;
+        if (pending == null) return const SizedBox.shrink();
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E3A5F), Color(0xFF1D4ED8)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.receipt_long,
+                      color: Colors.white70, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      pending.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      pending.tariffCode?.toUpperCase() ?? 'PREMIUM',
+                      style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_fmtAmount(pending.amount)} so\'m',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Tarifni faollashtirish uchun quyida shu summani to\'lang',
+                style: TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedAmount = pending.amount;
+                    _amountCtrl.clear();
+                  });
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Summani avtomatik kiritish',
+                      style: TextStyle(
+                          color: PRIMARY_BLUE,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static String _fmtAmount(int amount) {
+    final s = amount.toString();
+    final buf = StringBuffer();
+    int count = 0;
+    for (int i = s.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) buf.write(' ');
+      buf.write(s[i]);
+      count++;
+    }
+    return buf.toString().split('').reversed.join();
   }
 
   Widget _buildPresets() {

@@ -4,6 +4,7 @@ import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';
 import '../../../../../core/network/dio_response_extension.dart';
 import '../../models/balance_model.dart';
+import '../../models/invoice_model.dart';
 import '../../models/online_payment_model.dart';
 import '../../models/payment_system_model.dart';
 import '../../models/premium_tariff_model.dart';
@@ -33,6 +34,9 @@ abstract class BillingRemoteDataSource {
 
   /// Seeker: pays `blacklist_fee` from balance to leave the blacklist. 402 if insufficient.
   Future<Either<ErrorModel, bool>> payBlacklist();
+
+  /// Employer 50% invoices — pending + history.
+  Future<Either<ErrorModel, InvoiceListResponse>> getEmployerInvoices();
 
   /// Active premium tariffs (public).
   Future<Either<ErrorModel, List<PremiumTariffModel>>> getPremiumTariffs();
@@ -123,6 +127,14 @@ class BillingRemoteDataSourceImpl implements BillingRemoteDataSource {
     return dioClient.dio.wrapResponse<bool>(
       () => dioClient.dio.post('mobile/blacklist/pay'),
       (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, InvoiceListResponse>> getEmployerInvoices() {
+    return dioClient.dio.wrapResponse<InvoiceListResponse>(
+      () => dioClient.dio.get('mobile/employer/invoices'),
+      (json) => InvoiceListResponse.fromJson(json as Map<String, dynamic>),
     );
   }
 

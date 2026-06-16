@@ -7,6 +7,7 @@ import '../../../../core/error/error_model.dart';
 import '../../data/datasource/remote/vacancy_remote_data_source.dart';
 import '../../data/models/application_model.dart';
 import '../../data/models/candidate_model.dart';
+import '../../data/models/contact_unlock_model.dart';
 import '../../data/models/create_vacancy_request.dart';
 import '../../data/models/employer_application_model.dart';
 import '../../data/models/employer_vacancy_model.dart';
@@ -34,6 +35,11 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     on<UnsaveVacancyEvent>(_onUnsave);
     on<LoadEmployerApplicationsEvent>(_onLoadEmployerApplications);
     on<UpdateEmployerApplicationStatusEvent>(_onUpdateEmployerAppStatus);
+    on<LoadRecommendedCandidatesEvent>(_onLoadRecommended);
+    on<LoadContactAccessEvent>(_onLoadContactAccess);
+    on<UnlockContactEvent>(_onUnlockContact);
+    on<LoadUnlockHistoryEvent>(_onLoadUnlockHistory);
+    on<LoadCandidateDetailEvent>(_onLoadCandidateDetail);
   }
 
   Future<void> _onLoadSeekerVacancies(LoadSeekerVacanciesEvent event, Emitter<VacancyState> emit) async {
@@ -171,6 +177,79 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     result.fold(
       (failure) => emit(state.copyWith(employerAppsStatus: FormzSubmissionStatus.failure, error: failure)),
       (list) => emit(state.copyWith(employerAppsStatus: FormzSubmissionStatus.success, employerApplications: list)),
+    );
+  }
+
+  Future<void> _onLoadRecommended(LoadRecommendedCandidatesEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(recommendedStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getRecommendedCandidates();
+    result.fold(
+      (failure) => emit(state.copyWith(recommendedStatus: FormzSubmissionStatus.failure, error: failure)),
+      (list) => emit(state.copyWith(recommendedStatus: FormzSubmissionStatus.success, recommendedCandidates: list)),
+    );
+  }
+
+  Future<void> _onLoadContactAccess(LoadContactAccessEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(contactAccessStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getContactAccess();
+    result.fold(
+      (failure) => emit(state.copyWith(contactAccessStatus: FormzSubmissionStatus.failure, error: failure)),
+      (access) => emit(state.copyWith(contactAccessStatus: FormzSubmissionStatus.success, contactAccess: access)),
+    );
+  }
+
+  Future<void> _onUnlockContact(UnlockContactEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(unlockStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.unlockContact(
+      anketaId: event.anketaId,
+      vacancyId: event.vacancyId,
+      trigger: event.trigger,
+    );
+    result.fold(
+      (failure) => emit(state.copyWith(unlockStatus: FormzSubmissionStatus.failure, error: failure)),
+      (unlockResult) {
+        final newUnlocked = Set<int>.from(state.unlockedAnketaIds)..add(event.anketaId);
+        final newPhones = Map<int, String>.from(state.unlockedPhones)
+          ..[event.anketaId] = unlockResult.phone;
+        emit(state.copyWith(
+          unlockStatus: FormzSubmissionStatus.success,
+          unlockResult: unlockResult,
+          unlockedAnketaIds: newUnlocked,
+          unlockedPhones: newPhones,
+        ));
+      },
+    );
+    emit(state.copyWith(unlockStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onLoadCandidateDetail(LoadCandidateDetailEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(candidateDetailStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getCandidateDetail(event.id);
+    result.fold(
+      (failure) => emit(state.copyWith(
+        candidateDetailStatus: FormzSubmissionStatus.failure,
+        error: failure,
+      )),
+      (detail) => emit(state.copyWith(
+        candidateDetailStatus: FormzSubmissionStatus.success,
+        candidateDetail: detail,
+      )),
+    );
+  }
+
+  Future<void> _onLoadUnlockHistory(LoadUnlockHistoryEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(unlockHistoryStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getUnlockHistory();
+    result.fold(
+      (failure) => emit(state.copyWith(unlockHistoryStatus: FormzSubmissionStatus.failure, error: failure)),
+      (list) {
+        final ids = list.map((h) => h.anketaId).toSet();
+        emit(state.copyWith(
+          unlockHistoryStatus: FormzSubmissionStatus.success,
+          unlockHistory: list,
+          unlockedAnketaIds: ids,
+        ));
+      },
     );
   }
 

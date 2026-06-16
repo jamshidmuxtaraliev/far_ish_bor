@@ -4,8 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../data/models/candidate_model.dart';
+import '../../data/models/contact_unlock_model.dart';
 import '../logic/vacancy_bloc.dart';
+import 'candidate_detail_screen.dart';
+import 'unlock_history_screen.dart';
 
 class CandidatesScreen extends StatefulWidget {
   const CandidatesScreen({super.key});
@@ -14,13 +18,26 @@ class CandidatesScreen extends StatefulWidget {
   State<CandidatesScreen> createState() => _CandidatesScreenState();
 }
 
-class _CandidatesScreenState extends State<CandidatesScreen> {
+class _CandidatesScreenState extends State<CandidatesScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    context.read<VacancyBloc>().add(LoadCandidatesEvent());
+    _tabController = TabController(length: 2, vsync: this);
+    final bloc = context.read<VacancyBloc>();
+    bloc.add(LoadCandidatesEvent());
+    bloc.add(LoadRecommendedCandidatesEvent());
+    bloc.add(LoadContactAccessEvent());
+    bloc.add(LoadUnlockHistoryEvent());
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,118 +49,191 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
-        body: Column(
-          children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 20,
-                right: 20,
-                bottom: 16,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
+      child: BlocListener<VacancyBloc, VacancyState>(
+        listenWhen: (prev, curr) => prev.unlockStatus != curr.unlockStatus,
+        listener: (context, state) {
+          if (state.unlockStatus.isSuccess && state.unlockResult != null) {
+            _showUnlockSuccessSheet(context, state.unlockResult!);
+          } else if (state.unlockStatus.isFailure) {
+            final msg = state.error?.errorMessage ?? 'Xatolik';
+            final isInsufficientBalance =
+                state.error?.errorCode == 402;
+            if (isInsufficientBalance) {
+              _showInsufficientBalanceDialog(context);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(msg), backgroundColor: Colors.red),
+              );
+            }
+          }
+        },
+        child: Scaffold(
+          backgroundColor: LIGHT_GRAY_BG,
+          body: Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _CandidatesTab(
+                      searchQuery: _searchQuery,
+                      onSearchChanged: (v) =>
+                          setState(() => _searchQuery = v.toLowerCase()),
+                    ),
+                    const _RecommendedTab(),
+                  ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Mos nomzodlar', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  const Text('Vakansiyalaringizga mos anketalar', style: TextStyle(color: Colors.white54, fontSize: 13)),
-                  const SizedBox(height: 14),
-                  Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                    child: TextField(
-                      onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-                      style: const TextStyle(color: DARK_NAVY, fontSize: 14),
-                      decoration: const InputDecoration(
-                        hintText: 'Ism yoki kasb bo\'yicha qidirish...',
-                        hintStyle: TextStyle(color: GRAY_TEXT),
-                        prefixIcon: Icon(Icons.search, color: GRAY_TEXT, size: 20),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      ),
-                    ),
-                  ),
-                ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 20,
+        right: 20,
+        bottom: 0,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Nomzodlar',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold)),
+                    SizedBox(height: 2),
+                    Text('60%+ mos va tasdiqlangan',
+                        style: TextStyle(color: Colors.white54, fontSize: 13)),
+                  ],
+                ),
               ),
+              GestureDetector(
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const UnlockHistoryScreen())),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.history, color: Colors.white70, size: 16),
+                      SizedBox(width: 4),
+                      Text('Tarix',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TabBar(
+            controller: _tabController,
+            indicatorColor: PRIMARY_BLUE,
+            indicatorWeight: 3,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white54,
+            labelStyle:
+                const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            tabs: const [
+              Tab(text: 'Mos nomzodlar'),
+              Tab(text: 'Tavsiya etilgan'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUnlockSuccessSheet(
+      BuildContext context, ContactUnlockResultModel result) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Colors.white,
+      builder: (_) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                  color: Color(0xFFDCFCE7), shape: BoxShape.circle),
+              child: const Icon(Icons.check_circle,
+                  color: GREEN_COLOR, size: 32),
             ),
-            // List
-            Expanded(
-              child: BlocBuilder<VacancyBloc, VacancyState>(
-                builder: (context, state) {
-                  if (state.candidatesStatus.isInProgress) {
-                    return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE));
-                  }
-                  if (state.candidatesStatus == FormzSubmissionStatus.failure) {
-                    return _ErrorView(
-                      message: state.error?.errorMessage ?? 'Xato yuz berdi',
-                      onRetry: () => context.read<VacancyBloc>().add(LoadCandidatesEvent()),
-                    );
-                  }
-
-                  var candidates = state.candidates;
-                  if (_searchQuery.isNotEmpty) {
-                    candidates = candidates.where((c) {
-                      final name = (c.fullname ?? '').toLowerCase();
-                      final job = (c.jobTypeName ?? '').toLowerCase();
-                      return name.contains(_searchQuery) || job.contains(_searchQuery);
-                    }).toList();
-                  }
-
-                  if (candidates.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.people_outline, size: 64, color: GRAY_TEXT),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchQuery.isEmpty ? "Hozircha mos nomzod yo'q" : "Qidiruv natijasi topilmadi",
-                            style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
-                          ),
-                          if (_searchQuery.isEmpty) ...[
-                            const SizedBox(height: 8),
-                            const Text(
-                              '60%+ mos va tasdiqlangan nomzodlar ko\'rinadi',
-                              style: TextStyle(fontSize: 12, color: GRAY_TEXT),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  }
-
-                  return RefreshIndicator(
-                    color: PRIMARY_BLUE,
-                    onRefresh: () async => context.read<VacancyBloc>().add(LoadCandidatesEvent()),
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            '${candidates.length} ta nomzod topildi',
-                            style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
-                          ),
-                        ),
-                        ...candidates.map((c) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _CandidateCard(candidate: c),
-                        )),
-                      ],
-                    ),
-                  );
-                },
+            const SizedBox(height: 16),
+            const Text('Kontakt ochildi!',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: DARK_NAVY)),
+            const SizedBox(height: 8),
+            Text(
+              result.phone,
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: PRIMARY_BLUE,
+                  letterSpacing: 1),
+            ),
+            if (result.additionalContact != null) ...[
+              const SizedBox(height: 4),
+              Text(result.additionalContact!,
+                  style:
+                      const TextStyle(fontSize: 14, color: GRAY_TEXT)),
+            ],
+            const SizedBox(height: 8),
+            if (!result.free && result.fee > 0)
+              Text(
+                '${_formatAmount(result.fee)} so\'m yechildi • Qolgan balans: ${_formatAmount(result.balance ?? 0)} so\'m',
+                style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+                textAlign: TextAlign.center,
+              )
+            else
+              const Text('Bepul ochildi',
+                  style: TextStyle(fontSize: 12, color: GREEN_COLOR)),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: PRIMARY_BLUE,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12))),
+                child: const Text('Yopish'),
               ),
             ),
           ],
@@ -151,20 +241,225 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       ),
     );
   }
+
+  void _showInsufficientBalanceDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Balans yetarli emas',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: DARK_NAVY)),
+        content: const Text(
+            'Kontaktni ochish uchun balansni to\'ldiring.',
+            style: TextStyle(color: GRAY_TEXT)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          const TopUpScreen(isEmployer: true)));
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: PRIMARY_BLUE,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            child: const Text("To'ldirish"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatAmount(int amount) {
+    final s = amount.toString();
+    final buf = StringBuffer();
+    int count = 0;
+    for (int i = s.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) buf.write(' ');
+      buf.write(s[i]);
+      count++;
+    }
+    return buf.toString().split('').reversed.join();
+  }
 }
+
+// ── Mos nomzodlar tab ─────────────────────────────────────────────────────────
+
+class _CandidatesTab extends StatelessWidget {
+  final String searchQuery;
+  final ValueChanged<String> onSearchChanged;
+
+  const _CandidatesTab(
+      {required this.searchQuery, required this.onSearchChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Container(
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12)),
+            child: TextField(
+              onChanged: onSearchChanged,
+              style: const TextStyle(color: DARK_NAVY, fontSize: 14),
+              decoration: const InputDecoration(
+                hintText: "Ism yoki kasb bo'yicha...",
+                hintStyle: TextStyle(color: GRAY_TEXT),
+                prefixIcon: Icon(Icons.search, color: GRAY_TEXT, size: 20),
+                border: InputBorder.none,
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: BlocBuilder<VacancyBloc, VacancyState>(
+            builder: (context, state) {
+              if (state.candidatesStatus.isInProgress) {
+                return const Center(
+                    child: CircularProgressIndicator(color: PRIMARY_BLUE));
+              }
+              if (state.candidatesStatus == FormzSubmissionStatus.failure) {
+                return _ErrorView(
+                  message:
+                      state.error?.errorMessage ?? 'Xato yuz berdi',
+                  onRetry: () =>
+                      context.read<VacancyBloc>().add(LoadCandidatesEvent()),
+                );
+              }
+              var candidates = state.candidates;
+              if (searchQuery.isNotEmpty) {
+                candidates = candidates.where((c) {
+                  final name = (c.fullname ?? '').toLowerCase();
+                  final job = (c.jobTypeName ?? '').toLowerCase();
+                  return name.contains(searchQuery) ||
+                      job.contains(searchQuery);
+                }).toList();
+              }
+              if (candidates.isEmpty) {
+                return _EmptyView(
+                    icon: searchQuery.isEmpty
+                        ? Icons.work_outline
+                        : Icons.search_off,
+                    message: searchQuery.isEmpty
+                        ? 'Avval vakansiya joylang'
+                        : 'Qidiruv natijasi topilmadi',
+                    subtitle: searchQuery.isEmpty
+                        ? 'Vakansiya qo\'shilgach mos nomzodlar bu yerda ko\'rinadi'
+                        : null);
+              }
+              return RefreshIndicator(
+                color: PRIMARY_BLUE,
+                onRefresh: () async =>
+                    context.read<VacancyBloc>().add(LoadCandidatesEvent()),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text('${candidates.length} ta nomzod',
+                          style: const TextStyle(
+                              fontSize: 13, color: GRAY_TEXT)),
+                    ),
+                    ...candidates.map((c) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _CandidateCard(candidate: c),
+                        )),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Tavsiya etilgan tab ───────────────────────────────────────────────────────
+
+class _RecommendedTab extends StatelessWidget {
+  const _RecommendedTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<VacancyBloc, VacancyState>(
+      builder: (context, state) {
+        if (state.recommendedStatus.isInProgress) {
+          return const Center(
+              child: CircularProgressIndicator(color: PRIMARY_BLUE));
+        }
+        if (state.recommendedCandidates.isEmpty) {
+          return const _EmptyView(
+              message: "Operator yo'naltirgach ko'rinadi",
+              subtitle: 'Operator tavsiya qilgan nomzodlar kontakti bepul ochiladi');
+        }
+        return RefreshIndicator(
+          color: PRIMARY_BLUE,
+          onRefresh: () async => context
+              .read<VacancyBloc>()
+              .add(LoadRecommendedCandidatesEvent()),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: GREEN_COLOR.withValues(alpha: 0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.star, color: GREEN_COLOR, size: 16),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Operator tavsiya qilgan nomzodlar kontakti bepul ochiladi',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF166534)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              ...state.recommendedCandidates.map((c) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _CandidateCard(candidate: c, isRecommended: true),
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Kandidat kartasi ──────────────────────────────────────────────────────────
 
 class _CandidateCard extends StatelessWidget {
   final CandidateModel candidate;
-  const _CandidateCard({required this.candidate});
+  final bool isRecommended;
 
-  void _showProfile(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => _CandidateProfileSheet(candidate: candidate),
-    );
-  }
+  const _CandidateCard({required this.candidate, this.isRecommended = false});
 
   Color get _matchColor {
     final p = candidate.matchPercent;
@@ -175,254 +470,416 @@ class _CandidateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        children: [
-          Row(
+    return BlocBuilder<VacancyBloc, VacancyState>(
+      builder: (context, vacState) {
+        final phone = candidate.phoneRaw ??
+            vacState.unlockedPhones[candidate.id];
+        final isUnlocked = candidate.isUnlocked ||
+            vacState.unlockedAnketaIds.contains(candidate.id) ||
+            isRecommended;
+        final isUnlocking = vacState.unlockStatus.isInProgress;
+        final access = vacState.contactAccess;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: isRecommended
+                    ? GREEN_COLOR.withValues(alpha: 0.3)
+                    : const Color(0xFFE5E7EB)),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2))
+            ],
+          ),
+          child: Column(
             children: [
-              // Avatar
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [PRIMARY_BLUE.withValues(alpha: 0.8), SECONDARY_BLUE],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(candidate.initials, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header row: avatar + info + badge
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            candidate.fullname ?? 'Ism noma\'lum',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [
+                              PRIMARY_BLUE.withValues(alpha: 0.8),
+                              SECONDARY_BLUE
+                            ]),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(candidate.initials,
+                                style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _matchColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            '${candidate.matchPercent}%',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _matchColor),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      candidate.fullname ?? "Ism noma'lum",
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: DARK_NAVY),
+                                    ),
+                                  ),
+                                  if (isRecommended)
+                                    _Badge('Tavsiya', GREEN_COLOR)
+                                  else if (candidate.matchPercent > 0)
+                                    _Badge('${candidate.matchPercent}%',
+                                        _matchColor),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                candidate.jobTypeName ?? 'Kasb ko\'rsatilmagan',
+                                style: const TextStyle(
+                                    fontSize: 12, color: GRAY_TEXT),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      candidate.jobTypeName ?? 'Kasb #${candidate.jobTypeId}',
-                      style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
+                    const SizedBox(height: 10),
+                    // Meta row: region · yosh · oylik
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        if (candidate.region != null)
+                          _MetaChip(
+                              Icons.location_on_outlined,
+                              candidate.region!.name),
+                        if (candidate.age != null)
+                          _MetaChip(Icons.cake_outlined,
+                              '${candidate.age} yosh'),
+                        if (candidate.expectedSalary != null)
+                          _MetaChip(Icons.attach_money,
+                              candidate.salaryDisplay),
+                      ],
                     ),
+                    // Assignment status for recommended
+                    if (isRecommended && candidate.assignment != null) ...[
+                      const SizedBox(height: 8),
+                      _AssignmentChip(candidate.assignment!.status),
+                    ],
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // Info row
-          Row(
-            children: [
-              if (candidate.experienceYear != null) ...[
-                const Icon(Icons.work_outline, size: 13, color: GRAY_TEXT),
-                const SizedBox(width: 4),
-                Text('${candidate.experienceYear} yil tajriba', style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
-                const SizedBox(width: 12),
-              ],
-              if (candidate.salaryDisplay.isNotEmpty) ...[
-                const Icon(Icons.attach_money, size: 13, color: GRAY_TEXT),
-                const SizedBox(width: 2),
-                Text(candidate.salaryDisplay, style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
-              ],
-            ],
-          ),
-          if (candidate.languages.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.language_outlined, size: 13, color: GRAY_TEXT),
-                const SizedBox(width: 4),
-                Text(candidate.languages.join(', ').toUpperCase(), style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
-              ],
-            ),
-          ],
-          const SizedBox(height: 12),
-          // Buttons
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 38,
-                  child: ElevatedButton(
-                    onPressed: () => _showProfile(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: PRIMARY_BLUE,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text("Profilni ko'rish", style: TextStyle(fontSize: 13)),
-                  ),
+              // Phone or unlock + detail buttons
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(16)),
                 ),
-              ),
-              if (candidate.phone != null) ...[
-                const SizedBox(width: 10),
-                Expanded(
-                  child: SizedBox(
-                    height: 38,
-                    child: OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.phone_outlined, size: 14),
-                      label: const Text('Aloqa', style: TextStyle(fontSize: 13)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: DARK_NAVY,
-                        side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: isUnlocked && phone != null
+                    ? _PhoneRow(phone: phone)
+                    : _ActionRow(
+                        candidate: candidate,
+                        access: access,
+                        isUnlocking: isUnlocking,
+                        isRecommended: isRecommended,
                       ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-// ── Candidate profile bottom sheet ─────────────────────────────────────────────
+// ── Karta ichi kichik widgetlar ───────────────────────────────────────────────
 
-class _CandidateProfileSheet extends StatelessWidget {
-  final CandidateModel candidate;
-  const _CandidateProfileSheet({required this.candidate});
+class _Badge extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _Badge(this.text, this.color);
 
   @override
-  Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (_, scrollCtrl) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(6),
         ),
-        child: ListView(
-          controller: scrollCtrl,
-          padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 20),
-          children: [
-            Center(
-              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2))),
-            ),
-            const SizedBox(height: 20),
-            // Avatar + name
-            Center(
-              child: Column(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [PRIMARY_BLUE.withValues(alpha: 0.8), SECONDARY_BLUE]),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(candidate.initials, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    candidate.fullname ?? "Ism ko'rsatilmagan",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: DARK_NAVY),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    candidate.jobTypeName ?? 'Kasb #${candidate.jobTypeId}',
-                    style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF16A34A).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Moslik: ${candidate.matchPercent}%',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF16A34A)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-            _ProfileRow(icon: Icons.work_outline, label: 'Tajriba', value: candidate.experienceYear != null ? '${candidate.experienceYear} yil' : "Ko'rsatilmagan"),
-            if (candidate.salaryDisplay.isNotEmpty)
-              _ProfileRow(icon: Icons.attach_money, label: 'Kutilayotgan maosh', value: candidate.salaryDisplay),
-            if (candidate.workStatus != null)
-              _ProfileRow(icon: Icons.circle, label: 'Holati', value: candidate.workStatus!),
-            if (candidate.workSchedule != null)
-              _ProfileRow(icon: Icons.schedule_outlined, label: 'Ish grafigi', value: candidate.workSchedule!),
-            if (candidate.languages.isNotEmpty)
-              _ProfileRow(icon: Icons.language_outlined, label: 'Tillar', value: candidate.languages.join(', ').toUpperCase()),
-            if (candidate.phone != null)
-              _ProfileRow(icon: Icons.phone_outlined, label: 'Telefon', value: candidate.phone!),
-          ],
-        ),
-      ),
-    );
-  }
+        child: Text(text,
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+      );
 }
 
-class _ProfileRow extends StatelessWidget {
+class _MetaChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
-  const _ProfileRow({required this.icon, required this.label, required this.value});
+  const _MetaChip(this.icon, this.label);
+
+  @override
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: GRAY_TEXT),
+          const SizedBox(width: 3),
+          Text(label,
+              style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+        ],
+      );
+}
+
+class _AssignmentChip extends StatelessWidget {
+  final String status;
+  const _AssignmentChip(this.status);
+
+  static const _labels = {
+    'yangi': 'Yangi',
+    'ko\'rib_chiqilmoqda': "Ko'rib chiqilmoqda",
+    'suhbatga_yozildi': 'Suhbatga belgilandi',
+    'qabul_qilindi': 'Qabul qilindi',
+    'rad_etildi': 'Rad etildi',
+  };
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final label = _labels[status] ?? status;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: GREEN_COLOR.withValues(alpha: 0.3)),
+      ),
+      child: Text(label,
+          style: const TextStyle(fontSize: 11, color: GREEN_COLOR)),
+    );
+  }
+}
+
+class _PhoneRow extends StatelessWidget {
+  final String phone;
+  const _PhoneRow({required this.phone});
+
+  @override
+  Widget build(BuildContext context) => Row(
         children: [
-          Icon(icon, size: 18, color: PRIMARY_BLUE),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
-                const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 14, color: DARK_NAVY, fontWeight: FontWeight.w500)),
-              ],
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: GREEN_COLOR.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.phone, color: GREEN_COLOR, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(phone,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: DARK_NAVY)),
+          ),
+          const Icon(Icons.check_circle, color: GREEN_COLOR, size: 16),
+        ],
+      );
+}
+
+class _ActionRow extends StatelessWidget {
+  final CandidateModel candidate;
+  final ContactAccessModel? access;
+  final bool isUnlocking;
+  final bool isRecommended;
+
+  const _ActionRow({
+    required this.candidate,
+    required this.access,
+    required this.isUnlocking,
+    required this.isRecommended,
+  });
+
+  void _onUnlock(BuildContext context) {
+    final isFree = isRecommended || (access?.freeContacts ?? false);
+    if (isFree) {
+      context
+          .read<VacancyBloc>()
+          .add(UnlockContactEvent(anketaId: candidate.id));
+      return;
+    }
+    final fee = access?.fee ?? 30000;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Kontaktni ochish',
+            style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY)),
+        content: Text(
+          '${_fmt(fee)} so\'m balansingizdan yechiladi.\nDavom etasizmi?',
+          style: const TextStyle(color: GRAY_TEXT),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context
+                  .read<VacancyBloc>()
+                  .add(UnlockContactEvent(anketaId: candidate.id));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PRIMARY_BLUE,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("To'lab ochish"),
           ),
         ],
+      ),
+    );
+  }
+
+  static String _fmt(int amount) {
+    final s = amount.toString();
+    final buf = StringBuffer();
+    int count = 0;
+    for (int i = s.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) buf.write(' ');
+      buf.write(s[i]);
+      count++;
+    }
+    return buf.toString().split('').reversed.join();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isFree = isRecommended || (access?.freeContacts ?? false);
+    final fee = access?.fee ?? 30000;
+    final unlockLabel =
+        isFree ? 'Bepul ochish' : 'Ochish · ${_fmt(fee)} so\'m';
+
+    return Row(
+      children: [
+        // Batafsil
+        Expanded(
+          child: SizedBox(
+            height: 36,
+            child: OutlinedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CandidateDetailScreen(
+                    candidateId: candidate.id,
+                    card: candidate,
+                  ),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: DARK_NAVY,
+                side: const BorderSide(color: Color(0xFFE5E7EB)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                padding: EdgeInsets.zero,
+              ),
+              child: const Text('Batafsil',
+                  style: TextStyle(fontSize: 13)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Unlock
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 36,
+            child: ElevatedButton.icon(
+              onPressed: isUnlocking ? null : () => _onUnlock(context),
+              icon: isUnlocking
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : Icon(
+                      isFree ? Icons.lock_open : Icons.lock_open_outlined,
+                      size: 15),
+              label: Text(unlockLabel,
+                  style: const TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isFree ? GREEN_COLOR : PRIMARY_BLUE,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+class _EmptyView extends StatelessWidget {
+  final String message;
+  final String? subtitle;
+  final IconData icon;
+
+  const _EmptyView({
+    required this.message,
+    this.subtitle,
+    this.icon = Icons.people_outline,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 64, color: GRAY_TEXT),
+            const SizedBox(height: 16),
+            Text(message,
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: DARK_NAVY),
+                textAlign: TextAlign.center),
+            if (subtitle != null) ...[
+              const SizedBox(height: 8),
+              Text(subtitle!,
+                  style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+                  textAlign: TextAlign.center),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -441,13 +898,19 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 64, color: GRAY_TEXT),
+            const Icon(Icons.cloud_off_outlined,
+                size: 64, color: GRAY_TEXT),
             const SizedBox(height: 16),
-            Text(message, style: const TextStyle(fontSize: 15, color: GRAY_TEXT), textAlign: TextAlign.center),
+            Text(message,
+                style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
+                textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onRetry,
-              style: ElevatedButton.styleFrom(backgroundColor: PRIMARY_BLUE, foregroundColor: Colors.white, elevation: 0),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: PRIMARY_BLUE,
+                  foregroundColor: Colors.white,
+                  elevation: 0),
               child: const Text('Qayta urinish'),
             ),
           ],

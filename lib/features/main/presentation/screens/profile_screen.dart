@@ -14,6 +14,7 @@ import '../../../billing/presentation/screens/premium_screen.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+import 'edit_employer_screen.dart';
 import 'my_applications_screen.dart';
 import 'settings_screen.dart';
 
@@ -374,9 +375,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final List<_MenuItem> employerItems = [
       _MenuItem(
+        icon: Icons.business_outlined,
+        label: 'Kompaniyani tahrirlash',
+        color: PRIMARY_BLUE,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const EditEmployerScreen()),
+        ),
+      ),
+      _MenuItem(
         icon: Icons.work_outline,
         label: 'Vakansiyalar',
-        color: PRIMARY_BLUE,
+        color: const Color(0xFF0891B2),
         onTap: () {},
       ),
       _MenuItem(

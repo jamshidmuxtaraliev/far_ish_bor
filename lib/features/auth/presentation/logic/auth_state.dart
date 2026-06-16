@@ -11,9 +11,13 @@ class AuthState extends Equatable {
   final FormzSubmissionStatus regionsStatus;
   final FormzSubmissionStatus jobTypesStatus;
   final FormzSubmissionStatus languagesStatus;
+  final FormzSubmissionStatus employerStatus;
+  final FormzSubmissionStatus updateEmployerStatus;
+  final FormzSubmissionStatus uploadLogoStatus;
   final ErrorModel? error;
   final UserModel? user;
   final AnketaModel? anketa;
+  final EmployerModel? employer;
   final List<RegionModel> regions;
   final List<JobTypeModel> jobTypes;
   final List<LanguageModel> languages;
@@ -28,9 +32,13 @@ class AuthState extends Equatable {
     this.regionsStatus = FormzSubmissionStatus.initial,
     this.jobTypesStatus = FormzSubmissionStatus.initial,
     this.languagesStatus = FormzSubmissionStatus.initial,
+    this.employerStatus = FormzSubmissionStatus.initial,
+    this.updateEmployerStatus = FormzSubmissionStatus.initial,
+    this.uploadLogoStatus = FormzSubmissionStatus.initial,
     this.error,
     this.user,
     this.anketa,
+    this.employer,
     this.regions = const [],
     this.jobTypes = const [],
     this.languages = const [],
@@ -46,9 +54,13 @@ class AuthState extends Equatable {
     FormzSubmissionStatus? regionsStatus,
     FormzSubmissionStatus? jobTypesStatus,
     FormzSubmissionStatus? languagesStatus,
+    FormzSubmissionStatus? employerStatus,
+    FormzSubmissionStatus? updateEmployerStatus,
+    FormzSubmissionStatus? uploadLogoStatus,
     ErrorModel? error,
     UserModel? user,
     AnketaModel? anketa,
+    EmployerModel? employer,
     List<RegionModel>? regions,
     List<JobTypeModel>? jobTypes,
     List<LanguageModel>? languages,
@@ -63,9 +75,13 @@ class AuthState extends Equatable {
       regionsStatus: regionsStatus ?? this.regionsStatus,
       jobTypesStatus: jobTypesStatus ?? this.jobTypesStatus,
       languagesStatus: languagesStatus ?? this.languagesStatus,
+      employerStatus: employerStatus ?? this.employerStatus,
+      updateEmployerStatus: updateEmployerStatus ?? this.updateEmployerStatus,
+      uploadLogoStatus: uploadLogoStatus ?? this.uploadLogoStatus,
       error: error ?? this.error,
       user: user ?? this.user,
       anketa: anketa ?? this.anketa,
+      employer: employer ?? this.employer,
       regions: regions ?? this.regions,
       jobTypes: jobTypes ?? this.jobTypes,
       languages: languages ?? this.languages,
@@ -76,6 +92,7 @@ class AuthState extends Equatable {
   List<Object?> get props => [
         sendCodeStatus, registerStatus, loginStatus, getMeStatus,
         anketaStatus, updateAnketaStatus, regionsStatus, jobTypesStatus, languagesStatus,
-        error, user, anketa, regions, jobTypes, languages,
+        employerStatus, updateEmployerStatus, uploadLogoStatus,
+        error, user, anketa, employer, regions, jobTypes, languages,
       ];
 }

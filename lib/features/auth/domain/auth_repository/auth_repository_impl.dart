@@ -5,6 +5,7 @@ import '../../../../../core/error/error_model.dart';
 import '../../data/datasource/remote/auth_remote_data_source.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_response_model.dart';
+import '../../data/models/employer_model.dart';
 import '../../data/models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -47,4 +48,16 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<ErrorModel, List<LanguageModel>>> getLanguages() =>
       remoteDataSource.getLanguages();
+
+  @override
+  Future<Either<ErrorModel, EmployerModel>> getEmployer() =>
+      remoteDataSource.getEmployer();
+
+  @override
+  Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data) =>
+      remoteDataSource.updateEmployer(data);
+
+  @override
+  Future<Either<ErrorModel, String>> uploadLogo(String filePath) =>
+      remoteDataSource.uploadLogo(filePath);
 }

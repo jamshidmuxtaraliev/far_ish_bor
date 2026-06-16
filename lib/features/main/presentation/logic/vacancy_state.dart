@@ -17,6 +17,22 @@ class VacancyState extends Equatable {
   final List<ApplicationModel> myApplications;
   final List<SavedVacancyModel> savedVacancies;
   final List<EmployerApplicationModel> employerApplications;
+
+  final List<CandidateModel> recommendedCandidates;
+  final FormzSubmissionStatus recommendedStatus;
+  final ContactAccessModel? contactAccess;
+  final FormzSubmissionStatus contactAccessStatus;
+  final ContactUnlockResultModel? unlockResult;
+  final FormzSubmissionStatus unlockStatus;
+  final List<ContactUnlockHistoryModel> unlockHistory;
+  final FormzSubmissionStatus unlockHistoryStatus;
+  final Set<int> unlockedAnketaIds;
+  // anketa_id → phone (from in-session unlocks, so list cards refresh without reload)
+  final Map<int, String> unlockedPhones;
+
+  final CandidateModel? candidateDetail;
+  final FormzSubmissionStatus candidateDetailStatus;
+
   final ErrorModel? error;
 
   const VacancyState({
@@ -35,6 +51,18 @@ class VacancyState extends Equatable {
     this.myApplications = const [],
     this.savedVacancies = const [],
     this.employerApplications = const [],
+    this.recommendedCandidates = const [],
+    this.recommendedStatus = FormzSubmissionStatus.initial,
+    this.contactAccess,
+    this.contactAccessStatus = FormzSubmissionStatus.initial,
+    this.unlockResult,
+    this.unlockStatus = FormzSubmissionStatus.initial,
+    this.unlockHistory = const [],
+    this.unlockHistoryStatus = FormzSubmissionStatus.initial,
+    this.unlockedAnketaIds = const {},
+    this.unlockedPhones = const {},
+    this.candidateDetail,
+    this.candidateDetailStatus = FormzSubmissionStatus.initial,
     this.error,
   });
 
@@ -54,6 +82,18 @@ class VacancyState extends Equatable {
     List<ApplicationModel>? myApplications,
     List<SavedVacancyModel>? savedVacancies,
     List<EmployerApplicationModel>? employerApplications,
+    List<CandidateModel>? recommendedCandidates,
+    FormzSubmissionStatus? recommendedStatus,
+    ContactAccessModel? contactAccess,
+    FormzSubmissionStatus? contactAccessStatus,
+    ContactUnlockResultModel? unlockResult,
+    FormzSubmissionStatus? unlockStatus,
+    List<ContactUnlockHistoryModel>? unlockHistory,
+    FormzSubmissionStatus? unlockHistoryStatus,
+    Set<int>? unlockedAnketaIds,
+    Map<int, String>? unlockedPhones,
+    CandidateModel? candidateDetail,
+    FormzSubmissionStatus? candidateDetailStatus,
     ErrorModel? error,
   }) {
     return VacancyState(
@@ -72,6 +112,19 @@ class VacancyState extends Equatable {
       myApplications: myApplications ?? this.myApplications,
       savedVacancies: savedVacancies ?? this.savedVacancies,
       employerApplications: employerApplications ?? this.employerApplications,
+      recommendedCandidates: recommendedCandidates ?? this.recommendedCandidates,
+      recommendedStatus: recommendedStatus ?? this.recommendedStatus,
+      contactAccess: contactAccess ?? this.contactAccess,
+      contactAccessStatus: contactAccessStatus ?? this.contactAccessStatus,
+      unlockResult: unlockResult ?? this.unlockResult,
+      unlockStatus: unlockStatus ?? this.unlockStatus,
+      unlockHistory: unlockHistory ?? this.unlockHistory,
+      unlockHistoryStatus: unlockHistoryStatus ?? this.unlockHistoryStatus,
+      unlockedAnketaIds: unlockedAnketaIds ?? this.unlockedAnketaIds,
+      unlockedPhones: unlockedPhones ?? this.unlockedPhones,
+      candidateDetail: candidateDetail ?? this.candidateDetail,
+      candidateDetailStatus:
+          candidateDetailStatus ?? this.candidateDetailStatus,
       error: error ?? this.error,
     );
   }
@@ -81,6 +134,13 @@ class VacancyState extends Equatable {
         vacanciesStatus, candidatesStatus, applyStatus, manageVacancyStatus,
         applicationsStatus, updateAppStatus, savedStatus, employerAppsStatus, updateEmpAppStatus,
         seekerVacancies, employerVacancies, candidates, myApplications,
-        savedVacancies, employerApplications, error,
+        savedVacancies, employerApplications,
+        recommendedCandidates, recommendedStatus,
+        contactAccess, contactAccessStatus,
+        unlockResult, unlockStatus,
+        unlockHistory, unlockHistoryStatus, unlockedAnketaIds,
+        unlockedPhones,
+        candidateDetail, candidateDetailStatus,
+        error,
       ];
 }

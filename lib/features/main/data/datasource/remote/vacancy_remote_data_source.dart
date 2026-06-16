@@ -5,6 +5,7 @@ import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';
 import '../../models/application_model.dart';
 import '../../models/candidate_model.dart';
+import '../../models/contact_unlock_model.dart';
 import '../../models/create_vacancy_request.dart';
 import '../../models/employer_application_model.dart';
 import '../../models/employer_vacancy_model.dart';
@@ -33,6 +34,15 @@ abstract class VacancyRemoteDataSource {
     String? interviewDatetime,
     String? type,
   });
+  Future<Either<ErrorModel, List<CandidateModel>>> getRecommendedCandidates();
+  Future<Either<ErrorModel, ContactAccessModel>> getContactAccess();
+  Future<Either<ErrorModel, ContactUnlockResultModel>> unlockContact({
+    required int anketaId,
+    int? vacancyId,
+    String trigger,
+  });
+  Future<Either<ErrorModel, List<ContactUnlockHistoryModel>>> getUnlockHistory();
+  Future<Either<ErrorModel, CandidateModel>> getCandidateDetail(int id);
 }
 
 class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
@@ -154,6 +164,52 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
     return dioClient.dio.wrapResponse<bool>(
       () => dioClient.dio.patch('mobile/employer/applications/$applicationId', data: data),
       (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, List<CandidateModel>>> getRecommendedCandidates() {
+    return dioClient.dio.wrapResponse<List<CandidateModel>>(
+      () => dioClient.dio.get('mobile/employer/recommended'),
+      (json) => (json as List).map((e) => CandidateModel.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, ContactAccessModel>> getContactAccess() {
+    return dioClient.dio.wrapResponse<ContactAccessModel>(
+      () => dioClient.dio.get('mobile/employer/contact-access'),
+      (json) => ContactAccessModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, ContactUnlockResultModel>> unlockContact({
+    required int anketaId,
+    int? vacancyId,
+    String trigger = 'phone_view',
+  }) {
+    final data = <String, dynamic>{'anketa_id': anketaId, 'trigger': trigger};
+    if (vacancyId != null) data['vacancy_id'] = vacancyId;
+    return dioClient.dio.wrapResponse<ContactUnlockResultModel>(
+      () => dioClient.dio.post('mobile/employer/contact-unlock', data: data),
+      (json) => ContactUnlockResultModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, List<ContactUnlockHistoryModel>>> getUnlockHistory() {
+    return dioClient.dio.wrapResponse<List<ContactUnlockHistoryModel>>(
+      () => dioClient.dio.get('mobile/employer/contact-unlock'),
+      (json) => (json as List).map((e) => ContactUnlockHistoryModel.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, CandidateModel>> getCandidateDetail(int id) {
+    return dioClient.dio.wrapResponse<CandidateModel>(
+      () => dioClient.dio.get('mobile/employer/candidates/$id'),
+      (json) => CandidateModel.fromJson(json as Map<String, dynamic>),
     );
   }
 }

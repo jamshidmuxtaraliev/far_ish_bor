@@ -5,6 +5,7 @@ import 'package:formz/formz.dart';
 import '../../../../core/error/error_model.dart';
 import '../../data/datasource/remote/billing_remote_data_source.dart';
 import '../../data/models/balance_model.dart';
+import '../../data/models/invoice_model.dart';
 import '../../data/models/online_payment_model.dart';
 import '../../data/models/payment_system_model.dart';
 import '../../data/models/premium_tariff_model.dart';
@@ -26,6 +27,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<LoadPremiumTariffsEvent>(_onLoadPremiumTariffs);
     on<BuyPremiumEvent>(_onBuyPremium);
     on<ResetCheckoutEvent>(_onResetCheckout);
+    on<LoadEmployerInvoicesEvent>(_onLoadEmployerInvoices);
   }
 
   Future<void> _onLoadBalance(
@@ -240,6 +242,20 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       },
     );
     emit(state.copyWith(buyPremiumStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onLoadEmployerInvoices(LoadEmployerInvoicesEvent event, Emitter<BillingState> emit) async {
+    emit(state.copyWith(invoicesStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getEmployerInvoices();
+    result.fold(
+      (failure) => emit(state.copyWith(invoicesStatus: FormzSubmissionStatus.failure, error: failure)),
+      (response) => emit(state.copyWith(
+        invoicesStatus: FormzSubmissionStatus.success,
+        invoices: response.items,
+        pendingInvoice: response.pending,
+        clearPendingInvoice: response.pending == null,
+      )),
+    );
   }
 
   void _onResetCheckout(ResetCheckoutEvent event, Emitter<BillingState> emit) {

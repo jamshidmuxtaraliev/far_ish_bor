@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/constants/colors.dart';
+import 'candidates_screen.dart';
 import 'employer_applications_screen.dart';
 import 'home_screen.dart';
 import 'jobs_screen.dart';
-import 'messages_screen.dart';
 import 'my_applications_screen.dart';
 import 'profile_screen.dart';
 import 'saved_vacancies_screen.dart';
@@ -34,15 +34,15 @@ class _MainScreenState extends State<MainScreen> {
       _pages = [
         HomeScreen(isEmployer: widget.isEmployer),
         JobsScreen(isEmployer: widget.isEmployer),
+        const CandidatesScreen(),
         const EmployerApplicationsScreen(),
-        const MessagesScreen(),
         ProfileScreen(isEmployer: widget.isEmployer),
       ];
       _navItems = const [
         _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Bosh sahifa'),
         _NavItem(icon: Icons.work_outline, activeIcon: Icons.work, label: 'Vakansiyalar'),
+        _NavItem(icon: Icons.people_outline, activeIcon: Icons.people, label: 'Nomzodlar'),
         _NavItem(icon: Icons.inbox_outlined, activeIcon: Icons.inbox, label: 'Arizalar'),
-        _NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'Xabarlar'),
         _NavItem(icon: Icons.account_circle_outlined, activeIcon: Icons.account_circle, label: 'Profil'),
       ];
     } else {
