@@ -11,7 +11,10 @@ import 'package:far_ish_bor/features/chat/data/datasource/chat_realtime_datasour
 import 'package:far_ish_bor/features/chat/presentation/logic/chat_bloc.dart';
 import 'package:far_ish_bor/features/notifications/data/datasource/remote/notification_remote_data_source.dart';
 import 'package:far_ish_bor/features/notifications/presentation/logic/notification_bloc.dart';
+import 'package:far_ish_bor/features/main/data/datasource/interview_realtime_datasource.dart';
+import 'package:far_ish_bor/features/main/data/datasource/remote/interview_remote_data_source.dart';
 import 'package:far_ish_bor/features/main/data/datasource/remote/vacancy_remote_data_source.dart';
+import 'package:far_ish_bor/features/main/presentation/logic/interview_bloc.dart';
 import 'package:far_ish_bor/features/main/presentation/logic/vacancy_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,6 +48,15 @@ Future<void> setupDI({required Alice alice}) async {
       () => VacancyRemoteDataSourceImpl(getIt()),
     )
     ..registerLazySingleton<VacancyBloc>(() => VacancyBloc(getIt()))
+    ..registerLazySingleton<InterviewRemoteDataSource>(
+      () => InterviewRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<InterviewRealtimeDatasource>(
+      () => InterviewRealtimeDatasource(),
+    )
+    ..registerLazySingleton<InterviewBloc>(
+      () => InterviewBloc(getIt(), getIt()),
+    )
     ..registerLazySingleton<BillingRemoteDataSource>(
       () => BillingRemoteDataSourceImpl(getIt()),
     )

@@ -34,6 +34,12 @@ class DeleteVacancyEvent extends VacancyEvent {
 
 class LoadCandidatesEvent extends VacancyEvent {}
 
+// Vakansiya-markazli oqim: bitta vakansiya ichidagi tavsiya + mos nomzodlar
+class LoadVacancyCandidatesEvent extends VacancyEvent {
+  final int vacancyId;
+  LoadVacancyCandidatesEvent(this.vacancyId);
+}
+
 class LoadMyApplicationsEvent extends VacancyEvent {}
 
 class UpdateApplicationStatusEvent extends VacancyEvent {
@@ -80,6 +86,40 @@ class LoadUnlockHistoryEvent extends VacancyEvent {}
 class LoadCandidateDetailEvent extends VacancyEvent {
   final int id;
   LoadCandidateDetailEvent(this.id);
+}
+
+// Mos nomzodlar pipeline (Kanban) + bosqich biriktirishlari
+class LoadPipelineEvent extends VacancyEvent {}
+
+class CreateAssignmentEvent extends VacancyEvent {
+  final int anketaId;
+  final int requirementId;
+  final String status;
+  final String? interviewDatetime;
+  CreateAssignmentEvent({
+    required this.anketaId,
+    required this.requirementId,
+    this.status = 'suhbatga_yozildi',
+    this.interviewDatetime,
+  });
+}
+
+class UpdateAssignmentEvent extends VacancyEvent {
+  final int id;
+  final String? status;
+  final String? interviewDatetime;
+  final String? comment;
+  UpdateAssignmentEvent({
+    required this.id,
+    this.status,
+    this.interviewDatetime,
+    this.comment,
+  });
+}
+
+class DeleteAssignmentEvent extends VacancyEvent {
+  final int id;
+  DeleteAssignmentEvent(this.id);
 }
 
 class UpdateEmployerApplicationStatusEvent extends VacancyEvent {

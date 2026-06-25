@@ -11,7 +11,9 @@ import '../../data/models/contact_unlock_model.dart';
 import '../../data/models/create_vacancy_request.dart';
 import '../../data/models/employer_application_model.dart';
 import '../../data/models/employer_vacancy_model.dart';
+import '../../data/models/pipeline_model.dart';
 import '../../data/models/saved_vacancy_model.dart';
+import '../../data/models/vacancy_candidates_model.dart';
 import '../../data/models/vacancy_model.dart';
 
 part 'vacancy_event.dart';
@@ -28,6 +30,7 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     on<UpdateVacancyEvent>(_onUpdateVacancy);
     on<DeleteVacancyEvent>(_onDeleteVacancy);
     on<LoadCandidatesEvent>(_onLoadCandidates);
+    on<LoadVacancyCandidatesEvent>(_onLoadVacancyCandidates);
     on<LoadMyApplicationsEvent>(_onLoadMyApplications);
     on<UpdateApplicationStatusEvent>(_onUpdateApplicationStatus);
     on<LoadSavedVacanciesEvent>(_onLoadSaved);
@@ -40,6 +43,10 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     on<UnlockContactEvent>(_onUnlockContact);
     on<LoadUnlockHistoryEvent>(_onLoadUnlockHistory);
     on<LoadCandidateDetailEvent>(_onLoadCandidateDetail);
+    on<LoadPipelineEvent>(_onLoadPipeline);
+    on<CreateAssignmentEvent>(_onCreateAssignment);
+    on<UpdateAssignmentEvent>(_onUpdateAssignment);
+    on<DeleteAssignmentEvent>(_onDeleteAssignment);
   }
 
   Future<void> _onLoadSeekerVacancies(LoadSeekerVacanciesEvent event, Emitter<VacancyState> emit) async {
@@ -104,6 +111,15 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     result.fold(
       (failure) => emit(state.copyWith(candidatesStatus: FormzSubmissionStatus.failure, error: failure)),
       (list) => emit(state.copyWith(candidatesStatus: FormzSubmissionStatus.success, candidates: list)),
+    );
+  }
+
+  Future<void> _onLoadVacancyCandidates(LoadVacancyCandidatesEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(vacancyCandidatesStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getVacancyCandidates(event.vacancyId);
+    result.fold(
+      (failure) => emit(state.copyWith(vacancyCandidatesStatus: FormzSubmissionStatus.failure, error: failure)),
+      (data) => emit(state.copyWith(vacancyCandidatesStatus: FormzSubmissionStatus.success, vacancyCandidates: data)),
     );
   }
 
@@ -251,6 +267,72 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
         ));
       },
     );
+  }
+
+  Future<void> _onLoadPipeline(LoadPipelineEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(pipelineStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getPipeline();
+    result.fold(
+      (failure) => emit(state.copyWith(pipelineStatus: FormzSubmissionStatus.failure, error: failure)),
+      (data) => emit(state.copyWith(pipelineStatus: FormzSubmissionStatus.success, pipeline: data)),
+    );
+  }
+
+  /// Biriktirish o'zgargach pipeline + tavsiyalarni qayta yuklaymiz (§7).
+  Future<void> _refreshAfterAssignment(Emitter<VacancyState> emit) async {
+    final pipeline = await dataSource.getPipeline();
+    pipeline.fold((_) {}, (data) => emit(state.copyWith(pipeline: data)));
+    final recommended = await dataSource.getRecommendedCandidates();
+    recommended.fold((_) {}, (list) => emit(state.copyWith(recommendedCandidates: list)));
+  }
+
+  Future<void> _onCreateAssignment(CreateAssignmentEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.createAssignment(
+      anketaId: event.anketaId,
+      employerRequirementId: event.requirementId,
+      status: event.status,
+      interviewDatetime: event.interviewDatetime,
+    );
+    await result.fold(
+      (failure) async => emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
+        emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.success));
+        await _refreshAfterAssignment(emit);
+      },
+    );
+    emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onUpdateAssignment(UpdateAssignmentEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.updateAssignment(
+      event.id,
+      status: event.status,
+      interviewDatetime: event.interviewDatetime,
+      comment: event.comment,
+    );
+    await result.fold(
+      (failure) async => emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
+        emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.success));
+        await _refreshAfterAssignment(emit);
+      },
+    );
+    emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onDeleteAssignment(DeleteAssignmentEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.deleteAssignment(event.id);
+    await result.fold(
+      (failure) async => emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
+        emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.success));
+        await _refreshAfterAssignment(emit);
+      },
+    );
+    emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.initial));
   }
 
   Future<void> _onUpdateEmployerAppStatus(UpdateEmployerApplicationStatusEvent event, Emitter<VacancyState> emit) async {

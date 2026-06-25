@@ -14,6 +14,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>far_ish_bor</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Suhbatga yo'lga chiqqaningizda lokatsiyangizni ish beruvchiga ulashish uchun.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

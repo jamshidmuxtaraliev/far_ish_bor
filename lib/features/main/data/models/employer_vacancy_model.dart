@@ -11,6 +11,9 @@ class EmployerVacancyModel {
   final String? comment;
   final String? createdAt;
   final int? applicationsCount;
+  // Vakansiya-markazli oqim uchun badge sonlar (§4.1)
+  final int mosCount;
+  final int recommendedCount;
 
   EmployerVacancyModel({
     required this.id,
@@ -25,6 +28,8 @@ class EmployerVacancyModel {
     this.comment,
     this.createdAt,
     this.applicationsCount,
+    this.mosCount = 0,
+    this.recommendedCount = 0,
   });
 
   factory EmployerVacancyModel.fromJson(Map<String, dynamic> json) {
@@ -32,7 +37,10 @@ class EmployerVacancyModel {
     return EmployerVacancyModel(
       id: json['id'] as int? ?? 0,
       jobTypeId: json['job_type_id'] as int?,
-      jobTypeName: jobType?['name_uz'] as String?,
+      // Backend tanlangan tilda { id, name } qaytaradi; eski name_uz ga fallback
+      jobTypeName: jobType?['name'] as String? ??
+          jobType?['name_uz'] as String? ??
+          jobType?['name_ru'] as String?,
       anketaCount: json['anketa_count'] as int?,
       salary: json['salary'] as int?,
       deadline: json['deadline'] as String?,
@@ -42,6 +50,8 @@ class EmployerVacancyModel {
       comment: json['comment'] as String?,
       createdAt: json['created_at'] as String?,
       applicationsCount: json['applications_count'] as int?,
+      mosCount: json['mos_count'] as int? ?? 0,
+      recommendedCount: json['recommended_count'] as int? ?? 0,
     );
   }
 

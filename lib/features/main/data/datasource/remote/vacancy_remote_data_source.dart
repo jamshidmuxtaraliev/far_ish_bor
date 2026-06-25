@@ -9,7 +9,9 @@ import '../../models/contact_unlock_model.dart';
 import '../../models/create_vacancy_request.dart';
 import '../../models/employer_application_model.dart';
 import '../../models/employer_vacancy_model.dart';
+import '../../models/pipeline_model.dart';
 import '../../models/saved_vacancy_model.dart';
+import '../../models/vacancy_candidates_model.dart';
 import '../../models/vacancy_model.dart';
 
 abstract class VacancyRemoteDataSource {
@@ -27,6 +29,7 @@ abstract class VacancyRemoteDataSource {
   Future<Either<ErrorModel, bool>> createOrUpdateVacancy(CreateVacancyRequest request);
   Future<Either<ErrorModel, bool>> deleteVacancy(int id);
   Future<Either<ErrorModel, List<CandidateModel>>> getCandidates();
+  Future<Either<ErrorModel, VacancyCandidatesModel>> getVacancyCandidates(int vacancyId);
   Future<Either<ErrorModel, List<EmployerApplicationModel>>> getEmployerApplications();
   Future<Either<ErrorModel, bool>> updateEmployerApplicationStatus(
     int applicationId,
@@ -43,6 +46,21 @@ abstract class VacancyRemoteDataSource {
   });
   Future<Either<ErrorModel, List<ContactUnlockHistoryModel>>> getUnlockHistory();
   Future<Either<ErrorModel, CandidateModel>> getCandidateDetail(int id);
+  // Mos nomzodlar pipeline (Kanban) + bosqich biriktirishlari (§4.1–4.4)
+  Future<Either<ErrorModel, PipelineModel>> getPipeline();
+  Future<Either<ErrorModel, bool>> createAssignment({
+    required int anketaId,
+    required int employerRequirementId,
+    String status,
+    String? interviewDatetime,
+  });
+  Future<Either<ErrorModel, bool>> updateAssignment(
+    int id, {
+    String? status,
+    String? interviewDatetime,
+    String? comment,
+  });
+  Future<Either<ErrorModel, bool>> deleteAssignment(int id);
 }
 
 class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
@@ -100,6 +118,14 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
     return dioClient.dio.wrapResponse<List<CandidateModel>>(
       () => dioClient.dio.get('mobile/employer/candidates'),
       (json) => (json as List).map((e) => CandidateModel.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, VacancyCandidatesModel>> getVacancyCandidates(int vacancyId) {
+    return dioClient.dio.wrapResponse<VacancyCandidatesModel>(
+      () => dioClient.dio.get('mobile/employer/vacancies/$vacancyId/candidates'),
+      (json) => VacancyCandidatesModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
@@ -210,6 +236,58 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
     return dioClient.dio.wrapResponse<CandidateModel>(
       () => dioClient.dio.get('mobile/employer/candidates/$id'),
       (json) => CandidateModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, PipelineModel>> getPipeline() {
+    return dioClient.dio.wrapResponse<PipelineModel>(
+      () => dioClient.dio.get('mobile/employer/pipeline'),
+      (json) => PipelineModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> createAssignment({
+    required int anketaId,
+    required int employerRequirementId,
+    String status = 'suhbatga_yozildi',
+    String? interviewDatetime,
+  }) {
+    final data = <String, dynamic>{
+      'anketa_id': anketaId,
+      'employer_requirement_id': employerRequirementId,
+      'status': status,
+    };
+    if (interviewDatetime != null) data['interview_datetime'] = interviewDatetime;
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.post('mobile/employer/assignments', data: data),
+      (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> updateAssignment(
+    int id, {
+    String? status,
+    String? interviewDatetime,
+    String? comment,
+  }) {
+    final data = <String, dynamic>{};
+    if (status != null) data['status'] = status;
+    if (interviewDatetime != null) data['interview_datetime'] = interviewDatetime;
+    if (comment != null) data['comment'] = comment;
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.patch('mobile/employer/assignments/$id', data: data),
+      (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> deleteAssignment(int id) {
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.delete('mobile/employer/assignments/$id'),
+      (_) => true,
     );
   }
 }

@@ -1,3 +1,5 @@
+import '../../../../core/constants/constants.dart';
+
 class CandidateProfessionModel {
   final int jobTypeId;
   final String name;
@@ -138,6 +140,10 @@ class CandidateModel {
   final bool isUnlocked;
   final String? phoneRaw;
   final String? additionalContact;
+  // Detail endpoint gating (B varianti): full resume hidden until unlocked.
+  // locked=true → only teaser fields returned; `fee` = one-time unlock price.
+  final bool locked;
+  final int? fee;
   // Recommended endpoint extras
   final bool recommended;
   final CandidateAssignmentModel? assignment;
@@ -178,6 +184,8 @@ class CandidateModel {
     this.isUnlocked = false,
     this.phoneRaw,
     this.additionalContact,
+    this.locked = false,
+    this.fee,
     this.recommended = false,
     this.assignment,
     this.vacancy,
@@ -252,6 +260,8 @@ class CandidateModel {
       isUnlocked: json['is_unlocked'] as bool? ?? false,
       phoneRaw: json['phone'] as String? ?? json['phone_number'] as String?,
       additionalContact: json['additional_contact'] as String?,
+      locked: json['locked'] as bool? ?? false,
+      fee: json['fee'] as int?,
       recommended: json['recommended'] as bool? ?? false,
       assignment: assignJson != null
           ? CandidateAssignmentModel.fromJson(assignJson)
@@ -284,6 +294,15 @@ class CandidateModel {
     return rawExperienceYear;
   }
 
+  /// Rasm to'liq URL'i (PROMPT §6): `http` bilan boshlansa o'zini, aks holda
+  /// nisbiy yo'l `{DOMAIN}/uploads/{photo}` ko'rinishida.
+  String? get photoUrl {
+    final p = photo;
+    if (p == null || p.isEmpty) return null;
+    if (p.startsWith('http')) return p;
+    return '$DOMAIN/uploads/$p';
+  }
+
   String get initials {
     if (fullname == null || fullname!.isEmpty) return '?';
     final parts = fullname!.trim().split(' ');
@@ -291,10 +310,14 @@ class CandidateModel {
     return parts[0][0].toUpperCase();
   }
 
-  String? get maskedPhone {
-    final p = phoneRaw;
-    if (p == null || p.length < 6) return p;
-    return '${p.substring(0, p.length - 4)}****';
+  /// Maskalangan telefon (PROMPT §3.4): `phone` yo'q → `+998 XX XXX-XX-XX`;
+  /// bor → faqat operator kodi + oxirgi 2 raqam: `+998 90 XXX-XX-67`.
+  String get maskedPhone {
+    final digits = (phoneRaw ?? '').replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 9) return '+998 XX XXX-XX-XX';
+    final op = digits.substring(digits.length - 9, digits.length - 7);
+    final last2 = digits.substring(digits.length - 2);
+    return '+998 $op XXX-XX-$last2';
   }
 
   String get salaryDisplay {

@@ -4,6 +4,8 @@ part of 'vacancy_bloc.dart';
 class VacancyState extends Equatable {
   final FormzSubmissionStatus vacanciesStatus;
   final FormzSubmissionStatus candidatesStatus;
+  final FormzSubmissionStatus vacancyCandidatesStatus;
+  final VacancyCandidatesModel? vacancyCandidates;
   final FormzSubmissionStatus applyStatus;
   final FormzSubmissionStatus manageVacancyStatus;
   final FormzSubmissionStatus applicationsStatus;
@@ -33,11 +35,19 @@ class VacancyState extends Equatable {
   final CandidateModel? candidateDetail;
   final FormzSubmissionStatus candidateDetailStatus;
 
+  // Mos nomzodlar pipeline (Kanban)
+  final PipelineModel? pipeline;
+  final FormzSubmissionStatus pipelineStatus;
+  // create/update/delete biriktirish — bitta umumiy holat (one-shot)
+  final FormzSubmissionStatus assignmentActionStatus;
+
   final ErrorModel? error;
 
   const VacancyState({
     this.vacanciesStatus = FormzSubmissionStatus.initial,
     this.candidatesStatus = FormzSubmissionStatus.initial,
+    this.vacancyCandidatesStatus = FormzSubmissionStatus.initial,
+    this.vacancyCandidates,
     this.applyStatus = FormzSubmissionStatus.initial,
     this.manageVacancyStatus = FormzSubmissionStatus.initial,
     this.applicationsStatus = FormzSubmissionStatus.initial,
@@ -63,12 +73,17 @@ class VacancyState extends Equatable {
     this.unlockedPhones = const {},
     this.candidateDetail,
     this.candidateDetailStatus = FormzSubmissionStatus.initial,
+    this.pipeline,
+    this.pipelineStatus = FormzSubmissionStatus.initial,
+    this.assignmentActionStatus = FormzSubmissionStatus.initial,
     this.error,
   });
 
   VacancyState copyWith({
     FormzSubmissionStatus? vacanciesStatus,
     FormzSubmissionStatus? candidatesStatus,
+    FormzSubmissionStatus? vacancyCandidatesStatus,
+    VacancyCandidatesModel? vacancyCandidates,
     FormzSubmissionStatus? applyStatus,
     FormzSubmissionStatus? manageVacancyStatus,
     FormzSubmissionStatus? applicationsStatus,
@@ -94,11 +109,16 @@ class VacancyState extends Equatable {
     Map<int, String>? unlockedPhones,
     CandidateModel? candidateDetail,
     FormzSubmissionStatus? candidateDetailStatus,
+    PipelineModel? pipeline,
+    FormzSubmissionStatus? pipelineStatus,
+    FormzSubmissionStatus? assignmentActionStatus,
     ErrorModel? error,
   }) {
     return VacancyState(
       vacanciesStatus: vacanciesStatus ?? this.vacanciesStatus,
       candidatesStatus: candidatesStatus ?? this.candidatesStatus,
+      vacancyCandidatesStatus: vacancyCandidatesStatus ?? this.vacancyCandidatesStatus,
+      vacancyCandidates: vacancyCandidates ?? this.vacancyCandidates,
       applyStatus: applyStatus ?? this.applyStatus,
       manageVacancyStatus: manageVacancyStatus ?? this.manageVacancyStatus,
       applicationsStatus: applicationsStatus ?? this.applicationsStatus,
@@ -125,13 +145,18 @@ class VacancyState extends Equatable {
       candidateDetail: candidateDetail ?? this.candidateDetail,
       candidateDetailStatus:
           candidateDetailStatus ?? this.candidateDetailStatus,
+      pipeline: pipeline ?? this.pipeline,
+      pipelineStatus: pipelineStatus ?? this.pipelineStatus,
+      assignmentActionStatus:
+          assignmentActionStatus ?? this.assignmentActionStatus,
       error: error ?? this.error,
     );
   }
 
   @override
   List<Object?> get props => [
-        vacanciesStatus, candidatesStatus, applyStatus, manageVacancyStatus,
+        vacanciesStatus, candidatesStatus, vacancyCandidatesStatus, vacancyCandidates,
+        applyStatus, manageVacancyStatus,
         applicationsStatus, updateAppStatus, savedStatus, employerAppsStatus, updateEmpAppStatus,
         seekerVacancies, employerVacancies, candidates, myApplications,
         savedVacancies, employerApplications,
@@ -141,6 +166,7 @@ class VacancyState extends Equatable {
         unlockHistory, unlockHistoryStatus, unlockedAnketaIds,
         unlockedPhones,
         candidateDetail, candidateDetailStatus,
+        pipeline, pipelineStatus, assignmentActionStatus,
         error,
       ];
 }

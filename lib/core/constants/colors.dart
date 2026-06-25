@@ -37,3 +37,10 @@ const Color DARK_NAVY = Color(0xFF0F172A);
 const Color LIGHT_GRAY_BG = Color(0xFFF3F4F6);
 const Color GRAY_TEXT = Color(0xFF6B7280);
 const Color GREEN_COLOR = Color(0xFF22C55E);
+
+// Nomzodlar — tavsiya aksenti (binafsha, light rejim).
+const Color VIOLET = Color(0xFF6D28D9); // violet-700 (matn/badge)
+const Color CARD_BORDER = Color(0xFFE5E7EB);
+
+// Suhbatlar — yo'l holati aksenti (amber = "Yo'lda").
+const Color AMBER_COLOR = Color(0xFFF59E0B);

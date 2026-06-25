@@ -10,7 +10,9 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../core/constants/colors.dart';
 import '../logic/vacancy_bloc.dart';
 import '../widgets/vacancy_job_card.dart';
+import 'employer_interviews_screen.dart';
 import 'my_applications_screen.dart';
+import 'seeker_interviews_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isEmployer;
@@ -134,6 +136,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
+                  _InterviewsCard(
+                    onTap: () => startScreen(
+                      context,
+                      screen: widget.isEmployer
+                          ? const EmployerInterviewsScreen()
+                          : const SeekerInterviewsScreen(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   if (!widget.isEmployer) ...[
                     _SectionTitle(title: "Tavsiya etilgan ishlar"),
                     const SizedBox(height: 12),
@@ -160,6 +171,49 @@ class _HomeScreenState extends State<HomeScreen> {
                 ]),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InterviewsCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _InterviewsCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: PRIMARY_BLUE.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.event_available_outlined, color: PRIMARY_BLUE, size: 22),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Suhbatlar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+                  SizedBox(height: 2),
+                  Text('Suhbat belgilangan nomzodlar', style: TextStyle(fontSize: 12, color: GRAY_TEXT)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: GRAY_TEXT),
           ],
         ),
       ),
