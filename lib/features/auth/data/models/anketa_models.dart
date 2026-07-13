@@ -1,3 +1,5 @@
+import '../../../../core/constants/constants.dart';
+
 class RegionModel {
   final int id;
   final String name;
@@ -52,6 +54,7 @@ class LanguageModel {
 
 class AnketaModel {
   final String? fullname;
+  final String? photo;
   final String? gender;
   final String? birthday;
   final int? jobTypeId;
@@ -78,6 +81,7 @@ class AnketaModel {
 
   const AnketaModel({
     this.fullname,
+    this.photo,
     this.gender,
     this.birthday,
     this.jobTypeId,
@@ -105,6 +109,7 @@ class AnketaModel {
 
   factory AnketaModel.fromJson(Map<String, dynamic> json) => AnketaModel(
         fullname: json['fullname'] as String?,
+        photo: json['photo'] as String?,
         gender: json['gender'] as String?,
         birthday: json['birthday'] as String?,
         jobTypeId: json['job_type_id'] as int?,
@@ -154,5 +159,12 @@ class AnketaModel {
     if (additionalContact != null) map['additional_contact'] = additionalContact;
     if (address != null) map['address'] = address;
     return map;
+  }
+
+  String? get photoUrl {
+    final p = photo;
+    if (p == null || p.isEmpty) return null;
+    if (p.startsWith('http')) return p;
+    return '$BASE_IMAGE_URL$p';
   }
 }

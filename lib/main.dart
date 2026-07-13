@@ -16,6 +16,7 @@ import 'features/auth/presentation/logic/auth_bloc.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
 import 'features/billing/presentation/logic/billing_bloc.dart';
 import 'features/chat/presentation/logic/chat_bloc.dart';
+import 'features/faq/presentation/logic/faq_bloc.dart';
 import 'features/main/presentation/logic/interview_bloc.dart';
 import 'features/main/presentation/logic/vacancy_bloc.dart';
 import 'features/notifications/presentation/logic/notification_bloc.dart';
@@ -53,6 +54,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<BillingBloc>.value(value: getIt<BillingBloc>()),
         BlocProvider<ChatBloc>.value(value: getIt<ChatBloc>()),
         BlocProvider<NotificationBloc>.value(value: getIt<NotificationBloc>()),
+        BlocProvider<FaqBloc>.value(value: getIt<FaqBloc>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
         builder:

@@ -5,6 +5,7 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
+import '../../../../core/utils/utils.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
@@ -13,6 +14,7 @@ import '../../../auth/presentation/screens/language_screen.dart';
 import '../../../billing/presentation/screens/premium_screen.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
+import '../../../faq/presentation/screens/faq_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import 'edit_employer_screen.dart';
 import 'my_applications_screen.dart';
@@ -31,7 +33,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthBloc>().add(GetMeEvent());
+    final bloc = context.read<AuthBloc>();
+    bloc.add(GetMeEvent());
+    if (widget.isEmployer) {
+      bloc.add(LoadEmployerEvent());
+    } else {
+      bloc.add(LoadAnketaEvent());
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picked = await pickImageWithSourceSheet(context);
+    if (picked == null) return;
+    if (!mounted) return;
+    if (widget.isEmployer) {
+      context.read<AuthBloc>().add(UploadLogoEvent(picked.path));
+    } else {
+      context.read<AuthBloc>().add(UploadPhotoEvent(picked.path));
+    }
   }
 
   void _logout() {
@@ -98,17 +117,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, state) {
             final user = state.user;
             final isLoading = state.getMeStatus.isInProgress && user == null;
+            final avatarUrl =
+                widget.isEmployer
+                    ? state.employer?.logoUrl
+                    : state.anketa?.photoUrl;
+            final isAvatarUploading =
+                widget.isEmployer
+                    ? state.uploadLogoStatus.isInProgress
+                    : state.uploadPhotoStatus.isInProgress;
+            final showPhotoBanner =
+                !widget.isEmployer &&
+                state.anketa != null &&
+                state.anketa!.photo == null;
             return CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
-                  child: _buildHeader(context, user, isLoading),
+                  child: _buildHeader(
+                    context,
+                    user,
+                    isLoading,
+                    avatarUrl,
+                    isAvatarUploading,
+                  ),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       const SizedBox(height: 16),
-                      if (!widget.isEmployer && user != null) ...[
+                      if (showPhotoBanner) ...[
+                        _buildPhotoBanner(),
+                        const SizedBox(height: 16),
+                      ],
+                      if (!widget.isEmployer &&
+                          user != null &&
+                          (user.jobTypeName != null ||
+                              user.workStatus != null)) ...[
                         _buildInfoSection(user),
                         const SizedBox(height: 16),
                       ],
@@ -127,7 +171,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, UserModel? user, bool isLoading) {
+  Widget _buildHeader(
+    BuildContext context,
+    UserModel? user,
+    bool isLoading,
+    String? avatarUrl,
+    bool isAvatarUploading,
+  ) {
     final displayName =
         user?.displayName ??
         (widget.isEmployer ? 'Kompaniya' : 'Foydalanuvchi');
@@ -179,40 +229,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           // Avatar
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [PRIMARY_BLUE, SECONDARY_BLUE],
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: PRIMARY_BLUE.withValues(alpha: 0.35),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [PRIMARY_BLUE, SECONDARY_BLUE],
+                  ),
+                  shape: BoxShape.circle,
+                  image:
+                      avatarUrl != null
+                          ? DecorationImage(
+                            image: NetworkImage(avatarUrl),
+                            fit: BoxFit.cover,
+                          )
+                          : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: PRIMARY_BLUE.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child:
-                isLoading
-                    ? const Center(
+                child:
+                    isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : avatarUrl != null
+                        ? null
+                        : Center(
+                          child: Text(
+                            user?.initials ?? '?',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+              ),
+              if (isAvatarUploading)
+                Positioned.fill(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black38,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
                       child: CircularProgressIndicator(
                         color: Colors.white,
                         strokeWidth: 2,
                       ),
-                    )
-                    : Center(
-                      child: Text(
-                        user?.initials ?? '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                  ),
+                )
+              else
+                GestureDetector(
+                  onTap: _pickAndUploadAvatar,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: PRIMARY_BLUE,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF0F172A),
+                        width: 2,
                       ),
                     ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 14),
           Row(
@@ -257,14 +357,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 : 'Ish qidiruvchi • $subtitle',
             style: const TextStyle(color: Colors.white60, fontSize: 13),
           ),
-          if (user?.phone != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              user!.phone!,
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
-            ),
+          if (!widget.isEmployer && user != null) ...[
+            const SizedBox(height: 12),
+            _buildHeaderStats(user),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderStats(UserModel user) {
+    final chips = <Widget>[
+      if (user.phone != null)
+        _HeaderStatChip(icon: Icons.phone_outlined, value: user.phone!),
+      _HeaderStatChip(
+        icon: Icons.history_outlined,
+        value:
+            user.experienceYear != null
+                ? '${user.experienceYear} yil staj'
+                : "Staj ko'rsatilmagan",
+      ),
+      if (user.expectedSalary != null)
+        _HeaderStatChip(
+          icon: Icons.attach_money,
+          value: _formatSalary(user.expectedSalary!),
+        ),
+    ];
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: chips,
+    );
+  }
+
+  Widget _buildPhotoBanner() {
+    return GestureDetector(
+      onTap: _pickAndUploadAvatar,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFDE68A)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.add_a_photo_outlined,
+              color: Color(0xFFD97706),
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Profilingizga rasm yuklang',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF92400E),
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Color(0xFFD97706),
+              size: 18,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -285,40 +446,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          if (user.phone != null) ...[
-            _InfoRow(
-              icon: Icons.phone_outlined,
-              label: 'Telefon',
-              value: user.phone!,
-            ),
-            const Divider(height: 20, color: Color(0xFFF3F4F6)),
-          ],
           if (user.jobTypeName != null) ...[
             _InfoRow(
               icon: Icons.work_outline,
               label: 'Kasb',
               value: user.jobTypeName!,
             ),
-            const Divider(height: 20, color: Color(0xFFF3F4F6)),
-          ],
-          _InfoRow(
-            icon: Icons.history_outlined,
-            label: 'Tajriba',
-            value:
-                user.experienceYear != null
-                    ? '${user.experienceYear} yil'
-                    : "Ko'rsatilmagan",
-          ),
-          if (user.expectedSalary != null) ...[
-            const Divider(height: 20, color: Color(0xFFF3F4F6)),
-            _InfoRow(
-              icon: Icons.attach_money,
-              label: 'Kutilayotgan maosh',
-              value: _formatSalary(user.expectedSalary!),
-            ),
           ],
           if (user.workStatus != null) ...[
-            const Divider(height: 20, color: Color(0xFFF3F4F6)),
+            if (user.jobTypeName != null)
+              const Divider(height: 20, color: Color(0xFFF3F4F6)),
             _InfoRow(
               icon: Icons.circle_outlined,
               label: 'Holati',
@@ -362,15 +499,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               MaterialPageRoute(builder: (_) => const MyApplicationsScreen()),
             ),
       ),
-      _MenuItem(
-        icon: Icons.workspace_premium_outlined,
-        label: 'Premium',
-        color: const Color(0xFFD97706),
-        onTap:
-            () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const PremiumScreen())),
-      ),
+      // _MenuItem(
+      //   icon: Icons.workspace_premium_outlined,
+      //   label: 'Premium',
+      //   color: const Color(0xFFD97706),
+      //   onTap:
+      //       () => Navigator.of(
+      //         context,
+      //       ).push(MaterialPageRoute(builder: (_) => const PremiumScreen())),
+      // ),
     ];
 
     final List<_MenuItem> employerItems = [
@@ -393,6 +530,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         label: 'Nomzodlarni kuzatish',
         color: const Color(0xFF7C3AED),
         onTap: () {},
+      ),
+      _MenuItem(
+        icon: Icons.workspace_premium_outlined,
+        label: 'Premium',
+        color: const Color(0xFFD97706),
+        onTap:
+            () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const PremiumScreen())),
       ),
     ];
 
@@ -430,7 +576,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icons.help_outline,
         label: 'Yordam',
         color: GRAY_TEXT,
-        onTap: () {},
+        onTap:
+            () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => FaqScreen(isEmployer: widget.isEmployer),
+              ),
+            ),
       ),
     ];
 
@@ -517,6 +668,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HeaderStatChip extends StatelessWidget {
+  final IconData icon;
+  final String value;
+
+  const _HeaderStatChip({required this.icon, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white70, size: 13),
+          const SizedBox(width: 5),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

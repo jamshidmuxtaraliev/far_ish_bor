@@ -60,4 +60,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<ErrorModel, String>> uploadLogo(String filePath) =>
       remoteDataSource.uploadLogo(filePath);
+
+  @override
+  Future<Either<ErrorModel, String>> uploadPhoto(String filePath) =>
+      remoteDataSource.uploadPhoto(filePath);
 }

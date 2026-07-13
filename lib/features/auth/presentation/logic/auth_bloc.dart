@@ -30,6 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoadEmployerEvent>(_onLoadEmployer);
     on<UpdateEmployerEvent>(_onUpdateEmployer);
     on<UploadLogoEvent>(_onUploadLogo);
+    on<UploadPhotoEvent>(_onUploadPhoto);
   }
 
   Future<void> _onSendCode(SendCodeEvent event, Emitter<AuthState> emit) async {
@@ -93,8 +94,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onUpdateAnketa(UpdateAnketaEvent event, Emitter<AuthState> emit) async {
     emit(state.copyWith(updateAnketaStatus: FormzSubmissionStatus.inProgress));
     final result = await repository.updateAnketa(event.data);
-    result.fold(
-      (failure) => emit(state.copyWith(updateAnketaStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(updateAnketaStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(updateAnketaStatus: FormzSubmissionStatus.success));
         final refresh = await repository.getAnketa();
@@ -151,8 +152,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onUploadLogo(UploadLogoEvent event, Emitter<AuthState> emit) async {
     emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.inProgress));
     final result = await repository.uploadLogo(event.filePath);
-    result.fold(
-      (failure) => emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.success));
         final refresh = await repository.getEmployer();
@@ -162,11 +163,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(uploadLogoStatus: FormzSubmissionStatus.initial));
   }
 
+  Future<void> _onUploadPhoto(UploadPhotoEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(uploadPhotoStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.uploadPhoto(event.filePath);
+    await result.fold(
+      (failure) async => emit(state.copyWith(uploadPhotoStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
+        emit(state.copyWith(uploadPhotoStatus: FormzSubmissionStatus.success));
+        final refresh = await repository.getAnketa();
+        refresh.fold((_) {}, (anketa) => emit(state.copyWith(anketa: anketa)));
+      },
+    );
+    emit(state.copyWith(uploadPhotoStatus: FormzSubmissionStatus.initial));
+  }
+
   Future<void> _onUpdateEmployer(UpdateEmployerEvent event, Emitter<AuthState> emit) async {
     emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.inProgress));
     final result = await repository.updateEmployer(event.data);
-    result.fold(
-      (failure) => emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.failure, error: failure)),
       (employer) async {
         emit(state.copyWith(updateEmployerStatus: FormzSubmissionStatus.success, employer: employer));
         final meRefresh = await repository.getMe();

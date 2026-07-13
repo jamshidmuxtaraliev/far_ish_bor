@@ -1,3 +1,4 @@
+import '../../../../core/constants/constants.dart';
 import 'anketa_models.dart';
 
 class CoverageRegionModel {
@@ -114,4 +115,11 @@ class EmployerModel {
             .map((e) => CoverageRegionModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
+
+  String? get logoUrl {
+    final l = logo;
+    if (l == null || l.isEmpty) return null;
+    if (l.startsWith('http')) return l;
+    return '$BASE_IMAGE_URL$l';
+  }
 }

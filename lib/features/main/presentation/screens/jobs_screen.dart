@@ -5,7 +5,9 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../data/models/employer_vacancy_model.dart';
+import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
+import '../widgets/job_map_view.dart';
 import '../widgets/vacancy_job_card.dart';
 import 'create_vacancy_screen.dart';
 import 'job_detail_screen.dart';
@@ -52,6 +54,18 @@ class _SeekerJobsView extends StatefulWidget {
 class _SeekerJobsViewState extends State<_SeekerJobsView> {
   final _searchCtrl = TextEditingController();
   String _query = '';
+  bool _showMap = false;
+
+  void _openJob(BuildContext context, VacancyModel vacancy) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: context.read<VacancyBloc>(),
+          child: JobDetailScreen(vacancy: vacancy),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -150,7 +164,7 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                           return name.contains(_query) || company.contains(_query);
                         }).toList();
 
-                  return Column(
+                  final listContent = Column(
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
@@ -178,22 +192,40 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                                 color: PRIMARY_BLUE,
                                 onRefresh: () async => widget.onRefresh(),
                                 child: ListView.separated(
-                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
                                   itemCount: vacancies.length,
                                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                                   itemBuilder: (context, index) => VacancyJobCard(
                                     vacancy: vacancies[index],
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => BlocProvider.value(
-                                          value: context.read<VacancyBloc>(),
-                                          child: JobDetailScreen(vacancy: vacancies[index]),
-                                        ),
-                                      ),
-                                    ),
+                                    onTap: () => _openJob(context, vacancies[index]),
                                   ),
                                 ),
                               ),
+                      ),
+                    ],
+                  );
+
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: _showMap
+                            ? JobMapView(
+                                vacancies: vacancies,
+                                onOpenJob: (v) => _openJob(context, v),
+                              )
+                            : listContent,
+                      ),
+                      // Ro'yxat ⇄ Xarita almashtirish tugmasi (screenshotdagidek)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 16,
+                        child: Center(
+                          child: _MapListToggle(
+                            showingMap: _showMap,
+                            onTap: () => setState(() => _showMap = !_showMap),
+                          ),
+                        ),
                       ),
                     ],
                   );
@@ -539,6 +571,41 @@ class _InfoRow extends StatelessWidget {
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
+
+/// Ro'yxat va xarita ko'rinishlari orasida almashtiruvchi suzuvchi tugma.
+class _MapListToggle extends StatelessWidget {
+  final bool showingMap;
+  final VoidCallback onTap;
+  const _MapListToggle({required this.showingMap, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      elevation: 6,
+      shadowColor: Colors.black.withValues(alpha: 0.25),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(showingMap ? Icons.format_list_bulleted_rounded : Icons.map_outlined, size: 20, color: DARK_NAVY),
+              const SizedBox(width: 8),
+              Text(
+                showingMap ? "Ro'yxat" : 'Xarita',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: DARK_NAVY),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _EmptyView extends StatelessWidget {
   final String message;

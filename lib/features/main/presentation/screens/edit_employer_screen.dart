@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/colors.dart';
-import '../../../../core/constants/constants.dart';
+import '../../../../core/utils/utils.dart';
 import '../../../auth/data/models/anketa_models.dart';
 import '../../../auth/data/models/employer_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
@@ -297,7 +296,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLogoSection(
-                              employer?.logo,
+                              employer?.logoUrl,
                               isLogoUploading,
                             ),
                             const SizedBox(height: 16),
@@ -484,9 +483,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     );
   }
 
-  Widget _buildLogoSection(String? logoPath, bool isUploading) {
-    final logoUrl = logoPath != null ? '$DOMAIN/$logoPath' : null;
-
+  Widget _buildLogoSection(String? logoUrl, bool isUploading) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -588,12 +585,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   }
 
   Future<void> _pickAndUploadLogo() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 800,
-    );
+    final picked = await pickImageWithSourceSheet(context);
     if (picked == null) return;
     if (!mounted) return;
     context.read<AuthBloc>().add(UploadLogoEvent(picked.path));

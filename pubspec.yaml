@@ -51,6 +51,7 @@ dependencies:
   iconsax:
   mask_text_input_formatter: ^2.4.0
   infinite_scroll_pagination:
+  flutter_html: ^3.0.0-beta.2
 
   # Audio & Video
   just_audio:
@@ -67,6 +68,7 @@ dependencies:
   google_maps_flutter: ^2.9.0
 
   cupertino_icons: ^1.0.8
+  yandex_mapkit: ^4.2.1
 
 dev_dependencies:
   flutter_test:

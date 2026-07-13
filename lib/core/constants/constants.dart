@@ -1,5 +1,6 @@
 const String DOMAIN = 'https://api.jobup24.uz';
 const String BASE_URL = "$DOMAIN/api/v1/";
+const String BASE_IMAGE_URL = "$DOMAIN/api/v1/uploads/";
 
 const String UZ_LANG_KEY = "uz";
 const String RU_LANG_KEY = "ru";

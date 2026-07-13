@@ -19,4 +19,5 @@ abstract class AuthRepository {
   Future<Either<ErrorModel, EmployerModel>> getEmployer();
   Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data);
   Future<Either<ErrorModel, String>> uploadLogo(String filePath);
+  Future<Either<ErrorModel, String>> uploadPhoto(String filePath);
 }

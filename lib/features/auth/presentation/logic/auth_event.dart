@@ -48,3 +48,8 @@ class UploadLogoEvent extends AuthEvent {
   final String filePath;
   UploadLogoEvent(this.filePath);
 }
+
+class UploadPhotoEvent extends AuthEvent {
+  final String filePath;
+  UploadPhotoEvent(this.filePath);
+}

@@ -330,6 +330,39 @@ Future<void> launchInBrowser(String url) async {
   }
 }
 
+/// Kamera/Galereya tanlash bottom-sheeti. Rasm tanlangach `XFile` qaytaradi,
+/// bekor qilinsa `null`.
+Future<XFile?> pickImageWithSourceSheet(BuildContext context) async {
+  final source = await showModalBottomSheet<ImageSource>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined, color: PRIMARY_BLUE),
+            title: const Text('Kamera'),
+            onTap: () => Navigator.pop(ctx, ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined, color: PRIMARY_BLUE),
+            title: const Text('Galereya'),
+            onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+  if (source == null) return null;
+  return ImagePicker().pickImage(source: source, imageQuality: 85, maxWidth: 1080);
+}
+
 Future<void> checkCameraPermissionAndStartScanner(BuildContext context, Function func) async {
   var status = await Permission.camera.status;
 

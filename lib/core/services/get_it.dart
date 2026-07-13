@@ -9,6 +9,8 @@ import 'package:far_ish_bor/features/billing/data/datasource/remote/billing_remo
 import 'package:far_ish_bor/features/billing/presentation/logic/billing_bloc.dart';
 import 'package:far_ish_bor/features/chat/data/datasource/chat_realtime_datasource.dart';
 import 'package:far_ish_bor/features/chat/presentation/logic/chat_bloc.dart';
+import 'package:far_ish_bor/features/faq/data/datasource/remote/faq_remote_data_source.dart';
+import 'package:far_ish_bor/features/faq/presentation/logic/faq_bloc.dart';
 import 'package:far_ish_bor/features/notifications/data/datasource/remote/notification_remote_data_source.dart';
 import 'package:far_ish_bor/features/notifications/presentation/logic/notification_bloc.dart';
 import 'package:far_ish_bor/features/main/data/datasource/interview_realtime_datasource.dart';
@@ -68,5 +70,9 @@ Future<void> setupDI({required Alice alice}) async {
     ..registerLazySingleton<NotificationRemoteDataSource>(
       () => NotificationRemoteDataSourceImpl(getIt()),
     )
-    ..registerLazySingleton<NotificationBloc>(() => NotificationBloc(getIt()));
+    ..registerLazySingleton<NotificationBloc>(() => NotificationBloc(getIt()))
+    ..registerLazySingleton<FaqRemoteDataSource>(
+      () => FaqRemoteDataSourceImpl(getIt()),
+    )
+    ..registerLazySingleton<FaqBloc>(() => FaqBloc(getIt()));
 }

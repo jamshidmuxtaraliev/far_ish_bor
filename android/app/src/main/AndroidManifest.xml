@@ -6,8 +6,9 @@
 
     <application
         android:label="far_ish_bor"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:name=".MainApplication"
+        android:icon="@mipmap/ic_launcher"
+        android:extractNativeLibs="false">
         <!-- Google Maps API kaliti — o'zingizning kalitingizni qo'ying.
              https://console.cloud.google.com → Maps SDK for Android -->
         <meta-data

@@ -41,6 +41,8 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
   final _bdDay = TextEditingController();
   final _bdMonth = TextEditingController();
   final _bdYear = TextEditingController();
+  final _bdMonthFocus = FocusNode();
+  final _bdYearFocus = FocusNode();
   // Step 5 – region / district / address
   RegionModel? _region;
   DistrictModel? _district;
@@ -91,6 +93,8 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
     _bdDay.dispose();
     _bdMonth.dispose();
     _bdYear.dispose();
+    _bdMonthFocus.dispose();
+    _bdYearFocus.dispose();
     _address.dispose();
     _jobSearch.dispose();
     _salary.dispose();
@@ -268,7 +272,7 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
                         isUz: isUz,
                         onGender: (v) => setState(() => _gender = v),
                       ),
-                      _StepBirthday(day: _bdDay, month: _bdMonth, year: _bdYear, isUz: isUz),
+                      _StepBirthday(day: _bdDay, month: _bdMonth, year: _bdYear, monthFocus: _bdMonthFocus, yearFocus: _bdYearFocus, isUz: isUz),
                       _StepLocation(
                         selectedRegion: _region,
                         selectedDistrict: _district,
@@ -536,8 +540,9 @@ class _GenderBtn extends StatelessWidget {
 
 class _StepBirthday extends StatelessWidget {
   final TextEditingController day, month, year;
+  final FocusNode monthFocus, yearFocus;
   final bool isUz;
-  const _StepBirthday({required this.day, required this.month, required this.year, required this.isUz});
+  const _StepBirthday({required this.day, required this.month, required this.year, required this.monthFocus, required this.yearFocus, required this.isUz});
 
   @override
   Widget build(BuildContext context) {
@@ -547,11 +552,49 @@ class _StepBirthday extends StatelessWidget {
       subtitle: isUz ? 'Yosh 18 dan 65 gacha bo\'lishi kerak' : 'Возраст от 18 до 65 лет',
       child: Row(
         children: [
-          Expanded(flex: 2, child: _Field(ctrl: day, hint: 'KK', keyboardType: TextInputType.number, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+          Expanded(
+            flex: 2,
+            child: _Field(
+              ctrl: day,
+              hint: 'KK',
+              keyboardType: TextInputType.number,
+              maxLength: 2,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (v) {
+                if (v.length == 2) FocusScope.of(context).requestFocus(monthFocus);
+              },
+            ),
+          ),
           const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 22, color: GRAY_TEXT))),
-          Expanded(flex: 2, child: _Field(ctrl: month, hint: 'OO', keyboardType: TextInputType.number, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+          Expanded(
+            flex: 2,
+            child: _Field(
+              ctrl: month,
+              hint: 'OO',
+              keyboardType: TextInputType.number,
+              maxLength: 2,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              focusNode: monthFocus,
+              onChanged: (v) {
+                if (v.length == 2) FocusScope.of(context).requestFocus(yearFocus);
+              },
+            ),
+          ),
           const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 22, color: GRAY_TEXT))),
-          Expanded(flex: 3, child: _Field(ctrl: year, hint: 'YYYY', keyboardType: TextInputType.number, maxLength: 4, inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+          Expanded(
+            flex: 3,
+            child: _Field(
+              ctrl: year,
+              hint: 'YYYY',
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              focusNode: yearFocus,
+              onChanged: (v) {
+                if (v.length == 4) FocusScope.of(context).unfocus();
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -1105,6 +1148,7 @@ class _Field extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final String? suffix;
   final ValueChanged<String>? onChanged;
+  final FocusNode? focusNode;
 
   const _Field({
     required this.ctrl,
@@ -1115,12 +1159,14 @@ class _Field extends StatelessWidget {
     this.inputFormatters,
     this.suffix,
     this.onChanged,
+    this.focusNode,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: ctrl,
+      focusNode: focusNode,
       keyboardType: keyboardType,
       autofocus: autofocus,
       maxLength: maxLength,

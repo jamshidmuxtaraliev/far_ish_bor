@@ -10,6 +10,10 @@ class VacancyModel {
   final String? companyName;
   final String? companyPhone;
   final String? companyAddress;
+  final String? companyLogo;
+  // Employer joylashuvi — xaritada marker sifatida ko'rsatish uchun.
+  final double? latitude;
+  final double? longitude;
 
   VacancyModel({
     required this.id,
@@ -23,6 +27,9 @@ class VacancyModel {
     this.companyName,
     this.companyPhone,
     this.companyAddress,
+    this.companyLogo,
+    this.latitude,
+    this.longitude,
   });
 
   factory VacancyModel.fromJson(Map<String, dynamic> json) {
@@ -40,8 +47,14 @@ class VacancyModel {
       companyName: employer?['name'] as String?,
       companyPhone: employer?['phone'] as String?,
       companyAddress: employer?['address'] as String?,
+      companyLogo: employer?['logo'] as String?,
+      latitude: (employer?['latitude'] as num?)?.toDouble(),
+      longitude: (employer?['longitude'] as num?)?.toDouble(),
     );
   }
+
+  /// True agar vakansiyani xaritada ko'rsatish uchun koordinatalar mavjud bo'lsa.
+  bool get hasCoords => latitude != null && longitude != null;
 
   String get salaryDisplay {
     if (salary == null) return "Ko'rsatilmagan";

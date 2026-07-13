@@ -22,6 +22,7 @@ abstract class AuthRemoteDataSource {
   Future<Either<ErrorModel, EmployerModel>> getEmployer();
   Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data);
   Future<Either<ErrorModel, String>> uploadLogo(String filePath);
+  Future<Either<ErrorModel, String>> uploadPhoto(String filePath);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -134,6 +135,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       },
       (json) => (json as Map<String, dynamic>)['logo'] as String,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, String>> uploadPhoto(String filePath) {
+    return dioClient.dio.wrapResponse<String>(
+      () async {
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(
+            filePath,
+            filename: filePath.split('/').last,
+          ),
+        });
+        return dioClient.dio.post(
+          'mobile/anketa/photo',
+          data: formData,
+          options: Options(contentType: 'multipart/form-data'),
+        );
+      },
+      (json) => (json as Map<String, dynamic>)['photo'] as String,
     );
   }
 }

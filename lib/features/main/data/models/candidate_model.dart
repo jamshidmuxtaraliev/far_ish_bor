@@ -295,12 +295,12 @@ class CandidateModel {
   }
 
   /// Rasm to'liq URL'i (PROMPT §6): `http` bilan boshlansa o'zini, aks holda
-  /// nisbiy yo'l `{DOMAIN}/uploads/{photo}` ko'rinishida.
+  /// nisbiy yo'l `{BASE_IMAGE_URL}{photo}` ko'rinishida.
   String? get photoUrl {
     final p = photo;
     if (p == null || p.isEmpty) return null;
     if (p.startsWith('http')) return p;
-    return '$DOMAIN/uploads/$p';
+    return '$BASE_IMAGE_URL$p';
   }
 
   String get initials {

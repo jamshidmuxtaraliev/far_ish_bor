@@ -5,6 +5,9 @@ platform :ios, '14.0'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+# Yandex MapKit native SDK variant — east_quest bilan bir xil (full).
+ENV['YANDEX_MAPKIT_VARIANT'] = 'full'
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,

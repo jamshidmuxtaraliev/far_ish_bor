@@ -14,6 +14,7 @@ class AuthState extends Equatable {
   final FormzSubmissionStatus employerStatus;
   final FormzSubmissionStatus updateEmployerStatus;
   final FormzSubmissionStatus uploadLogoStatus;
+  final FormzSubmissionStatus uploadPhotoStatus;
   final ErrorModel? error;
   final UserModel? user;
   final AnketaModel? anketa;
@@ -35,6 +36,7 @@ class AuthState extends Equatable {
     this.employerStatus = FormzSubmissionStatus.initial,
     this.updateEmployerStatus = FormzSubmissionStatus.initial,
     this.uploadLogoStatus = FormzSubmissionStatus.initial,
+    this.uploadPhotoStatus = FormzSubmissionStatus.initial,
     this.error,
     this.user,
     this.anketa,
@@ -57,6 +59,7 @@ class AuthState extends Equatable {
     FormzSubmissionStatus? employerStatus,
     FormzSubmissionStatus? updateEmployerStatus,
     FormzSubmissionStatus? uploadLogoStatus,
+    FormzSubmissionStatus? uploadPhotoStatus,
     ErrorModel? error,
     UserModel? user,
     AnketaModel? anketa,
@@ -78,6 +81,7 @@ class AuthState extends Equatable {
       employerStatus: employerStatus ?? this.employerStatus,
       updateEmployerStatus: updateEmployerStatus ?? this.updateEmployerStatus,
       uploadLogoStatus: uploadLogoStatus ?? this.uploadLogoStatus,
+      uploadPhotoStatus: uploadPhotoStatus ?? this.uploadPhotoStatus,
       error: error ?? this.error,
       user: user ?? this.user,
       anketa: anketa ?? this.anketa,
@@ -92,7 +96,7 @@ class AuthState extends Equatable {
   List<Object?> get props => [
         sendCodeStatus, registerStatus, loginStatus, getMeStatus,
         anketaStatus, updateAnketaStatus, regionsStatus, jobTypesStatus, languagesStatus,
-        employerStatus, updateEmployerStatus, uploadLogoStatus,
+        employerStatus, updateEmployerStatus, uploadLogoStatus, uploadPhotoStatus,
         error, user, anketa, employer, regions, jobTypes, languages,
       ];
 }

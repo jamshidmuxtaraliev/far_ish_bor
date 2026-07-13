@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../logic/vacancy_bloc.dart';
@@ -86,15 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           _HeaderIconBtn(icon: Icons.notifications_outlined, onTap: () {}),
                         ],
                       ],
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 3))],
-                      ),
-                      child: _SearchRow(icon: Iconsax.search_normal, hint: 'Kasb, lavozim yoki kompaniya', hasBottom: false),
                     ),
                   ],
                 ),
@@ -262,29 +252,6 @@ class _HeaderIconBtn extends StatelessWidget {
           border: borderColor != null ? Border.all(color: borderColor!, width: 1.5) : null,
         ),
         child: Icon(icon, color: borderColor ?? Colors.white, size: 20),
-      ),
-    );
-  }
-}
-
-class _SearchRow extends StatelessWidget {
-  final IconData icon;
-  final String hint;
-  final bool hasBottom;
-
-  const _SearchRow({required this.icon, required this.hint, required this.hasBottom});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: hasBottom ? const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB)))) : null,
-      child: Row(
-        children: [
-          Icon(icon, color: GRAY_TEXT, size: 20),
-          const SizedBox(width: 10),
-          Text(hint, style: const TextStyle(color: GRAY_TEXT, fontSize: 14)),
-        ],
       ),
     );
   }
