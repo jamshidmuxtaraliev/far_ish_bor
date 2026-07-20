@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="far_ish_bor"
+        android:label="JobUp24"
         android:name=".MainApplication"
         android:icon="@mipmap/ic_launcher"
         android:extractNativeLibs="false">

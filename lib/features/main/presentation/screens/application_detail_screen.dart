@@ -62,14 +62,18 @@ class ApplicationDetailScreen extends StatelessWidget {
               slivers: [
                 SliverAppBar(
                   pinned: true,
-                  backgroundColor: const Color(0xFF0F172A),
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  foregroundColor: JB_INK,
+                  elevation: 0,
+                  scrolledUnderElevation: 0.5,
                   leading: IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.arrow_back_ios_new, color: JB_INK, size: 20),
                   ),
                   title: Text(
                     a.jobTypeName ?? 'Ariza',
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(color: JB_INK, fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                 ),
                 SliverPadding(

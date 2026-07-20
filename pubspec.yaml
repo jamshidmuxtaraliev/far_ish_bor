@@ -1,5 +1,5 @@
-name: far_ish_bor
-description: "Far Ish Bor"
+name: jobUp24
+description: "JobUp24"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -94,8 +94,22 @@ flutter:
     - assets/icons/navbar_icons/
     - assets/fonts/gotham_pro/
     - assets/fonts/montserrat/
+    - assets/fonts/poppins/
 
   fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/poppins/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/poppins/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/poppins/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/poppins/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/poppins/Poppins-ExtraBold.ttf
+          weight: 800
+
     - family: GothamPro
       fonts:
         - asset: assets/fonts/gotham_pro/gothampro.ttf

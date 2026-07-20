@@ -1,4 +1,4 @@
-import 'package:far_ish_bor/core/utils/utils.dart';
+import 'package:jobUp24/core/utils/utils.dart';
 
 import 'package:flutter/material.dart';
 

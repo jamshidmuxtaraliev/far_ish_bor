@@ -55,23 +55,17 @@ class _EmployerApplicationsScreenState
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         body: Column(
           children: [
             Container(
               width: double.infinity,
+              color: Colors.white,
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
+                top: MediaQuery.of(context).padding.top + 18,
                 left: 20,
                 right: 20,
-                bottom: 20,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
+                bottom: 16,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,18 +73,18 @@ class _EmployerApplicationsScreenState
                   const Text(
                     'Nomzodlar',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: JB_INK,
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: JB_CHIP_BG,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: TextField(
@@ -303,6 +297,56 @@ String _initialsOf(String? name) {
   return n[0].toUpperCase();
 }
 
+/// Ariza statusiga mos rang (badge foni + matni).
+({Color color, Color bg}) _statusTone(String status) {
+  switch (status) {
+    case 'hired':
+    case 'accepted':
+    case 'probation':
+      return (color: const Color(0xFF15803D), bg: GREEN_COLOR.withValues(alpha: 0.12));
+    case 'rejected':
+      return (color: RED_COLOR, bg: RED_COLOR.withValues(alpha: 0.1));
+    case 'missed':
+      return (color: AMBER_COLOR, bg: AMBER_COLOR.withValues(alpha: 0.14));
+    case 'invited':
+    case 'scheduled':
+    case 'confirmed':
+    case 'on_way':
+    case 'arrived':
+      return (color: const Color(0xFFB45309), bg: AMBER_COLOR.withValues(alpha: 0.14));
+    case 'viewed':
+      return (color: PRIMARY_BLUE, bg: PRIMARY_BLUE.withValues(alpha: 0.1));
+    default: // pending
+      return (color: GRAY_TEXT, bg: LIGHT_GRAY_BG);
+  }
+}
+
+Widget _statusBadge(String label, ({Color color, Color bg}) tone) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: tone.bg,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+          fontSize: 11.5, fontWeight: FontWeight.w600, color: tone.color),
+    ),
+  );
+}
+
+Widget _metaChip(IconData icon, String text, {Color iconColor = GRAY_TEXT}) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 15, color: iconColor),
+      const SizedBox(width: 4),
+      Text(text, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+    ],
+  );
+}
+
 class _AppCard extends StatelessWidget {
   final EmployerApplicationModel app;
   final VoidCallback onViewProfile;
@@ -316,15 +360,16 @@ class _AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tone = _statusTone(app.status);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: CARD_BORDER),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -337,8 +382,8 @@ class _AppCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 52,
+                height: 52,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFD1D5DB), Color(0xFF9CA3AF)],
@@ -349,7 +394,7 @@ class _AppCard extends StatelessWidget {
                   child: Text(
                     _initialsOf(app.anketaFullname),
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -362,6 +407,7 @@ class _AppCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
@@ -371,65 +417,34 @@ class _AppCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               color: DARK_NAVY,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 18,
-                          color: PRIMARY_BLUE,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _placeholderRating(app.id).toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: DARK_NAVY,
-                          ),
-                        ),
+                        const SizedBox(width: 8),
+                        _statusBadge(app.statusLabel, tone),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       app.anketaJobType ?? app.requirementJobTypeName ?? 'Kasb',
                       style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (app.anketaRegion != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 15,
-                            color: GRAY_TEXT,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            app.anketaRegion!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: GRAY_TEXT,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Row(
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 6,
                       children: [
-                        const Icon(
-                          Icons.work_outline,
-                          size: 15,
-                          color: GRAY_TEXT,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_placeholderExperience(app.id)} yil tajriba',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: GRAY_TEXT,
-                          ),
-                        ),
+                        if (app.anketaRegion != null)
+                          _metaChip(
+                              Icons.location_on_outlined, app.anketaRegion!),
+                        _metaChip(Icons.work_outline,
+                            '${_placeholderExperience(app.id)} yil tajriba'),
+                        _metaChip(Icons.star_rounded,
+                            _placeholderRating(app.id).toStringAsFixed(1),
+                            iconColor: PRIMARY_BLUE),
                       ],
                     ),
                   ],

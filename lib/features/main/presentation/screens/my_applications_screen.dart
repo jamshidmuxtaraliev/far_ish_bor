@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'application_detail_screen.dart';
@@ -32,7 +33,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: JB_BG,
         body: BlocConsumer<VacancyBloc, VacancyState>(
           listenWhen: (prev, curr) => prev.updateAppStatus != curr.updateAppStatus,
           listener: (context, state) {
@@ -53,24 +54,14 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
   Widget _buildHeader(BuildContext context, VacancyState state) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8, left: 20, right: 8, bottom: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
-      ),
-      child:
-      Column(
+      color: Colors.white,
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 18, left: 20, right: 20, bottom: 22),
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          BlocBuilder<VacancyBloc, VacancyState>(
-            buildWhen: (p, c) => p.savedVacancies != c.savedVacancies,
-            builder: (context, state) => Text(
-              'Mening arizalarim',
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text('Vakansiyalarga ariza topshirgansiz', style: TextStyle(color: Colors.white60, fontSize: 13)),
+          Text('Mening arizalarim', style: TextStyle(color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
+          SizedBox(height: 6),
+          Text('Vakansiyalarga ariza topshirgansiz', style: TextStyle(color: JB_GRAY, fontSize: 14)),
         ],
       ),
     );
@@ -203,7 +194,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: DARK_NAVY));
+    return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: JB_INK));
   }
 }
 
@@ -272,13 +263,8 @@ class _ApplicationCard extends StatelessWidget {
         (application.status == 'scheduled' || application.status == 'confirmed' || application.status == 'on_way');
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
+      padding: const EdgeInsets.all(18),
+      decoration: jbCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -292,23 +278,23 @@ class _ApplicationCard extends StatelessWidget {
                   children: [
                     Text(
                       application.jobTypeName ?? "Kasb noma'lum",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: JB_INK),
                     ),
                     const SizedBox(height: 4),
-                    Text(application.companyName ?? 'Kompaniya', style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+                    Text(application.companyName ?? 'Kompaniya', style: const TextStyle(fontSize: 13.5, color: JB_GRAY)),
                   ],
                 ),
               ),
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: style.bgColor, borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: style.bgColor, borderRadius: BorderRadius.circular(100)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(style.icon, size: 14, color: style.color),
                     const SizedBox(width: 5),
-                    Text(style.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: style.color)),
+                    Text(style.label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: style.color)),
                   ],
                 ),
               ),

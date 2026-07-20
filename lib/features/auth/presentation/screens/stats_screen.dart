@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:far_ish_bor/core/utils/utils.dart';
+import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/colors.dart';
@@ -131,7 +131,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              isUz ? 'FARISHBOR Statistikasi' : 'Статистика FARISHBOR',
+                              isUz ? 'Jobup24 Statistikasi' : 'Статистика Jobup24',
                               style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
                             ),

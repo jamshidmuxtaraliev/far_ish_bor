@@ -62,8 +62,8 @@ class JobMapMarkers {
     final bool big = count >= 10;
     final Color color = big ? RED_COLOR : PRIMARY_BLUE;
     // Diametr son kattaligiga qarab biroz o'sadi.
-    final double d = big ? (count >= 50 ? 58 : 52) : 46;
-    final double glow = d + 14;
+    final double d = big ? (count >= 50 ? 70 : 62) : 56;
+    final double glow = d + 16;
 
     final size = Size(glow * dpr, glow * dpr);
     final recorder = ui.PictureRecorder();
@@ -93,7 +93,7 @@ class JobMapMarkers {
         text: label,
         style: TextStyle(
           color: Colors.white,
-          fontSize: count > 99 ? 17 : 19,
+          fontSize: count > 99 ? 20 : 22,
           fontWeight: FontWeight.bold,
           height: 1,
         ),

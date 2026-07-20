@@ -86,7 +86,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         body: BlocListener<BillingBloc, BillingState>(
           listenWhen: (p, c) => p.buyPremiumStatus != c.buyPremiumStatus,
           listener: (context, state) {
@@ -164,15 +164,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
         top: MediaQuery.of(context).padding.top + 8,
         left: 12,
         right: 20,
-        bottom: 20,
+        bottom: 16,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-      ),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -182,7 +176,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(
                   Icons.arrow_back_ios_new,
-                  color: Colors.white,
+                  color: JB_INK,
                   size: 20,
                 ),
               ),
@@ -195,9 +189,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
               const Text(
                 'Premium',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  color: JB_INK,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
@@ -209,7 +203,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               builder:
                   (context, state) => Text(
                     'Balans: ${state.balance?.balanceDisplay ?? '—'}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: const TextStyle(color: JB_GRAY, fontSize: 13),
                   ),
             ),
           ),

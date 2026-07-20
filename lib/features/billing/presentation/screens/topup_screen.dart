@@ -7,6 +7,7 @@ import 'package:formz/formz.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/balance_model.dart';
 import '../../data/models/online_payment_model.dart';
 import '../../data/models/payment_system_model.dart';
@@ -224,7 +225,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         body: BlocListener<BillingBloc, BillingState>(
           listenWhen:
               (p, c) =>
@@ -318,44 +319,32 @@ class _TopUpScreenState extends State<TopUpScreen> {
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 8,
-          left: 12,
+          top: MediaQuery.of(context).padding.top + 14,
+          left: 20,
           right: 20,
-          bottom: 24,
+          bottom: 8,
         ),
-        decoration: const BoxDecoration(
-          color: Color(0xFF0F172A),
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(24),
-            bottomRight: Radius.circular(24),
-          ),
-        ),
+        color: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
+                JBCircleButton(onTap: () => Navigator.pop(context)),
+                const SizedBox(width: 14),
                 const Text(
                   'Balansni to\'ldirish',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    color: JB_INK,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.zero,
               child: BlocBuilder<BillingBloc, BillingState>(
                 buildWhen:
                     (p, c) =>
@@ -365,20 +354,28 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   final balance = state.balance;
                   return Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(18),
+                    padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [JB_BLUE_DARK, JB_BLUE],
                       ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: JB_BLUE_DARK.withValues(alpha: 0.25),
+                          blurRadius: 26,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Joriy balans',
-                          style: TextStyle(color: Colors.white60, fontSize: 13),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13.5),
                         ),
                         const SizedBox(height: 6),
                         if (state.balanceStatus ==
@@ -416,9 +413,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
   Widget _sectionTitle(String text) => Text(
     text,
     style: const TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.bold,
-      color: DARK_NAVY,
+      fontSize: 15.5,
+      fontWeight: FontWeight.w800,
+      color: JB_INK,
     ),
   );
 

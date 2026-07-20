@@ -10,10 +10,14 @@ import '../logic/vacancy_bloc.dart';
 import '../widgets/candidate_card.dart';
 import '../widgets/pipeline_kanban.dart';
 import '../widgets/state_views.dart';
+import 'archived_applications_screen.dart';
 import 'unlock_history_screen.dart';
 
 // Tavsiya hinti rangi (binafsha, light) — PROMPT §3.3.
 const _purpleBg = Color(0xFFEDE9FE);
+
+/// Arxivga tushadigan (jarayoni yopilgan) ariza statuslari.
+const Set<String> kArchivedAppStatuses = {'hired', 'rejected', 'missed'};
 
 /// "Nomzodlar" ekrani (PROMPT_NOMZODLAR_MOBILE.md).
 /// Ikki manbali tekis ro'yxat:
@@ -47,6 +51,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     vacancy.add(LoadPipelineEvent());
     vacancy.add(LoadContactAccessEvent());
     vacancy.add(LoadUnlockHistoryEvent());
+    vacancy.add(LoadEmployerApplicationsEvent()); // Arxiv sonini hisoblash uchun
     context.read<BillingBloc>().add(const LoadBalanceEvent(true));
   }
 
@@ -70,7 +75,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark, // yorug' header — to'q ikonalar
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
@@ -123,51 +128,95 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
+        top: MediaQuery.of(context).padding.top + 14,
         left: 20,
         right: 20,
-        bottom: 16,
+        bottom: 14,
       ),
       decoration: const BoxDecoration(
-        color: DARK_NAVY,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: CARD_BORDER)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Nomzodlar',
+          Row(
+            children: [
+              const Expanded(
+                child: Text('Nomzodlar',
                     style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
+                        color: DARK_NAVY,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold)),
-                SizedBox(height: 2),
-                Text('Sizga mos nomzodlar',
-                    style: TextStyle(color: Colors.white54, fontSize: 13)),
-              ],
-            ),
-          ),
-          _buildBalanceChip(context),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const UnlockHistoryScreen())),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.history, color: Colors.white70, size: 18),
-            ),
+              _buildArchiveButton(context),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text('Sizga mos nomzodlar',
+              style: TextStyle(color: GRAY_TEXT, fontSize: 13)),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildBalanceChip(context),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const UnlockHistoryScreen())),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: LIGHT_GRAY_BG,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.history, color: GRAY_TEXT, size: 20),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  /// "Arxiv (n)" — jarayoni yopilgan arizalar (ishga kirdi / rad etildi / kelmadi).
+  Widget _buildArchiveButton(BuildContext context) {
+    return BlocBuilder<VacancyBloc, VacancyState>(
+      buildWhen: (p, c) => p.employerApplications != c.employerApplications,
+      builder: (context, state) {
+        final count = state.employerApplications
+            .where((a) => kArchivedAppStatuses.contains(a.status))
+            .length;
+        return GestureDetector(
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const ArchivedApplicationsScreen())),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: CARD_BORDER),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.inventory_2_outlined,
+                    size: 18, color: DARK_NAVY),
+                const SizedBox(width: 8),
+                Text('Arxiv ($count)',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: DARK_NAVY)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -181,16 +230,18 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: GREEN_COLOR.withValues(alpha: 0.18),
+              color: GREEN_COLOR.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: GREEN_COLOR.withValues(alpha: 0.35)),
             ),
             child: const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.workspace_premium, color: Color(0xFF34D399), size: 16),
+                Icon(Icons.workspace_premium, color: GREEN_COLOR, size: 16),
                 SizedBox(width: 5),
                 Text('Premium · kontaktlar bepul',
                     style: TextStyle(
-                        color: Color(0xFFD1FAE5),
+                        color: Color(0xFF15803D),
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
               ],
@@ -206,8 +257,9 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: PRIMARY_BLUE.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: PRIMARY_BLUE.withValues(alpha: 0.2)),
             ),
             child: BlocBuilder<BillingBloc, BillingState>(
               buildWhen: (p, c) =>
@@ -224,13 +276,13 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                           ? '...'
                           : 'Balans: ${balance?.balanceDisplay ?? "0 so'm"}',
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: PRIMARY_BLUE,
                           fontSize: 12,
                           fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(width: 5),
                     const Icon(Icons.add_circle_outline,
-                        color: Color(0xFF93C5FD), size: 16),
+                        color: PRIMARY_BLUE, size: 16),
                   ],
                 );
               },
@@ -249,21 +301,16 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       builder: (context, state) {
         final recCount = state.recommendedCandidates.length;
         return Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          margin: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: LIGHT_GRAY_BG,
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: Row(
             children: [
-              _tabItem(
-                label: 'Tavsiya etilgan',
-                icon: Icons.auto_awesome,
-                badge: recCount,
-                index: 0,
-              ),
-              _tabItem(
-                label: 'Mos nomzodlar',
-                icon: Icons.view_kanban_outlined,
-                index: 1,
-              ),
+              _tabItem(label: 'Tavsiya etilgan', badge: recCount, index: 0),
+              _tabItem(label: 'Mos nomzodlar', index: 1),
             ],
           ),
         );
@@ -271,33 +318,35 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     );
   }
 
+  /// Segment-uslubidagi pill tab (screenshotdagi Yangi/Jarayonda/Suhbat kabi).
   Widget _tabItem({
     required String label,
-    required IconData icon,
     required int index,
     int badge = 0,
   }) {
     final active = _tab == index;
-    final color = active ? PRIMARY_BLUE : GRAY_TEXT;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => setState(() => _tab = index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: active ? PRIMARY_BLUE : Colors.transparent,
-                width: 2,
-              ),
-            ),
+            color: active ? DARK_NAVY : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2))
+                  ]
+                : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   label,
@@ -305,7 +354,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                      color: color),
+                      color: active ? Colors.white : GRAY_TEXT),
                 ),
               ),
               if (badge > 0) ...[
@@ -314,14 +363,16 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
+                    color: active
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : GRAY_TEXT.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text('$badge',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: color)),
+                          color: active ? Colors.white : GRAY_TEXT)),
                 ),
               ],
             ],

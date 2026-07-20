@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/utils/utils.dart';
 import 'employer_registration_screen.dart';
 import 'job_seeker_registration_screen.dart';
 import 'login_screen.dart';
@@ -37,26 +38,7 @@ class UserTypeScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [PRIMARY_BLUE, SECONDARY_BLUE],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: PRIMARY_BLUE.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.work_outline, color: Colors.white, size: 40),
-                  ),
+                  Image.asset('assets/images/logo.png', width: getScreenWidth(context), height: 120),
                   const SizedBox(height: 24),
                   Text(
                     isUz ? 'Kim siz?' : 'Кто вы?',

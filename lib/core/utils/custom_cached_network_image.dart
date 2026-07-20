@@ -33,7 +33,7 @@ class CustomCachedNetworkImage extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: Center(
                 child: Image.asset(
-                  forUserImages == true ? Assets.imagesAvatar : Assets.imagesLogoAuth,
+                  forUserImages == true ? Assets.images.avatar.path : Assets.images.logoText.path,
                   height: height,
                   width: width,
                   fit: BoxFit.contain,

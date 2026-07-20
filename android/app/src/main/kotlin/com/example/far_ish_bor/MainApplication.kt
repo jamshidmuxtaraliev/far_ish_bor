@@ -1,4 +1,4 @@
-package com.example.far_ish_bor
+package uz.jobUp24.jobUp24
 
 import android.app.Application
 import com.yandex.mapkit.MapKitFactory

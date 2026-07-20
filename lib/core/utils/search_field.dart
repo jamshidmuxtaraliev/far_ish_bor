@@ -1,5 +1,5 @@
-import 'package:far_ish_bor/core/extensions/extensions.dart';
-import 'package:far_ish_bor/generated/assets.dart';
+import 'package:jobUp24/core/extensions/extensions.dart';
+import 'package:jobUp24/generated/assets.dart';
 import 'package:flutter/material.dart';
 
 class SearchField extends StatelessWidget {
@@ -17,7 +17,7 @@ class SearchField extends StatelessWidget {
       decoration: BoxDecoration(color: context.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          Image.asset(Assets.iconsSearch, color: Colors.grey, scale: 4),
+          Image.asset(Assets.icons.search.path, color: Colors.grey, scale: 4),
           SizedBox(width: 8),
           Expanded(
             child: TextField(

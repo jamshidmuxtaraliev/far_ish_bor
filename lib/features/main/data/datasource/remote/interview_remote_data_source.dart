@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:far_ish_bor/core/network/dio_response_extension.dart';
+import 'package:jobUp24/core/network/dio_response_extension.dart';
 
 import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';

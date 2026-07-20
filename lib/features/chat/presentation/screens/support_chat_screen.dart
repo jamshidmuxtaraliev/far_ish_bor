@@ -89,7 +89,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         appBar: _buildAppBar(),
         body:
             !_ready
@@ -147,9 +147,11 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF0F172A),
-      foregroundColor: Colors.white,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      foregroundColor: JB_INK,
       elevation: 0,
+      scrolledUnderElevation: 0.5,
       titleSpacing: 0,
       title: Row(
         children: [
@@ -157,12 +159,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: JB_INDIGO_TINT,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.support_agent,
-              color: Colors.white,
+              color: JB_BLUE,
               size: 22,
             ),
           ),
@@ -195,8 +197,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                         fontSize: 12,
                         color:
                             state.connected
-                                ? const Color(0xFF4ADE80)
-                                : Colors.white60,
+                                ? JB_GREEN_FG
+                                : JB_GRAY_LIGHT,
                       ),
                     ),
                   ],

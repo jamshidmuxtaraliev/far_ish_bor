@@ -35,13 +35,16 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
   Widget build(BuildContext context) {
     return CandidateUnlockListener(
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: JB_BG,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F172A),
-          foregroundColor: Colors.white,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          foregroundColor: JB_INK,
+          elevation: 0,
+          scrolledUnderElevation: 0.5,
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
           title: Text(widget.vacancy.jobTypeName ?? 'Vakansiya',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
         ),
         body: BlocBuilder<VacancyBloc, VacancyState>(
           buildWhen: (p, c) =>

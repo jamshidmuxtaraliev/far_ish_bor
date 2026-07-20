@@ -238,21 +238,25 @@ class ApplicantProfileScreen extends StatelessWidget {
             slivers: [
               SliverAppBar(
                 pinned: true,
-                backgroundColor: const Color(0xFF0F172A),
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.white,
+                foregroundColor: JB_INK,
+                elevation: 0,
+                scrolledUnderElevation: 0.5,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(
                     Icons.arrow_back_ios_new,
-                    color: Colors.white,
+                    color: JB_INK,
                     size: 20,
                   ),
                 ),
                 title: const Text(
                   'Nomzod profili',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    color: JB_INK,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),

@@ -1,6 +1,6 @@
-import 'package:far_ish_bor/core/services/get_it.dart';
-import 'package:far_ish_bor/core/theme/theme_cubit.dart';
-import 'package:far_ish_bor/generated/l10n/l10n.dart';
+import 'package:jobUp24/core/services/get_it.dart';
+import 'package:jobUp24/core/theme/theme_cubit.dart';
+import 'package:jobUp24/generated/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

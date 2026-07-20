@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/notification_model.dart';
 import '../logic/notification_bloc.dart';
 
@@ -35,14 +36,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F172A),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: JB_INK,
           elevation: 0,
+          scrolledUnderElevation: 0,
           title: const Text(
             'Bildirishnomalar',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: JB_INK),
           ),
           actions: [
             BlocBuilder<NotificationBloc, NotificationState>(
@@ -53,7 +55,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   onPressed: _markAllRead,
                   child: const Text(
                     "O'qildi",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: JB_BLUE, fontWeight: FontWeight.w600),
                   ),
                 );
               },
@@ -124,30 +126,19 @@ class _NotificationTile extends StatelessWidget {
               )
               : null,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: unread ? const Color(0xFFEFF6FF) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: unread ? const Color(0xFFF5F8FF) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: unread ? const Color(0xFFBFDBFE) : const Color(0xFFE5E7EB),
+            color: unread ? const Color(0xFFDCE6FF) : JB_BORDER,
+            width: 1.5,
           ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: PRIMARY_BLUE.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                color: PRIMARY_BLUE,
-                size: 20,
-              ),
-            ),
+            const JBIconTile(icon: Icons.notifications_none_rounded, size: 40, radius: 12, iconSize: 18),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -163,8 +154,8 @@ class _NotificationTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight:
-                                unread ? FontWeight.bold : FontWeight.w600,
-                            color: DARK_NAVY,
+                                unread ? FontWeight.w700 : FontWeight.w600,
+                            color: JB_INK,
                           ),
                         ),
                       ),

@@ -112,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: JB_BG,
         body: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             final user = state.user;
@@ -192,13 +192,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         top: MediaQuery.of(context).padding.top + 16,
         left: 20,
         right: 20,
-        bottom: 28,
+        bottom: 30,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [JB_BLUE, JB_BLUE_LIGHT],
+        ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
       ),
       child: Column(
@@ -233,12 +237,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             alignment: Alignment.bottomRight,
             children: [
               Container(
-                width: 88,
-                height: 88,
+                width: 92,
+                height: 92,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [PRIMARY_BLUE, SECONDARY_BLUE],
-                  ),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                   image:
                       avatarUrl != null
@@ -247,13 +249,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fit: BoxFit.cover,
                           )
                           : null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: PRIMARY_BLUE.withValues(alpha: 0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child:
                     isLoading
@@ -298,16 +293,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: PRIMARY_BLUE,
+                      color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFF0F172A),
+                        color: Colors.white,
                         width: 2,
                       ),
                     ),
                     child: const Icon(
                       Icons.camera_alt,
-                      color: Colors.white,
+                      color: JB_BLUE,
                       size: 14,
                     ),
                   ),
@@ -328,21 +323,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: GREEN_COLOR.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(100),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.verified, color: GREEN_COLOR, size: 12),
+                    Icon(Icons.verified, color: Colors.white, size: 12),
                     SizedBox(width: 3),
                     Text(
                       'Tasdiqlangan',
                       style: TextStyle(
-                        color: GREEN_COLOR,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],

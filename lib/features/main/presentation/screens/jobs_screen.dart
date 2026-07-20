@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
@@ -85,62 +86,61 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: JB_BG,
         body: Column(
           children: [
-            // ── Dark header ──
+            // ── White header ──
             Container(
               width: double.infinity,
-              padding: EdgeInsets.only(top: topPad + 16, left: 16, right: 16, bottom: 20),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
+              color: Colors.white,
+              padding: EdgeInsets.only(top: topPad + 18, left: 20, right: 20, bottom: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Ishlar',
-                    style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Ishlar', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: JB_INK)),
                   const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
                         child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: TextField(
-                            controller: _searchCtrl,
-                            onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-                            style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
-                            decoration: const InputDecoration(
-                              hintText: 'Qidirish...',
-                              hintStyle: TextStyle(color: GRAY_TEXT, fontSize: 14),
-                              prefixIcon: Icon(Icons.search, color: GRAY_TEXT, size: 20),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 14),
-                            ),
+                          height: 46,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(color: JB_CHIP_BG, borderRadius: BorderRadius.circular(14)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.search_rounded, color: JB_GRAY_LIGHT, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchCtrl,
+                                  onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                                  style: const TextStyle(fontSize: 14, color: JB_INK),
+                                  decoration: const InputDecoration(
+                                    isCollapsed: true,
+                                    hintText: 'Qidirish...',
+                                    hintStyle: TextStyle(color: JB_GRAY_LIGHT, fontSize: 14),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: PRIMARY_BLUE,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(color: JB_BLUE, borderRadius: BorderRadius.circular(14)),
+                        child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  JBSegmented(
+                    tabs: const ["Ro'yxat", 'Xarita'],
+                    index: _showMap ? 1 : 0,
+                    onChanged: (i) => setState(() => _showMap = i == 1),
                   ),
                 ],
               ),
@@ -167,19 +167,19 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                   final listContent = Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
                         child: Row(
                           children: [
                             Text(
                               '${vacancies.length} ta ish topildi',
-                              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, fontWeight: FontWeight.w500),
+                              style: const TextStyle(fontSize: 13, color: JB_GRAY),
                             ),
                             const Spacer(),
                             GestureDetector(
                               onTap: () {},
                               child: const Text(
                                 'Saralash',
-                                style: TextStyle(fontSize: 13, color: PRIMARY_BLUE, fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: 13, color: JB_BLUE, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -189,12 +189,12 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                         child: vacancies.isEmpty
                             ? _EmptyView(message: "Hozircha mos vakansiya yo'q", onRefresh: widget.onRefresh)
                             : RefreshIndicator(
-                                color: PRIMARY_BLUE,
+                                color: JB_BLUE,
                                 onRefresh: () async => widget.onRefresh(),
                                 child: ListView.separated(
-                                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
                                   itemCount: vacancies.length,
-                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                  separatorBuilder: (_, __) => const SizedBox(height: 14),
                                   itemBuilder: (context, index) => VacancyJobCard(
                                     vacancy: vacancies[index],
                                     onTap: () => _openJob(context, vacancies[index]),
@@ -205,30 +205,12 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                     ],
                   );
 
-                  return Stack(
-                    children: [
-                      Positioned.fill(
-                        child: _showMap
-                            ? JobMapView(
-                                vacancies: vacancies,
-                                onOpenJob: (v) => _openJob(context, v),
-                              )
-                            : listContent,
-                      ),
-                      // Ro'yxat ⇄ Xarita almashtirish tugmasi (screenshotdagidek)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 16,
-                        child: Center(
-                          child: _MapListToggle(
-                            showingMap: _showMap,
-                            onTap: () => setState(() => _showMap = !_showMap),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
+                  return _showMap
+                      ? JobMapView(
+                          vacancies: vacancies,
+                          onOpenJob: (v) => _openJob(context, v),
+                        )
+                      : listContent;
                 },
               ),
             ),
@@ -256,7 +238,7 @@ class _EmployerJobsView extends StatelessWidget {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: JB_BG,
         body: BlocListener<VacancyBloc, VacancyState>(
           listener: (context, state) {
             if (state.manageVacancyStatus == FormzSubmissionStatus.failure) {
@@ -269,18 +251,12 @@ class _EmployerJobsView extends StatelessWidget {
             children: [
               Container(
                 width: double.infinity,
+                color: Colors.white,
                 padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 12,
-                  left: 16,
-                  right: 16,
+                  top: MediaQuery.of(context).padding.top + 18,
+                  left: 20,
+                  right: 20,
                   bottom: 16,
-                ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0F172A),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
                 ),
                 child: Row(
                   children: [
@@ -288,9 +264,9 @@ class _EmployerJobsView extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Vakansiyalarim', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text('Vakansiyalarim', style: TextStyle(color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
                           SizedBox(height: 4),
-                          Text("Kompaniya vakansiyalari", style: TextStyle(color: Colors.white54, fontSize: 13)),
+                          Text("Kompaniya vakansiyalari", style: TextStyle(color: JB_GRAY, fontSize: 13.5)),
                         ],
                       ),
                     ),
@@ -411,7 +387,8 @@ class _EmployerVacancyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
+        border: Border.all(color: CARD_BORDER),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,20 +446,20 @@ class _EmployerVacancyCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          // ── Info rows ──
-          _InfoRow(icon: Icons.attach_money_outlined, text: vacancy.salaryDisplay),
-          if (vacancy.deadline != null) ...[
-            const SizedBox(height: 7),
-            _InfoRow(icon: Icons.calendar_today_outlined, text: 'Muddat: ${_formatDeadline(vacancy.deadline!)}'),
-          ],
-          if (timeAgo.isNotEmpty) ...[
-            const SizedBox(height: 7),
-            _InfoRow(icon: Icons.access_time_outlined, text: timeAgo),
-          ],
-          if (vacancy.applicationsCount != null && vacancy.applicationsCount! > 0) ...[
-            const SizedBox(height: 7),
-            _InfoRow(icon: Icons.people_outline, text: '${vacancy.applicationsCount} ta ariza'),
-          ],
+          // ── Info chips ──
+          Wrap(
+            spacing: 14,
+            runSpacing: 8,
+            children: [
+              _InfoRow(icon: Icons.attach_money_outlined, text: vacancy.salaryDisplay),
+              if (vacancy.deadline != null)
+                _InfoRow(icon: Icons.calendar_today_outlined, text: 'Muddat: ${_formatDeadline(vacancy.deadline!)}'),
+              if (timeAgo.isNotEmpty)
+                _InfoRow(icon: Icons.access_time_outlined, text: timeAgo),
+              if (vacancy.applicationsCount != null && vacancy.applicationsCount! > 0)
+                _InfoRow(icon: Icons.people_outline, text: '${vacancy.applicationsCount} ta ariza'),
+            ],
+          ),
           if (vacancy.comment != null && vacancy.comment!.isNotEmpty) ...[
             const SizedBox(height: 10),
             const Divider(height: 1, color: Color(0xFFF1F5F9)),
@@ -561,6 +538,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 15, color: GRAY_TEXT),
         const SizedBox(width: 6),
@@ -571,41 +549,6 @@ class _InfoRow extends StatelessWidget {
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
-
-/// Ro'yxat va xarita ko'rinishlari orasida almashtiruvchi suzuvchi tugma.
-class _MapListToggle extends StatelessWidget {
-  final bool showingMap;
-  final VoidCallback onTap;
-  const _MapListToggle({required this.showingMap, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(28),
-      elevation: 6,
-      shadowColor: Colors.black.withValues(alpha: 0.25),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(28),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(showingMap ? Icons.format_list_bulleted_rounded : Icons.map_outlined, size: 20, color: DARK_NAVY),
-              const SizedBox(width: 8),
-              Text(
-                showingMap ? "Ro'yxat" : 'Xarita',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: DARK_NAVY),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _EmptyView extends StatelessWidget {
   final String message;

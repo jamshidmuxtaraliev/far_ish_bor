@@ -436,11 +436,14 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   Widget _buildAppBar(BuildContext context, bool isSaving) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: const Color(0xFF0F172A),
-      foregroundColor: Colors.white,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      foregroundColor: JB_INK,
+      elevation: 0,
+      scrolledUnderElevation: 0.5,
       title: const Text(
         'Kompaniya ma\'lumotlari',
-        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new, size: 18),

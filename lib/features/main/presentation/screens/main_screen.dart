@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/colors.dart';
 import 'candidates_screen.dart';
 import 'employer_applications_screen.dart';
+import 'employer_interviews_screen.dart';
 import 'home_screen.dart';
 import 'jobs_screen.dart';
 import 'my_applications_screen.dart';
@@ -26,39 +27,41 @@ class _MainScreenState extends State<MainScreen> {
   late final List<Widget> _pages;
   late final List<_NavItem> _navItems;
 
+  void _selectTab(int index) => setState(() => _selectedIndex = index);
+
   @override
   void initState() {
     super.initState();
 
     if (widget.isEmployer) {
       _pages = [
-        HomeScreen(isEmployer: widget.isEmployer),
         JobsScreen(isEmployer: widget.isEmployer),
         const CandidatesScreen(),
         const EmployerApplicationsScreen(),
+        const EmployerInterviewsScreen(),
         ProfileScreen(isEmployer: widget.isEmployer),
       ];
       _navItems = const [
-        _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Bosh sahifa'),
-        _NavItem(icon: Icons.work_outline, activeIcon: Icons.work, label: 'Vakansiyalar'),
-        _NavItem(icon: Icons.people_outline, activeIcon: Icons.people, label: 'Nomzodlar'),
-        _NavItem(icon: Icons.inbox_outlined, activeIcon: Icons.inbox, label: 'Arizalar'),
-        _NavItem(icon: Icons.account_circle_outlined, activeIcon: Icons.account_circle, label: 'Profil'),
+        _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: 'Vakansiyalar'),
+        _NavItem(icon: Icons.people_outline_rounded, activeIcon: Icons.people_rounded, label: 'Nomzodlar'),
+        _NavItem(icon: Icons.inbox_outlined, activeIcon: Icons.inbox_rounded, label: 'Arizalar'),
+        _NavItem(icon: Icons.event_note_outlined, activeIcon: Icons.event_note_rounded, label: 'Suhbatlar'),
+        _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profil'),
       ];
     } else {
       _pages = [
-        HomeScreen(isEmployer: widget.isEmployer),
+        HomeScreen(isEmployer: widget.isEmployer, onSelectTab: _selectTab),
         JobsScreen(isEmployer: widget.isEmployer),
         MyApplicationsScreen(),
         const SavedVacanciesScreen(),
         ProfileScreen(isEmployer: widget.isEmployer),
       ];
       _navItems = const [
-        _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Bosh sahifa'),
-        _NavItem(icon: Icons.work_outline, activeIcon: Icons.work, label: 'Ishlar'),
-        _NavItem(icon: Icons.description_outlined, activeIcon: Icons.description, label: 'Arizalarim'),
-        _NavItem(icon: Icons.bookmark_border_outlined, activeIcon: Icons.bookmark, label: 'Saqlangan'),
-        _NavItem(icon: Icons.account_circle_outlined, activeIcon: Icons.account_circle, label: 'Profil'),
+        _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Bosh sahifa'),
+        _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: 'Ishlar'),
+        _NavItem(icon: Icons.description_outlined, activeIcon: Icons.description_rounded, label: 'Arizalarim'),
+        _NavItem(icon: Icons.bookmark_border_rounded, activeIcon: Icons.bookmark_rounded, label: 'Saqlangan'),
+        _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profil'),
       ];
     }
   }
@@ -74,13 +77,15 @@ class _MainScreenState extends State<MainScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
+        backgroundColor: JB_BG,
         body: IndexedStack(index: _selectedIndex, children: _pages),
         bottomNavigationBar: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -2))],
+            border: Border(top: BorderSide(color: JB_BORDER)),
           ),
           child: SafeArea(
+            top: false,
             child: SizedBox(
               height: 64,
               child: Row(
@@ -89,19 +94,19 @@ class _MainScreenState extends State<MainScreen> {
                   final isActive = _selectedIndex == index;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _selectedIndex = index),
+                      onTap: () => _selectTab(index),
                       behavior: HitTestBehavior.opaque,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(isActive ? item.activeIcon : item.icon, color: isActive ? PRIMARY_BLUE : GRAY_TEXT, size: 24),
+                          Icon(isActive ? item.activeIcon : item.icon, color: isActive ? JB_BLUE : JB_GRAY, size: 23),
                           const SizedBox(height: 4),
                           Text(
                             item.label,
                             style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                              color: isActive ? PRIMARY_BLUE : GRAY_TEXT,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isActive ? JB_BLUE : JB_GRAY,
                             ),
                           ),
                         ],

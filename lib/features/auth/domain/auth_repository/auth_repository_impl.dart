@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:far_ish_bor/features/auth/domain/auth_repository/auth_repository.dart';
+import 'package:jobUp24/features/auth/domain/auth_repository/auth_repository.dart';
 
 import '../../../../../core/error/error_model.dart';
 import '../../data/datasource/remote/auth_remote_data_source.dart';

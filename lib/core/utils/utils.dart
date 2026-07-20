@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:far_ish_bor/core/extensions/extensions.dart';
-import 'package:far_ish_bor/core/utils/custom_button.dart';
+import 'package:jobUp24/core/extensions/extensions.dart';
+import 'package:jobUp24/core/utils/custom_button.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 

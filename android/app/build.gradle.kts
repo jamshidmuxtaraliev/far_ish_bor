@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.far_ish_bor"
+    namespace = "uz.jobUp24.jobUp24"
     // east_quest bilan bir xil — Yandex MapKit 16 KB page size uchun
     compileSdk = 36
     ndkVersion = "28.2.13676358"
@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.far_ish_bor"
+        applicationId = "uz.jobUp24.jobUp24"
         // east_quest bilan bir xil — Yandex MapKit minSdk 26 talab qiladi
         minSdk = 26
         targetSdk = 36

@@ -228,13 +228,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
         right: 16,
         bottom: 16,
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-      ),
+      color: Colors.white,
       child: Row(
         children: [
           GestureDetector(
@@ -243,10 +237,10 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: JB_CHIP_BG,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, color: JB_INK, size: 18),
             ),
           ),
           const SizedBox(width: 14),
@@ -254,27 +248,27 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Ishchi e\'lonlar', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                const Text('Ishchi e\'lonlar', style: TextStyle(color: JB_GRAY, fontSize: 12)),
                 Text(
                   _isEdit ? "Vakansiyani tahrirlash" : "Yangi vakansiya",
-                  style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: JB_INK, fontSize: 17, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: PRIMARY_BLUE.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(20),
+              color: JB_INDIGO_TINT,
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               children: [
-                const Icon(Icons.work_outline, color: Colors.white, size: 13),
+                const Icon(Icons.work_outline, color: JB_BLUE, size: 13),
                 const SizedBox(width: 4),
                 Text(
                   _isEdit ? 'Tahrirlash' : 'Yangi',
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: const TextStyle(color: JB_BLUE, fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ],
             ),

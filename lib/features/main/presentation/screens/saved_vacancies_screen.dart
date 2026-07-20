@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../data/models/saved_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
@@ -45,36 +46,24 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         body: Column(
           children: [
             Container(
               width: double.infinity,
+              color: Colors.white,
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
+                top: MediaQuery.of(context).padding.top + 18,
                 left: 20,
                 right: 20,
-                bottom: 20,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
+                bottom: 22,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  BlocBuilder<VacancyBloc, VacancyState>(
-                    buildWhen: (p, c) => p.savedVacancies != c.savedVacancies,
-                    builder: (context, state) => Text(
-                      'Saqlangan vakansiyalar (${state.savedVacancies.length})',
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('Keyinroq ko\'rib chiqish uchun saqlangan', style: TextStyle(color: Colors.white60, fontSize: 13)),
+                  const Text('Saqlangan', style: TextStyle(color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  const Text("Saqlab qo'yilgan vakansiyalar", style: TextStyle(color: JB_GRAY, fontSize: 14)),
                 ],
               ),
             ),
@@ -145,13 +134,8 @@ class _SavedCard extends StatelessWidget {
     final isActive = item.status == 'active';
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
+      padding: const EdgeInsets.all(18),
+      decoration: jbCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -162,11 +146,11 @@ class _SavedCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: JB_CHIP_BG,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
-                  child: Icon(Icons.work_outline_rounded, size: 26, color: DARK_NAVY),
+                  child: Icon(Icons.work_outline_rounded, size: 26, color: JB_BLUE),
                 ),
               ),
               const SizedBox(width: 12),

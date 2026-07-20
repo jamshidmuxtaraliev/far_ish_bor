@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_alice/alice.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:far_ish_bor/generated/l10n/l10n.dart';
+import 'package:jobUp24/generated/l10n/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/locale/locale_cubit.dart';
@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
             (context, locale) => BlocBuilder<ThemeCubit, ThemeMode>(
               builder:
                   (context, themeMode) => MaterialApp(
-                    title: 'FARISHBOR',
+                    title: 'Jobup24',
                     debugShowCheckedModeBanner: false,
                     theme: lightTheme(),
                     darkTheme: darkTheme(),

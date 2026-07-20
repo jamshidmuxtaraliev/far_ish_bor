@@ -75,22 +75,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 scale: _scaleAnim,
                 child: FadeTransition(
                   opacity: _fadeAnim,
-                  child: Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 30, offset: const Offset(0, 10))],
-                    ),
-                    child: const Icon(Icons.work_outline, color: PRIMARY_BLUE, size: 48),
-                  ),
+                  child: Image.asset('assets/images/logo.png', width: 200, height: 200),
                 ),
-              ),
-              const SizedBox(height: 32),
-              FadeTransition(
-                opacity: _fadeAnim,
-                child: const Text('FARISHBOR', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 2)),
               ),
               const SizedBox(height: 12),
               FadeTransition(

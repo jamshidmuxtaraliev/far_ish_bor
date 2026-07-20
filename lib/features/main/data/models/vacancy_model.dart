@@ -7,10 +7,15 @@ class VacancyModel {
   final int? maxAge;
   final String? status;
   final double? matchScore;
+  final int? companyId;
   final String? companyName;
   final String? companyPhone;
   final String? companyAddress;
   final String? companyLogo;
+  // Korxona profili — mavjud bo'lsa ko'rsatiladi, aks holda yashiriladi.
+  final String? companyCategory;
+  final String? companyAbout;
+  final String? companyContact;
   // Employer joylashuvi — xaritada marker sifatida ko'rsatish uchun.
   final double? latitude;
   final double? longitude;
@@ -24,10 +29,14 @@ class VacancyModel {
     this.maxAge,
     this.status,
     this.matchScore,
+    this.companyId,
     this.companyName,
     this.companyPhone,
     this.companyAddress,
     this.companyLogo,
+    this.companyCategory,
+    this.companyAbout,
+    this.companyContact,
     this.latitude,
     this.longitude,
   });
@@ -44,14 +53,22 @@ class VacancyModel {
       maxAge: json['max_age'] as int?,
       status: json['status'] as String?,
       matchScore: (json['match_score'] as num?)?.toDouble(),
+      companyId: employer?['id'] as int?,
       companyName: employer?['name'] as String?,
       companyPhone: employer?['phone'] as String?,
       companyAddress: employer?['address'] as String?,
       companyLogo: employer?['logo'] as String?,
+      companyCategory: (employer?['category'] ?? employer?['field'] ?? employer?['activity_field']) as String?,
+      companyAbout: (employer?['about'] ?? employer?['description']) as String?,
+      companyContact: (employer?['contact_person'] ?? employer?['responsible_person'] ?? employer?['contact']) as String?,
       latitude: (employer?['latitude'] as num?)?.toDouble(),
       longitude: (employer?['longitude'] as num?)?.toDouble(),
     );
   }
+
+  /// Korxona bosh harfi (avatar uchun).
+  String get companyInitial =>
+      (companyName?.trim().isNotEmpty == true) ? companyName!.trim()[0].toUpperCase() : '?';
 
   /// True agar vakansiyani xaritada ko'rsatish uchun koordinatalar mavjud bo'lsa.
   bool get hasCoords => latitude != null && longitude != null;

@@ -1,5 +1,5 @@
-import 'package:far_ish_bor/core/extensions/extensions.dart';
-import 'package:far_ish_bor/core/utils/utils.dart';
+import 'package:jobUp24/core/extensions/extensions.dart';
+import 'package:jobUp24/core/utils/utils.dart';
 
 import 'package:flutter/material.dart';
 

@@ -26,35 +26,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Colors.white,
         body: Column(
           children: [
-            // Dark header
+            // White header
             Container(
               width: double.infinity,
+              color: Colors.white,
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 12,
                 left: 8,
                 right: 20,
-                bottom: 16,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
+                bottom: 12,
               ),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_back_ios_new,
-                        color: Colors.white, size: 20),
+                        color: JB_INK, size: 20),
                   ),
                   const Text(
                     'Sozlamalar',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: JB_INK,
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
@@ -107,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 40),
                   const Center(
                     child: Text(
-                      'FARISHBOR v1.0.0',
+                      'Jobup24 v1.0.0',
                       style: TextStyle(color: GRAY_TEXT, fontSize: 13),
                     ),
                   ),

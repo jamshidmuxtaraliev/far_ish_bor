@@ -1,7 +1,7 @@
-import 'package:far_ish_bor/core/extensions/extensions.dart';
-import 'package:far_ish_bor/core/theme/app_theme.dart';
-import 'package:far_ish_bor/core/utils/thousands_formatter.dart';
-import 'package:far_ish_bor/core/utils/utils.dart';
+import 'package:jobUp24/core/extensions/extensions.dart';
+import 'package:jobUp24/core/theme/app_theme.dart';
+import 'package:jobUp24/core/utils/thousands_formatter.dart';
+import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

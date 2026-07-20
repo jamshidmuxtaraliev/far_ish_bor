@@ -28,21 +28,15 @@ class MessagesScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         body: Column(
           children: [
-            // Dark header
+            // White header
             Container(
               width: double.infinity,
+              color: Colors.white,
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
+                top: MediaQuery.of(context).padding.top + 18,
                 left: 20,
                 right: 20,
-                bottom: 20,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0F172A),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
+                bottom: 16,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,15 +44,15 @@ class MessagesScreen extends StatelessWidget {
                   const Text(
                     'Xabarlar',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: JB_INK,
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: JB_CHIP_BG,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const TextField(

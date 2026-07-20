@@ -1,22 +1,23 @@
-import 'package:far_ish_bor/core/utils/utils.dart';
-import 'package:far_ish_bor/features/main/presentation/screens/create_vacancy_screen.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../logic/vacancy_bloc.dart';
 import '../widgets/vacancy_job_card.dart';
-import 'employer_interviews_screen.dart';
-import 'my_applications_screen.dart';
+import 'job_detail_screen.dart';
 import 'seeker_interviews_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isEmployer;
 
-  const HomeScreen({super.key, this.isEmployer = false});
+  /// Switches the parent [MainScreen] bottom-nav tab (0=Home,1=Jobs,2=Apps...).
+  final ValueChanged<int>? onSelectTab;
+
+  const HomeScreen({super.key, this.isEmployer = false, this.onSelectTab});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -31,179 +32,164 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _goTab(int index) => widget.onSelectTab?.call(index);
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarContrastEnforced: false,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: JB_BG,
         body: CustomScrollView(
           slivers: [
+            // ---- White branded header ----
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 16, left: 20, right: 20, bottom: 24),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0F172A),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
-                ),
+                color: Colors.white,
+                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 18, left: 20, right: 20, bottom: 22),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'FARISHBOR',
-                                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.isEmployer ? 'Eng yaxshi nomzodlarni toping' : 'Orzuingizdagi ishni toping',
-                                style: const TextStyle(color: Colors.white60, fontSize: 13),
-                              ),
-                            ],
-                          ),
+                        const JBWordmark(height: 26),
+                        const Spacer(),
+                        JBCircleButton(
+                          icon: Icons.notifications_none_rounded,
+                          bg: JB_CHIP_BG,
+                          fg: JB_INK,
+                          size: 40,
+                          onTap: () => _goTab(4),
                         ),
-                        if (widget.isEmployer) ...[
-                          _HeaderIconBtn(icon: CupertinoIcons.location, onTap: () {}, bgColor: Colors.black, borderColor: PRIMARY_BLUE),
-                          const SizedBox(width: 8),
-                          _HeaderIconBtn(icon: Icons.add, onTap: () => startScreen(context, screen: CreateVacancyScreen()), bgColor: PRIMARY_BLUE),
-                        ] else ...[
-                          _HeaderIconBtn(icon: Icons.notifications_outlined, onTap: () {}),
-                        ],
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    const Text('Orzuingizdagi ishni toping', style: TextStyle(fontSize: 15, color: JB_GRAY)),
                   ],
                 ),
               ),
             ),
+
             SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  // ---- Action grid ----
                   Row(
                     children: [
                       Expanded(
-                        child: _QuickActionCard(
-                          icon: widget.isEmployer ? Icons.post_add_outlined : Icons.search,
-                          label: widget.isEmployer ? 'Vakansiyalar' : 'Ish qidirish',
-                          gradientColors: const [PRIMARY_BLUE, SECONDARY_BLUE],
-                          onTap: () {},
+                        child: _ActionCard.gradient(
+                          icon: Icons.search_rounded,
+                          label: 'Ish qidirish',
+                          onTap: () => _goTab(1),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _QuickActionCard(
-                          icon: widget.isEmployer ? Icons.trending_up : Icons.folder_open_outlined,
-                          label: widget.isEmployer ? 'Kuzatuv' : 'Arizalarim',
-                          gradientColors: const [Color(0xFF1E293B), Color(0xFF334155)],
-                          onTap: () => startScreen(context, screen: MyApplicationsScreen()),
+                        child: _ActionCard.light(
+                          icon: Icons.work_outline_rounded,
+                          iconBg: JB_INDIGO_TINT,
+                          iconFg: JB_BLUE,
+                          label: 'Arizalarim',
+                          onTap: () => _goTab(2),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+                  // ---- Stats grid ----
                   Row(
                     children: [
-                      Expanded(child: _StatsCard(icon: Icons.work_outline, label: "Ish o'rinlari", value: '12,450', iconColor: PRIMARY_BLUE)),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.work_outline_rounded,
+                          iconBg: JB_INDIGO_TINT,
+                          iconFg: JB_BLUE,
+                          value: '12,450',
+                          label: "Ish o'rinlari",
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _StatsCard(icon: Icons.business_outlined, label: 'Kompaniyalar', value: '3,200', iconColor: const Color(0xFF7C3AED)),
+                        child: _StatCard(
+                          icon: Icons.grid_view_rounded,
+                          iconBg: JB_PURPLE_BG,
+                          iconFg: JB_PURPLE_FG,
+                          value: '3,200',
+                          label: 'Kompaniyalar',
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  _InterviewsCard(
-                    onTap: () => startScreen(
-                      context,
-                      screen: widget.isEmployer
-                          ? const EmployerInterviewsScreen()
-                          : const SeekerInterviewsScreen(),
+                  const SizedBox(height: 16),
+                  // ---- Suhbatlar row ----
+                  JBCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    onTap: () => startScreen(context, screen: const SeekerInterviewsScreen()),
+                    child: Row(
+                      children: [
+                        const JBIconTile(icon: Icons.event_available_outlined, size: 40),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Suhbatlar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK)),
+                              SizedBox(height: 1),
+                              Text('Suhbat belgilangan nomzodlar', style: TextStyle(fontSize: 13, color: JB_GRAY)),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: JB_GRAY_LIGHT, size: 22),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  if (!widget.isEmployer) ...[
-                    _SectionTitle(title: "Tavsiya etilgan ishlar"),
-                    const SizedBox(height: 12),
-                    BlocBuilder<VacancyBloc, VacancyState>(
-                      buildWhen: (p, c) => p.seekerVacancies != c.seekerVacancies || p.vacanciesStatus != c.vacanciesStatus,
-                      builder: (context, state) {
-                        if (state.vacanciesStatus.isInProgress) {
-                          return const _VacancyLoadingList();
-                        }
-                        if (state.seekerVacancies.isEmpty) {
-                          return const _EmptyVacancies();
-                        }
-                        return Column(
-                          children:
-                              state.seekerVacancies
-                                  .take(5)
-                                  .map((v) => Padding(padding: const EdgeInsets.only(bottom: 12), child: VacancyJobCard(vacancy: v)))
-                                  .toList(),
-                        );
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: 20),
                 ]),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
-class _InterviewsCard extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _InterviewsCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(color: PRIMARY_BLUE.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.event_available_outlined, color: PRIMARY_BLUE, size: 22),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Suhbatlar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
-                  SizedBox(height: 2),
-                  Text('Suhbat belgilangan nomzodlar', style: TextStyle(fontSize: 12, color: GRAY_TEXT)),
-                ],
+            // ---- Tavsiya etilgan ishlar ----
+            SliverToBoxAdapter(
+              child: JBSectionHeader(
+                title: 'Tavsiya etilgan ishlar',
+                actionLabel: "Barchasini ko'r",
+                onAction: () => _goTab(1),
               ),
             ),
-            const Icon(Icons.chevron_right, color: GRAY_TEXT),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: BlocBuilder<VacancyBloc, VacancyState>(
+                buildWhen: (p, c) => p.seekerVacancies != c.seekerVacancies || p.vacanciesStatus != c.vacanciesStatus,
+                builder: (context, state) {
+                  if (state.vacanciesStatus.isInProgress) {
+                    return const SliverToBoxAdapter(child: _VacancyLoadingList());
+                  }
+                  if (state.seekerVacancies.isEmpty) {
+                    return const SliverToBoxAdapter(child: _EmptyVacancies());
+                  }
+                  final items = state.seekerVacancies.take(5).toList();
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: VacancyJobCard(
+                          vacancy: items[i],
+                          onTap: () => startScreen(context, screen: JobDetailScreen(vacancy: items[i])),
+                        ),
+                      ),
+                      childCount: items.length,
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -211,79 +197,81 @@ class _InterviewsCard extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: DARK_NAVY)),
-        const Spacer(),
-        GestureDetector(
-          onTap: () {},
-          child: const Text("Barchasini ko'r", style: TextStyle(fontSize: 13, color: PRIMARY_BLUE, fontWeight: FontWeight.w500)),
-        ),
-      ],
-    );
-  }
-}
-
-class _HeaderIconBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color? bgColor;
-  final Color? borderColor;
-
-  const _HeaderIconBtn({required this.icon, required this.onTap, this.bgColor, this.borderColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: bgColor ?? Colors.white.withValues(alpha: 0.12),
-          shape: BoxShape.circle,
-          border: borderColor != null ? Border.all(color: borderColor!, width: 1.5) : null,
-        ),
-        child: Icon(icon, color: borderColor ?? Colors.white, size: 20),
-      ),
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
+/// Large action tile — either a blue gradient or a white card.
+class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
-  final List<Color> gradientColors;
   final VoidCallback onTap;
+  final bool isGradient;
+  final Color iconBg;
+  final Color iconFg;
 
-  const _QuickActionCard({required this.icon, required this.label, required this.gradientColors, required this.onTap});
+  const _ActionCard._({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.isGradient,
+    required this.iconBg,
+    required this.iconFg,
+  });
+
+  factory _ActionCard.gradient({required IconData icon, required String label, required VoidCallback onTap}) {
+    return _ActionCard._(
+      icon: icon,
+      label: label,
+      onTap: onTap,
+      isGradient: true,
+      iconBg: Colors.white24,
+      iconFg: Colors.white,
+    );
+  }
+
+  factory _ActionCard.light({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color iconBg,
+    required Color iconFg,
+  }) {
+    return _ActionCard._(icon: icon, label: label, onTap: onTap, isGradient: false, iconBg: iconBg, iconFg: iconFg);
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 110,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(gradient: LinearGradient(colors: gradientColors), borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.all(18),
+        decoration: isGradient
+            ? BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [JB_GRADIENT_START, JB_BLUE_LIGHT],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: JB_BLUE.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 10))],
+              )
+            : jbCardDecoration(border: JB_BORDER, borderWidth: 1),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: Colors.white, size: 20),
+              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)),
+              alignment: Alignment.center,
+              child: Icon(icon, color: iconFg, size: 18),
             ),
-            const Spacer(),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 30),
+            Text(
+              label,
+              style: TextStyle(
+                color: isGradient ? Colors.white : JB_INK,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
       ),
@@ -291,42 +279,37 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-class _StatsCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final IconData icon;
-  final String label;
+  final Color iconBg;
+  final Color iconFg;
   final String value;
-  final Color iconColor;
+  final String label;
 
-  const _StatsCard({required this.icon, required this.label, required this.value, required this.iconColor});
+  const _StatCard({
+    required this.icon,
+    required this.iconBg,
+    required this.iconFg,
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
+    return JBCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(height: 12),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+          JBIconTile(icon: icon, bg: iconBg, fg: iconFg, size: 36, iconSize: 17),
+          const SizedBox(height: 14),
+          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: JB_INK)),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+          Text(label, style: const TextStyle(fontSize: 13, color: JB_GRAY)),
         ],
       ),
     );
   }
 }
-
 
 class _VacancyLoadingList extends StatelessWidget {
   const _VacancyLoadingList();
@@ -337,10 +320,10 @@ class _VacancyLoadingList extends StatelessWidget {
       children: List.generate(
         3,
         (_) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          height: 140,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5E7EB))),
-          child: const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2)),
+          margin: const EdgeInsets.only(bottom: 14),
+          height: 150,
+          decoration: jbCardDecoration(),
+          child: const Center(child: CircularProgressIndicator(color: JB_BLUE, strokeWidth: 2)),
         ),
       ),
     );
@@ -352,27 +335,26 @@ class _EmptyVacancies extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return JBCard(
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5E7EB))),
       child: Column(
         children: [
           Container(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(color: LIGHT_GRAY_BG, borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.work_off_outlined, color: GRAY_TEXT, size: 28),
+            decoration: BoxDecoration(color: JB_CHIP_BG, borderRadius: BorderRadius.circular(16)),
+            child: const Icon(Icons.work_off_outlined, color: JB_GRAY, size: 28),
           ),
           const SizedBox(height: 14),
           const Text(
-            "Hozircha mos vakansiya topilmadi",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: DARK_NAVY),
+            'Hozircha mos vakansiya topilmadi',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           const Text(
             "Anketangizni to'ldirib, ko'proq imkoniyatlarni oching",
-            style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+            style: TextStyle(fontSize: 13, color: JB_GRAY),
             textAlign: TextAlign.center,
           ),
         ],

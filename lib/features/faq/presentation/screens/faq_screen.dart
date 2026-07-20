@@ -53,12 +53,13 @@ class _FaqScreenState extends State<FaqScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: JB_BG,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F172A),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: JB_INK,
           elevation: 0,
-          title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          scrolledUnderElevation: 0,
+          title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: JB_INK)),
         ),
         body: Column(
           children: [
@@ -69,18 +70,22 @@ class _FaqScreenState extends State<FaqScreen> {
                 onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                 decoration: InputDecoration(
                   hintText: lang == 'ru' ? 'Поиск...' : 'Qidirish...',
-                  hintStyle: const TextStyle(color: GRAY_TEXT, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search, color: GRAY_TEXT, size: 20),
+                  hintStyle: const TextStyle(color: JB_GRAY_LIGHT, fontSize: 14),
+                  prefixIcon: const Icon(Icons.search_rounded, color: JB_GRAY_LIGHT, size: 20),
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: JB_BORDER, width: 1.5),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: JB_BORDER, width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: JB_BLUE, width: 1.5),
                   ),
                 ),
               ),
@@ -164,21 +169,21 @@ class _FaqTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: JB_BORDER, width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 14),
-          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           expandedAlignment: Alignment.centerLeft,
-          iconColor: PRIMARY_BLUE,
-          collapsedIconColor: GRAY_TEXT,
+          iconColor: JB_BLUE,
+          collapsedIconColor: JB_GRAY_LIGHT,
           title: Text(
             faq.questionFor(lang),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: DARK_NAVY),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK),
           ),
           children: [
             Align(

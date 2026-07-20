@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:jobUp24/core/utils/utils.dart';
 import '../../../../core/constants/colors.dart';
 import 'stats_screen.dart';
 
@@ -28,19 +29,8 @@ class LanguageScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [BoxShadow(color: PRIMARY_BLUE.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
-                    ),
-                    child: const Icon(Icons.work_outline, color: Colors.white, size: 40),
-                  ),
+                  Image.asset('assets/images/logo.png', width: getScreenWidth(context), height: 180),
                   const SizedBox(height: 24),
-                  const Text('FARISHBOR', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DARK_NAVY, letterSpacing: 1.5)),
-                  const SizedBox(height: 8),
                   const Text('Choose Language / Tilni tanlang', style: TextStyle(fontSize: 14, color: GRAY_TEXT), textAlign: TextAlign.center),
                   const SizedBox(height: 48),
                   _LangCard(flag: '🇺🇿', title: "O'zbekcha", subtitle: 'Uzbek', onTap: () => _select(context, 'uz')),

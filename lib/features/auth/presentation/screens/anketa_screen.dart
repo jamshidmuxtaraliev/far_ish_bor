@@ -292,13 +292,7 @@ class _AnketaScreenState extends State<AnketaScreen> {
         right: 16,
         bottom: 16,
       ),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-        ),
-      ),
+      color: Colors.white,
       child: Row(
         children: [
           GestureDetector(
@@ -307,10 +301,10 @@ class _AnketaScreenState extends State<AnketaScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: JB_CHIP_BG,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, color: JB_INK, size: 18),
             ),
           ),
           const SizedBox(width: 14),
@@ -320,24 +314,24 @@ class _AnketaScreenState extends State<AnketaScreen> {
               children: [
                 Text(
                   'Anketa to\'ldirish',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style: const TextStyle(color: JB_GRAY, fontSize: 12),
                 ),
                 Text(
                   titles[_currentStep],
-                  style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: JB_INK, fontSize: 17, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: PRIMARY_BLUE.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(20),
+              color: JB_INDIGO_TINT,
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
               '${_currentStep + 1} / $_totalSteps',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: JB_BLUE, fontSize: 12, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -347,7 +341,7 @@ class _AnketaScreenState extends State<AnketaScreen> {
 
   Widget _buildProgressBar() {
     return Container(
-      color: const Color(0xFF1E293B),
+      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: List.generate(_totalSteps, (i) {
@@ -362,7 +356,7 @@ class _AnketaScreenState extends State<AnketaScreen> {
                     ? GREEN_COLOR
                     : isActive
                         ? PRIMARY_BLUE
-                        : Colors.white.withValues(alpha: 0.2),
+                        : JB_BORDER,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
