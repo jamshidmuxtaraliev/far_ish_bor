@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 
 class EmptyView extends StatelessWidget {
   final String message;
@@ -24,18 +25,28 @@ class EmptyView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: GRAY_TEXT),
-            const SizedBox(height: 16),
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: JB_INDIGO_TINT,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 34, color: JB_BLUE),
+            ),
+            const SizedBox(height: 18),
             Text(message,
                 style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: DARK_NAVY),
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: JB_INK),
                 textAlign: TextAlign.center),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!,
-                  style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+                  style: const TextStyle(
+                      fontSize: 13, color: JB_GRAY, height: 1.4),
                   textAlign: TextAlign.center),
             ],
             if (action != null) ...[
@@ -62,19 +73,28 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 64, color: GRAY_TEXT),
-            const SizedBox(height: 16),
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: JB_RED_BG,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.cloud_off_rounded,
+                  size: 34, color: JB_RED_FG),
+            ),
+            const SizedBox(height: 18),
             Text(message,
-                style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
+                style: const TextStyle(
+                    fontSize: 14, color: JB_GRAY, height: 1.4),
                 textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: PRIMARY_BLUE,
-                  foregroundColor: Colors.white,
-                  elevation: 0),
-              child: const Text('Qayta urinish'),
+            const SizedBox(height: 18),
+            JBPillButton(
+              label: 'Qayta urinish',
+              leadingIcon: Icons.refresh_rounded,
+              onTap: onRetry,
+              vPadding: 12,
             ),
           ],
         ),

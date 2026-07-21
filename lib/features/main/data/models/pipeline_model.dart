@@ -57,7 +57,7 @@ class PipelineModel {
     final matched = <PipelineColumnItem>[];
     for (final c in pool) {
       if (!assignedIds.contains(c.id)) {
-        matched.add(PipelineColumnItem(candidate: c));
+        matched.add(PipelineColumnItem(candidate: c, requirementId: reqId));
       }
     }
 
@@ -69,12 +69,29 @@ class PipelineModel {
         (c) => c.id == a.anketaId,
         orElse: () => a.anketa ?? CandidateModel(id: a.anketaId),
       );
-      byStatus
-          .putIfAbsent(a.status, () => <PipelineColumnItem>[])
-          .add(PipelineColumnItem(candidate: candidate, assignment: a));
+      byStatus.putIfAbsent(a.status, () => <PipelineColumnItem>[]).add(
+          PipelineColumnItem(
+              candidate: candidate, assignment: a, requirementId: reqId));
     }
     return byStatus;
   }
+
+  /// "Barchasi" tanlanganda — hamma vakansiyalarning ustunlari birlashtiriladi.
+  /// Har bir karta o'z `requirementId`sini olib yuradi, shuning uchun amallar
+  /// (suhbatga chaqirish, kontakt ochish) to'g'ri vakansiyaga bog'lanadi.
+  Map<String, List<PipelineColumnItem>> columnsForAll() {
+    final merged = <String, List<PipelineColumnItem>>{};
+    for (final r in requirements) {
+      columnsFor(r.id).forEach((status, items) {
+        merged.putIfAbsent(status, () => <PipelineColumnItem>[]).addAll(items);
+      });
+    }
+    return merged;
+  }
+
+  /// Barcha vakansiyalar bo'yicha mos nomzodlar soni.
+  int get totalCandidates =>
+      candidatesByReq.fold(0, (sum, c) => sum + c.candidates.length);
 }
 
 /// candidatesByReq[] elementi.
@@ -165,5 +182,12 @@ class PipelineColumnItem {
   final CandidateModel candidate;
   final PipelineAssignment? assignment;
 
-  const PipelineColumnItem({required this.candidate, this.assignment});
+  /// Karta qaysi vakansiya (employer_requirement) ustunida turibdi.
+  final int requirementId;
+
+  const PipelineColumnItem({
+    required this.candidate,
+    this.assignment,
+    required this.requirementId,
+  });
 }

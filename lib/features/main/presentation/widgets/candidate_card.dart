@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../data/models/candidate_model.dart';
 import '../../data/models/contact_unlock_model.dart';
@@ -270,19 +271,11 @@ class CandidateCard extends StatelessWidget {
 
         return Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: isRecommended
-                    ? VIOLET.withValues(alpha: 0.3)
-                    : CARD_BORDER),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2))
-            ],
+          decoration: jbCardDecoration(
+            radius: 18,
+            border: isRecommended
+                ? JB_PURPLE_FG.withValues(alpha: 0.28)
+                : JB_BORDER,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,27 +288,27 @@ class CandidateCard extends StatelessWidget {
                       candidate.fullname ?? "Ism noma'lum",
                       style: const TextStyle(
                           fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: DARK_NAVY),
+                          fontWeight: FontWeight.w700,
+                          color: JB_INK),
                     ),
                     const SizedBox(height: 6),
                     if (isRecommended)
-                      const _Badge('Operator tavsiyasi', VIOLET)
+                      const _Badge('Operator tavsiyasi', JB_PURPLE_FG)
                     else if (candidate.matchPercent > 0)
                       _Badge('${candidate.matchPercent}%',
                           matchBucketColor(candidate)),
                     const SizedBox(height: 6),
                     Text(_metaLine(),
                         style:
-                            const TextStyle(fontSize: 12.5, color: GRAY_TEXT)),
+                            const TextStyle(fontSize: 12.5, color: JB_GRAY)),
                     if (isRecommended && candidate.assignment != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         assignmentLabel(candidate.assignment!.status),
                         style: const TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: VIOLET),
+                            fontWeight: FontWeight.w600,
+                            color: JB_PURPLE_FG),
                       ),
                     ],
                     const SizedBox(height: 10),
@@ -363,14 +356,14 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(100),
         ),
         child: Text(text,
             style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+                fontSize: 11, fontWeight: FontWeight.w700, color: color)),
       );
 }
 
@@ -388,14 +381,15 @@ class _PhoneRow extends StatelessWidget {
     final display = unlocked ? phone! : masked;
     return Row(
       children: [
-        Icon(Icons.phone, size: 15, color: unlocked ? GREEN_COLOR : GRAY_TEXT),
+        Icon(Icons.phone,
+            size: 15, color: unlocked ? JB_GREEN_FG : JB_GRAY_LIGHT),
         const SizedBox(width: 7),
         Flexible(
           child: Text(display,
               style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  color: unlocked ? DARK_NAVY : GRAY_TEXT)),
+                  color: unlocked ? JB_INK : JB_GRAY)),
         ),
       ],
     );
@@ -421,11 +415,11 @@ class _DetailButton extends StatelessWidget {
         ),
         icon: const Icon(Icons.visibility_outlined, size: 15),
         style: OutlinedButton.styleFrom(
-          foregroundColor: DARK_NAVY,
-          side: const BorderSide(color: CARD_BORDER),
+          foregroundColor: JB_INK,
+          side: const BorderSide(color: JB_BORDER, width: 1.5),
           padding: EdgeInsets.zero,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         ),
         label: const Text('Batafsil', style: TextStyle(fontSize: 12.5)),
       ),
@@ -461,14 +455,14 @@ class _UnlockButton extends StatelessWidget {
           icon: const Icon(Icons.lock_open, size: 15),
           label: const Text('Ochilgan', style: TextStyle(fontSize: 12.5)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: GREEN_COLOR.withValues(alpha: 0.12),
-            disabledBackgroundColor: GREEN_COLOR.withValues(alpha: 0.12),
-            foregroundColor: GREEN_COLOR,
-            disabledForegroundColor: GREEN_COLOR,
+            backgroundColor: JB_GREEN_BG,
+            disabledBackgroundColor: JB_GREEN_BG,
+            foregroundColor: JB_GREEN_FG,
+            disabledForegroundColor: JB_GREEN_FG,
             elevation: 0,
             padding: EdgeInsets.zero,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
           ),
         ),
       );
@@ -494,12 +488,12 @@ class _UnlockButton extends StatelessWidget {
             style: const TextStyle(fontSize: 11.5),
             overflow: TextOverflow.ellipsis),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isFree ? GREEN_COLOR : PRIMARY_BLUE,
+          backgroundColor: isFree ? JB_GREEN_FG : JB_BLUE,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.zero,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         ),
       ),
     );
@@ -552,7 +546,7 @@ class _StageControl extends StatelessWidget {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(100)),
                 ),
                 child: Text(stageActionLabel(next),
                     style: const TextStyle(

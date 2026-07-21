@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_ui.dart';
 import '../../../../core/utils/geo_utils.dart';
 import '../../data/models/interview_model.dart';
 import '../logic/interview_bloc.dart';
@@ -52,12 +53,15 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LIGHT_GRAY_BG,
+      backgroundColor: JB_BG,
       appBar: AppBar(
-        backgroundColor: DARK_NAVY,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: JB_INK,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text('Kuzatish',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w800, color: JB_INK)),
       ),
       body: BlocBuilder<InterviewBloc, InterviewState>(
         buildWhen: (p, c) =>
@@ -85,13 +89,15 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   }
 
   Widget _topBar(String travel) {
-    final color = travel == 'on_way'
-        ? AMBER_COLOR
-        : (travel == 'arrived' ? GREEN_COLOR : GRAY_TEXT);
+    final (bg, fg) = switch (travel) {
+      'on_way' => (JB_AMBER_BG, JB_AMBER_FG),
+      'arrived' => (JB_GREEN_BG, JB_GREEN_FG),
+      _ => (JB_CHIP_BG, JB_GRAY),
+    };
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
       child: Row(
         children: [
           Expanded(
@@ -101,39 +107,34 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
                 Text(_i.anketa?.fullname ?? 'Nomzod',
                     style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: DARK_NAVY)),
+                        fontWeight: FontWeight.w700,
+                        color: JB_INK)),
                 if ((_i.anketa?.phoneNumber ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.phone, size: 14, color: GRAY_TEXT),
-                      const SizedBox(width: 5),
+                      const Icon(Icons.phone_rounded,
+                          size: 14, color: JB_GRAY_LIGHT),
+                      const SizedBox(width: 6),
                       Text(_i.anketa!.phoneNumber!,
-                          style:
-                              const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+                          style: const TextStyle(fontSize: 13, color: JB_GRAY)),
                     ],
                   ),
                 ],
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              switch (travel) {
-                'on_way' => "Yo'lda",
-                'arrived' => 'Yetib keldi',
-                'stopped' => "To'xtatildi",
-                _ => 'Boshlanmagan',
-              },
-              style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w700, color: color),
-            ),
+          JBChip(
+            text: switch (travel) {
+              'on_way' => "Yo'lda",
+              'arrived' => 'Yetib keldi',
+              'stopped' => "To'xtatildi",
+              _ => 'Boshlanmagan',
+            },
+            bg: bg,
+            fg: fg,
+            fontSize: 12,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           ),
         ],
       ),
@@ -143,18 +144,18 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   Widget _warning(String text) {
     return Container(
       width: double.infinity,
-      color: AMBER_COLOR.withValues(alpha: 0.10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: JB_AMBER_BG,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: AMBER_COLOR),
+          const Icon(Icons.warning_amber_rounded, size: 18, color: JB_AMBER_FG),
           const SizedBox(width: 8),
           Expanded(
             child: Text(text,
                 style: const TextStyle(
                     fontSize: 12.5,
-                    color: AMBER_COLOR,
-                    fontWeight: FontWeight.w500)),
+                    color: JB_AMBER_FG,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -187,7 +188,7 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
         Polyline(
           polylineId: const PolylineId('route'),
           points: [candidatePos, _usPos!],
-          color: AMBER_COLOR,
+          color: JB_AMBER_FG,
           width: 4,
           patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         ),
@@ -207,25 +208,31 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   Widget _bottomInfo(LiveLocation? loc) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        boxShadow: kJbSoftShadow,
+      ),
       padding: EdgeInsets.fromLTRB(
-          16, 14, 16, MediaQuery.of(context).padding.bottom + 14),
+          20, 18, 20, MediaQuery.of(context).padding.bottom + 16),
       child: Column(
         children: [
           if (loc == null)
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(
+                SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: AMBER_COLOR),
+                      strokeWidth: 2, color: JB_AMBER_FG),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Text('Nomzod lokatsiyani ulashishini kutilmoqda…',
-                    style: TextStyle(
-                        fontSize: 13, color: GRAY_TEXT.withValues(alpha: 0.9))),
+                    style: TextStyle(fontSize: 13, color: JB_GRAY)),
               ],
             )
           else ...[
@@ -234,19 +241,19 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
                 children: [
                   Expanded(
                       child: _statCard(Icons.timer_outlined, 'Yetib borish',
-                          _eta(loc), PRIMARY_BLUE)),
+                          _eta(loc), JB_BLUE, JB_INDIGO_TINT)),
                   const SizedBox(width: 12),
                   Expanded(
-                      child: _statCard(Icons.straighten, 'Masofa',
-                          _distance(loc), AMBER_COLOR)),
+                      child: _statCard(Icons.straighten_rounded, 'Masofa',
+                          _distance(loc), JB_AMBER_FG, JB_AMBER_BG)),
                 ],
               )
             else
               const Text('Faqat nomzod nuqtasi ko\'rsatilmoqda',
-                  style: TextStyle(fontSize: 13, color: GRAY_TEXT)),
-            const SizedBox(height: 10),
+                  style: TextStyle(fontSize: 13, color: JB_GRAY)),
+            const SizedBox(height: 12),
             Text('Oxirgi yangilanish: ${_time(loc.at)}',
-                style: const TextStyle(fontSize: 11.5, color: GRAY_TEXT)),
+                style: const TextStyle(fontSize: 11.5, color: JB_GRAY_LIGHT)),
           ],
         ],
       ),
@@ -265,29 +272,34 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
     return '${two(t.hour)}:${two(t.minute)}:${two(t.second)}';
   }
 
-  Widget _statCard(IconData icon, String label, String value, Color color) {
+  Widget _statCard(
+      IconData icon, String label, String value, Color color, Color bg) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        color: JB_CHIP_BG,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 22),
+          JBIconTile(icon: icon, bg: bg, fg: color, size: 36, radius: 12),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: const TextStyle(fontSize: 11, color: GRAY_TEXT)),
-              const SizedBox(height: 2),
-              Text(value,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: color)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(fontSize: 11, color: JB_GRAY)),
+                const SizedBox(height: 3),
+                Text(value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: JB_INK)),
+              ],
+            ),
           ),
         ],
       ),
