@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../chat/presentation/logic/chat_bloc.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
 
 class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
-
-  static const _conversations = [
-    {
-      'name': 'Qo\'llab-quvvatlash markazi',
-      'last': 'Savolingiz bo\'lsa, bemalol yozing',
-      'time': '',
-      'unread': 0,
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -70,15 +63,28 @@ class MessagesScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // List
+            // List — bitta suhbat: qo'llab-quvvatlash (operator bilan chat).
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: _conversations.length,
-                itemBuilder: (_, i) {
-                  final c = _conversations[i];
-                  final unread = c['unread'] as int;
-                  return InkWell(
+              child: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, chatState) {
+                  final lastMsg = chatState.messages.isEmpty
+                      ? null
+                      : chatState.messages.last;
+                  final c = {
+                    'name': 'Qo\'llab-quvvatlash markazi',
+                    'last': lastMsg?.text?.isNotEmpty == true
+                        ? lastMsg!.text!
+                        : (lastMsg?.attachmentUrl != null
+                            ? 'Fayl'
+                            : 'Savolingiz bo\'lsa, bemalol yozing'),
+                    'time': lastMsg?.timeDisplay ?? '',
+                  };
+                  final unread = chatState.unreadCount;
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: 1,
+                    itemBuilder: (_, i) {
+                      return InkWell(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SupportChatScreen()),
                     ),
@@ -178,6 +184,8 @@ class MessagesScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                      );
+                    },
                   );
                 },
               ),

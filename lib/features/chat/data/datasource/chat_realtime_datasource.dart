@@ -8,6 +8,10 @@ import '../../../../core/services/get_it.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../models/chat_message_model.dart';
 
+/// Auth-level handshake failures — token must be cleared and the user sent
+/// back to login (MOBILE_CHAT_PROMPT §5.2).
+const chatAuthErrors = ['auth_required', 'invalid_token', 'mobile_user_not_found'];
+
 /// Socket.IO transport for the support chat (user ↔ operator).
 ///
 /// Connects to [DOMAIN] (REST base without `/api/v1`) with the mobile JWT in the
@@ -19,11 +23,21 @@ class ChatRealtimeDatasource {
   final _messageController = StreamController<ChatMessageModel>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
   final _typingController = StreamController<Map<String, dynamic>>.broadcast();
+  final _presenceController = StreamController<Map<String, dynamic>>.broadcast();
+  final _assignedController = StreamController<Map<String, dynamic>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
 
   Stream<ChatMessageModel> get onMessage => _messageController.stream;
   Stream<bool> get onConnectionChanged => _connectionController.stream;
   Stream<Map<String, dynamic>> get onTyping => _typingController.stream;
+
+  /// chat:assigned — mas'ul operator o'zgardi (§5.4): raw payload with
+  /// `session_key` and `assigned: {id, user_name, image}`.
+  Stream<Map<String, dynamic>> get onAssigned => _assignedController.stream;
+
+  /// `{'joined': bool, 'audience': String?, 'userId': int?}` from
+  /// chat:user_joined / chat:user_left.
+  Stream<Map<String, dynamic>> get onPresence => _presenceController.stream;
   Stream<String> get onError => _errorController.stream;
 
   bool get isConnected => _connected;
@@ -59,7 +73,13 @@ class ChatRealtimeDatasource {
 
     _socket!.onConnectError((err) {
       debugPrint('[Chat] connect_error: $err');
-      _errorController.add('connect_error');
+      final raw =
+          err is Map ? (err['message']?.toString() ?? '') : (err?.toString() ?? '');
+      final auth = chatAuthErrors.firstWhere(
+        (e) => raw.contains(e),
+        orElse: () => '',
+      );
+      _errorController.add(auth.isNotEmpty ? auth : 'connect_error');
     });
 
     _socket!.onDisconnect((reason) {
@@ -84,6 +104,22 @@ class ChatRealtimeDatasource {
       if (data is Map) _typingController.add(Map<String, dynamic>.from(data));
     });
 
+    _socket!.on('chat:user_joined', (data) {
+      if (data is Map) {
+        _presenceController.add({'joined': true, ...Map<String, dynamic>.from(data)});
+      }
+    });
+
+    _socket!.on('chat:user_left', (data) {
+      if (data is Map) {
+        _presenceController.add({'joined': false, ...Map<String, dynamic>.from(data)});
+      }
+    });
+
+    _socket!.on('chat:assigned', (data) {
+      if (data is Map) _assignedController.add(Map<String, dynamic>.from(data));
+    });
+
     _socket!.on('chat:error', (data) {
       final msg = (data is Map ? data['message'] : null) as String?;
       _errorController.add(msg ?? 'chat_error');
@@ -105,8 +141,19 @@ class ChatRealtimeDatasource {
     _socket?.emit('chat:leave', {'session_key': sessionKey});
   }
 
-  void sendMessage(String sessionKey, String text) {
-    _socket?.emit('chat:message', {'session_key': sessionKey, 'text': text});
+  /// `text` yoki `attachment` — kamida bittasi bo'lishi shart (§5.3).
+  /// `client_msg_id` — TODO-3 passthrough; backend hozircha e'tiborsiz qoldiradi.
+  void sendMessage(
+    String sessionKey, {
+    String? text,
+    Map<String, dynamic>? attachment,
+    String? clientMsgId,
+  }) {
+    final payload = <String, dynamic>{'session_key': sessionKey};
+    if (text != null && text.isNotEmpty) payload['text'] = text;
+    if (attachment != null) payload['attachment'] = attachment;
+    if (clientMsgId != null) payload['client_msg_id'] = clientMsgId;
+    _socket?.emit('chat:message', payload);
   }
 
   void sendTyping(String sessionKey, bool isTyping) {
@@ -161,6 +208,8 @@ class ChatRealtimeDatasource {
     _messageController.close();
     _connectionController.close();
     _typingController.close();
+    _presenceController.close();
+    _assignedController.close();
     _errorController.close();
   }
 }

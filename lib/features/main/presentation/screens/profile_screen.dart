@@ -13,6 +13,7 @@ import '../../../auth/presentation/screens/anketa_screen.dart';
 import '../../../auth/presentation/screens/language_screen.dart';
 import '../../../billing/presentation/screens/premium_screen.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../chat/presentation/logic/chat_bloc.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
 import '../../../faq/presentation/screens/faq_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
@@ -80,6 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
+                  getIt<ChatBloc>().add(const DisconnectChatEvent());
                   await getIt<UserLocalDatasource>().clearCache();
                   if (mounted) {
                     Navigator.of(context).pushAndRemoveUntil(

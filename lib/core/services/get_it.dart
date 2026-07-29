@@ -8,6 +8,7 @@ import 'package:jobUp24/features/auth/presentation/logic/auth_bloc.dart';
 import 'package:jobUp24/features/billing/data/datasource/remote/billing_remote_data_source.dart';
 import 'package:jobUp24/features/billing/presentation/logic/billing_bloc.dart';
 import 'package:jobUp24/features/chat/data/datasource/chat_realtime_datasource.dart';
+import 'package:jobUp24/features/chat/data/datasource/remote/chat_remote_datasource.dart';
 import 'package:jobUp24/features/chat/presentation/logic/chat_bloc.dart';
 import 'package:jobUp24/features/faq/data/datasource/remote/faq_remote_data_source.dart';
 import 'package:jobUp24/features/faq/presentation/logic/faq_bloc.dart';
@@ -66,7 +67,10 @@ Future<void> setupDI({required Alice alice}) async {
     ..registerLazySingleton<ChatRealtimeDatasource>(
       () => ChatRealtimeDatasource(),
     )
-    ..registerLazySingleton<ChatBloc>(() => ChatBloc(getIt()))
+    ..registerLazySingleton<ChatRemoteDatasource>(
+      () => ChatRemoteDatasourceImpl(getIt()),
+    )
+    ..registerLazySingleton<ChatBloc>(() => ChatBloc(getIt(), getIt()))
     ..registerLazySingleton<NotificationRemoteDataSource>(
       () => NotificationRemoteDataSourceImpl(getIt()),
     )

@@ -51,6 +51,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (response) {
         getIt<UserLocalDatasource>().saveToken(response.token);
         getIt<UserLocalDatasource>().saveRole(response.role);
+        // Cached user is what builds the support-chat session_key.
+        if (response.user != null) {
+          getIt<UserLocalDatasource>().saveUser(response.user!);
+        }
         emit(state.copyWith(registerStatus: FormzSubmissionStatus.success, user: response.user));
       },
     );
@@ -65,6 +69,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (response) {
         getIt<UserLocalDatasource>().saveToken(response.token);
         getIt<UserLocalDatasource>().saveRole(response.role);
+        if (response.user != null) {
+          getIt<UserLocalDatasource>().saveUser(response.user!);
+        }
         emit(state.copyWith(loginStatus: FormzSubmissionStatus.success, user: response.user));
       },
     );
@@ -76,7 +83,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await repository.getMe();
     result.fold(
       (failure) => emit(state.copyWith(getMeStatus: FormzSubmissionStatus.failure, error: failure)),
-      (user) => emit(state.copyWith(getMeStatus: FormzSubmissionStatus.success, user: user)),
+      (user) {
+        getIt<UserLocalDatasource>().saveUser(user);
+        emit(state.copyWith(getMeStatus: FormzSubmissionStatus.success, user: user));
+      },
     );
     emit(state.copyWith(getMeStatus: FormzSubmissionStatus.initial));
   }
