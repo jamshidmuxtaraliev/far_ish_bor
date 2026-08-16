@@ -57,7 +57,7 @@ class _MainScreenState extends State<MainScreen> {
         const CandidatesScreen(),
         const EmployerApplicationsScreen(),
         const EmployerInterviewsScreen(),
-        ProfileScreen(isEmployer: widget.isEmployer),
+        ProfileScreen(isEmployer: widget.isEmployer, onSelectTab: _selectTab),
       ];
       _navItems = const [
         _NavItem(

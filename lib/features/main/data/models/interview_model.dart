@@ -97,19 +97,25 @@ class InterviewModel {
 
   String get statusLabel => switch (status) {
         'pending' => 'Kutilmoqda',
+        'scheduled' => 'Vaqt belgilandi',
         'confirmed' => 'Tasdiqlandi',
+        'on_way' => "Yo'lda",
+        'arrived' => 'Keldi',
         'done' => 'Yakunlandi',
         'cancelled' => 'Bekor qilindi',
-        'no_show' => 'Kelmadi',
-        _ => status,
+        'no_show' || 'missed' => 'Kelmadi',
+        'rejected' => 'Rad etildi',
+        _ => 'Jarayonda',
       };
 
   Color get statusColor => switch (status) {
         'pending' => GRAY_TEXT,
-        'confirmed' => PRIMARY_BLUE,
+        'scheduled' || 'confirmed' => PRIMARY_BLUE,
+        'on_way' || 'arrived' => AMBER_COLOR,
         'done' => GREEN_COLOR,
         'cancelled' => RED_COLOR,
-        'no_show' => AMBER_COLOR,
+        'no_show' || 'missed' => AMBER_COLOR,
+        'rejected' => RED_COLOR,
         _ => GRAY_TEXT,
       };
 
@@ -118,7 +124,7 @@ class InterviewModel {
         'on_way' => "Yo'lda",
         'arrived' => 'Yetib keldi',
         'stopped' => "To'xtatildi",
-        _ => travelStatus,
+        _ => 'Boshlanmagan',
       };
 
   Color get travelColor => switch (travelStatus) {

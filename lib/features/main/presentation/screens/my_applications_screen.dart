@@ -207,56 +207,8 @@ class _ApplicationCard extends StatelessWidget {
 
   const _ApplicationCard({required this.application, required this.isUpdating, required this.onUpdateStatus});
 
-  _StatusStyle get _style {
-    switch (application.status) {
-      case 'pending':
-        return _StatusStyle(color: const Color(0xFFD97706), bgColor: const Color(0xFFFEF3C7), icon: Icons.timelapse_rounded, label: 'Kutilmoqda');
-      case 'viewed':
-        return _StatusStyle(
-          color: const Color(0xFF4F46E5),
-          bgColor: const Color(0xFFEEF2FF),
-          icon: Icons.check_circle_outline_rounded,
-          label: "Ko'rildi",
-        );
-      case 'invited':
-        return _StatusStyle(
-          color: const Color(0xFF7C3AED),
-          bgColor: const Color(0xFFF5F3FF),
-          icon: Icons.mail_outline_rounded,
-          label: 'Taklif qilindi',
-        );
-      case 'scheduled':
-        return _StatusStyle(
-          color: const Color(0xFF16A34A),
-          bgColor: const Color(0xFFF0FDF4),
-          icon: Icons.calendar_month_rounded,
-          label: 'Suhbatga chaqirildi',
-        );
-      case 'confirmed':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.check_circle_rounded, label: 'Tasdiqlandi');
-      case 'on_way':
-        return _StatusStyle(
-          color: const Color(0xFF0891B2),
-          bgColor: const Color(0xFFECFEFF),
-          icon: Icons.directions_walk_rounded,
-          label: "Yo'ldaman",
-        );
-      case 'arrived':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.location_on_rounded, label: 'Keldi');
-      case 'hired':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.handshake_outlined, label: 'Ishga olindi');
-      case 'missed':
-        return _StatusStyle(color: GRAY_TEXT, bgColor: const Color(0xFFF3F4F6), icon: Icons.event_busy_rounded, label: 'Kelmadi');
-      case 'rejected':
-        return _StatusStyle(color: const Color(0xFFDC2626), bgColor: const Color(0xFFFEF2F2), icon: Icons.cancel_outlined, label: 'Rad etildi');
-      default:
-        return _StatusStyle(color: GRAY_TEXT, bgColor: const Color(0xFFF3F4F6), icon: Icons.info_outline, label: application.statusLabel);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final style = _style;
     final createdAt = application.createdAtDisplay;
     final hasInterview =
         application.interviewDatetime != null &&
@@ -288,13 +240,13 @@ class _ApplicationCard extends StatelessWidget {
               const SizedBox(width: 10),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: style.bgColor, borderRadius: BorderRadius.circular(100)),
+                decoration: BoxDecoration(color: application.statusBgColor, borderRadius: BorderRadius.circular(100)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(style.icon, size: 14, color: style.color),
+                    Icon(application.statusIcon, size: 14, color: application.statusColor),
                     const SizedBox(width: 5),
-                    Text(style.label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: style.color)),
+                    Text(application.statusLabel, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: application.statusColor)),
                   ],
                 ),
               ),
@@ -399,13 +351,4 @@ class _InfoRow extends StatelessWidget {
       ],
     );
   }
-}
-
-class _StatusStyle {
-  final Color color;
-  final Color bgColor;
-  final IconData icon;
-  final String label;
-
-  const _StatusStyle({required this.color, required this.bgColor, required this.icon, required this.label});
 }

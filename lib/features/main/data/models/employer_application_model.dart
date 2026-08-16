@@ -66,7 +66,12 @@ class EmployerApplicationModel {
       case 'hired': return 'Ishga kirdi';
       case 'missed': return 'Kelmadi';
       case 'rejected': return 'Rad etildi';
-      default: return status;
+      case 'qabul_qilindi': return 'Qabul qilindi';
+      case 'mos_kelmadi': return 'Mos kelmadi';
+      case 'suhbatga_yozildi': return 'Suhbat vaqti belgilandi';
+      case 'suhbatga_bordi': return 'Suhbatga bordi';
+      case 'bormadi': return 'Bormadi';
+      default: return 'Jarayonda';
     }
   }
 

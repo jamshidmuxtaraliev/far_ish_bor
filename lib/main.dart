@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
                         child: Stack(
                           children: [
                             child!,
-                            if (kDebugMode)
+                            if (true)
                               Positioned(
                                 bottom: 100,
                                 right: 16,

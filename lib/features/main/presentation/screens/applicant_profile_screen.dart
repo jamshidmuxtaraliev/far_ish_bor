@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../data/models/application_access.dart';
 import '../../data/models/employer_application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'messages_screen.dart';
@@ -414,17 +415,23 @@ class ApplicantProfileScreen extends StatelessWidget {
                           height: 52,
                           width: 52,
                           child: OutlinedButton(
-                            onPressed: () => _openChat(context),
+                            // Chat faqat ariza qabul qilingandan keyin ochiladi.
+                            onPressed: isApplicationAccepted(app.status)
+                                ? () => _openChat(context)
+                                : null,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: DARK_NAVY,
+                              disabledForegroundColor: GRAY_TEXT,
                               side: const BorderSide(color: Color(0xFFD1D5DB)),
                               padding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            child: const Icon(
-                              Icons.chat_bubble_outline,
+                            child: Icon(
+                              isApplicationAccepted(app.status)
+                                  ? Icons.chat_bubble_outline
+                                  : Icons.lock_outline_rounded,
                               size: 22,
                             ),
                           ),

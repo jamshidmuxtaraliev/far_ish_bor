@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
+import '../../data/models/application_access.dart';
 import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'job_detail_screen.dart';
@@ -22,6 +23,26 @@ class CompanyProfileScreen extends StatefulWidget {
 class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
   int _tab = 0; // 0 = Korxona haqida, 1 = Vakansiyalar
   bool _subscribed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Telefon raqami arizaning holatiga bog'liq — ro'yxatni yangilab olamiz.
+    context.read<VacancyBloc>().add(LoadMyApplicationsEvent());
+  }
+
+  /// Korxona telefoni faqat shu korxonaning biror vakansiyasiga yuborilgan
+  /// ariza qabul qilinganda ochiladi.
+  bool _contactUnlocked(VacancyState state) {
+    final companyVacancyIds = _companyVacancies(state).map((o) => o.id).toSet();
+    final companyName = widget.vacancy.companyName;
+    return state.myApplications.any((a) {
+      if (!a.isAccepted) return false;
+      if (a.requirementId != null) return companyVacancyIds.contains(a.requirementId);
+      // Backend requirement id qaytarmasa — korxona nomi bo'yicha.
+      return companyName != null && a.companyName == companyName;
+    });
+  }
 
   List<VacancyModel> _companyVacancies(VacancyState state) {
     final v = widget.vacancy;
@@ -62,7 +83,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
       child: Scaffold(
         backgroundColor: JB_BG,
         body: BlocBuilder<VacancyBloc, VacancyState>(
-          buildWhen: (p, c) => p.seekerVacancies != c.seekerVacancies,
+          buildWhen: (p, c) => p.seekerVacancies != c.seekerVacancies || p.myApplications != c.myApplications,
           builder: (context, state) {
             final vacancies = _companyVacancies(state);
             return CustomScrollView(
@@ -70,7 +91,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                 SliverToBoxAdapter(child: _buildHeader(v, vacancies.length)),
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPad + 28),
-                  sliver: _tab == 0 ? _buildAbout(v) : _buildVacancies(vacancies),
+                  sliver: _tab == 0 ? _buildAbout(v, _contactUnlocked(state)) : _buildVacancies(vacancies),
                 ),
               ],
             );
@@ -179,10 +200,17 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
     );
   }
 
-  Widget _buildAbout(VacancyModel v) {
+  Widget _buildAbout(VacancyModel v, bool contactUnlocked) {
     final rows = <Widget>[
       if (v.companyPhone != null)
-        _InfoTile(icon: Icons.phone_outlined, label: 'Telefon raqami', value: v.companyPhone!),
+        contactUnlocked
+            ? _InfoTile(icon: Icons.phone_outlined, label: 'Telefon raqami', value: v.companyPhone!)
+            : const _InfoTile(
+                icon: Icons.lock_outline_rounded,
+                label: 'Telefon raqami',
+                value: kContactLockedHint,
+                muted: true,
+              ),
       if (v.companyAddress != null)
         _InfoTile(icon: Icons.location_on_outlined, label: 'Joylashuv', value: v.companyAddress!),
       if (v.companyContact != null)
@@ -248,7 +276,9 @@ class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _InfoTile({required this.icon, required this.label, required this.value});
+  /// Yopiq (hali ochilmagan) qiymat — kulrang ko'rinadi.
+  final bool muted;
+  const _InfoTile({required this.icon, required this.label, required this.value, this.muted = false});
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +287,7 @@ class _InfoTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: JB_BLUE),
+          Icon(icon, size: 18, color: muted ? JB_GRAY_LIGHT : JB_BLUE),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -265,7 +295,14 @@ class _InfoTile extends StatelessWidget {
               children: [
                 Text(label, style: const TextStyle(fontSize: 12.5, color: JB_GRAY_LIGHT)),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: JB_INK)),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: muted ? 13 : 14.5,
+                    fontWeight: muted ? FontWeight.w500 : FontWeight.w700,
+                    color: muted ? JB_GRAY : JB_INK,
+                  ),
+                ),
               ],
             ),
           ),

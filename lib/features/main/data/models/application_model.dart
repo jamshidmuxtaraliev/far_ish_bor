@@ -1,6 +1,15 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/constants/colors.dart';
+import 'application_access.dart';
+
 class ApplicationModel {
   final int id;
   final String status;
+
+  /// Ariza yuborilgan vakansiya (requirement) id'si — vakansiya ekranida
+  /// "bu vakansiyaga arizam qabul qilinganmi?" degan tekshiruv uchun.
+  final int? requirementId;
   final String? jobTypeName;
   final String? companyName;
   final String? companyPhone;
@@ -16,6 +25,7 @@ class ApplicationModel {
   ApplicationModel({
     required this.id,
     required this.status,
+    this.requirementId,
     this.jobTypeName,
     this.companyName,
     this.companyPhone,
@@ -46,6 +56,7 @@ class ApplicationModel {
     return ApplicationModel(
       id: json['id'] as int? ?? 0,
       status: json['status'] as String? ?? 'pending',
+      requirementId: (req['id'] ?? json['requirement_id']) as int?,
       jobTypeName: jobType?['name_uz'] as String? ?? jobType?['name'] as String?,
       companyName: employer['name'] as String?,
       companyPhone: employer['phone'] as String?,
@@ -62,21 +73,72 @@ class ApplicationModel {
 
   bool get isActive => !['rejected', 'missed'].contains(status);
 
-  String get statusLabel {
-    switch (status) {
-      case 'pending':    return 'Kutilmoqda';
-      case 'viewed':     return "Ko'rildi";
-      case 'invited':    return 'Taklif qilindi';
-      case 'scheduled':  return 'Suhbatga chaqirildi';
-      case 'confirmed':  return 'Tasdiqlandi';
-      case 'on_way':     return "Yo'ldaman";
-      case 'arrived':    return 'Keldi';
-      case 'hired':      return 'Ishga olindi';
-      case 'missed':     return 'Kelmadi';
-      case 'rejected':   return 'Rad etildi';
-      default:           return status;
-    }
-  }
+  /// Ish beruvchi arizani qabul qilganmi — korxona telefoni va chat shu
+  /// shartga bog'liq.
+  bool get isAccepted => isApplicationAccepted(status);
+
+  /// Ish izlovchiga ko'rinadigan status matni. Backenddagi BARCHA qiymatlar shu
+  /// yerda tarjima qilinadi; noma'lum qiymat ham inglizcha chiqib qolmasligi
+  /// uchun umumiy "Jarayonda" ga tushadi.
+  String get statusLabel => switch (status) {
+        'pending' => 'Kutilmoqda',
+        'viewed' => "Ko'rildi",
+        'invited' => 'Taklif qilindi',
+        'scheduled' => 'Suhbatga chaqirildi',
+        'confirmed' => 'Tasdiqlandi',
+        'on_way' => "Yo'ldaman",
+        'arrived' => 'Keldi',
+        'accepted' => 'Maqul keldingiz',
+        'probation' => 'Sinov davrida',
+        'hired' => 'Ishga olindingiz',
+        'missed' => 'Kelmadingiz',
+        'rejected' => 'Rad etildi',
+        // Biriktirish (assignment) statuslari — ba'zi javoblarda shular keladi.
+        'suhbatga_yozildi' => 'Suhbat vaqti belgilandi',
+        'suhbatga_bordi' => 'Suhbatga bordingiz',
+        'bormadi' => 'Bormadingiz',
+        'qabul_qilindi' => 'Qabul qilindingiz',
+        'mos_kelmadi' => 'Mos kelmadi',
+        _ => 'Jarayonda',
+      };
+
+  Color get statusColor => switch (status) {
+        'pending' => const Color(0xFFD97706),
+        'viewed' => const Color(0xFF4F46E5),
+        'invited' => const Color(0xFF7C3AED),
+        'scheduled' || 'confirmed' || 'arrived' => const Color(0xFF16A34A),
+        'on_way' || 'probation' || 'suhbatga_yozildi' || 'suhbatga_bordi' => const Color(0xFF0891B2),
+        'accepted' || 'hired' || 'qabul_qilindi' => const Color(0xFF16A34A),
+        'rejected' => const Color(0xFFDC2626),
+        _ => GRAY_TEXT,
+      };
+
+  Color get statusBgColor => switch (status) {
+        'pending' => const Color(0xFFFEF3C7),
+        'viewed' => const Color(0xFFEEF2FF),
+        'invited' => const Color(0xFFF5F3FF),
+        'scheduled' || 'confirmed' || 'arrived' => const Color(0xFFF0FDF4),
+        'on_way' || 'probation' || 'suhbatga_yozildi' || 'suhbatga_bordi' => const Color(0xFFECFEFF),
+        'accepted' || 'hired' || 'qabul_qilindi' => const Color(0xFFF0FDF4),
+        'rejected' => const Color(0xFFFEF2F2),
+        _ => const Color(0xFFF3F4F6),
+      };
+
+  IconData get statusIcon => switch (status) {
+        'pending' => Icons.timelapse_rounded,
+        'viewed' => Icons.check_circle_outline_rounded,
+        'invited' => Icons.mail_outline_rounded,
+        'scheduled' || 'suhbatga_yozildi' => Icons.calendar_month_rounded,
+        'confirmed' => Icons.check_circle_rounded,
+        'on_way' => Icons.directions_walk_rounded,
+        'arrived' || 'suhbatga_bordi' => Icons.location_on_rounded,
+        'accepted' || 'qabul_qilindi' => Icons.thumb_up_outlined,
+        'probation' => Icons.hourglass_bottom_rounded,
+        'hired' => Icons.handshake_outlined,
+        'missed' || 'bormadi' => Icons.event_busy_rounded,
+        'rejected' || 'mos_kelmadi' => Icons.cancel_outlined,
+        _ => Icons.info_outline,
+      };
 
   bool get canConfirm  => status == 'scheduled' || status == 'invited';
   bool get canGoOnWay  => status == 'confirmed';

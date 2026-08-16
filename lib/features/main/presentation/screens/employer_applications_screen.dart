@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../data/models/application_access.dart';
 import '../../data/models/employer_application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'applicant_profile_screen.dart';
@@ -361,6 +362,7 @@ class _AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = _statusTone(app.status);
+    final chatUnlocked = isApplicationAccepted(app.status);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -483,20 +485,31 @@ class _AppCard extends StatelessWidget {
                 child: SizedBox(
                   height: 44,
                   child: OutlinedButton(
-                    onPressed: onMessage,
+                    // Chat faqat ariza qabul qilingandan keyin ochiladi.
+                    onPressed: chatUnlocked ? onMessage : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: DARK_NAVY,
+                      disabledForegroundColor: GRAY_TEXT,
                       side: const BorderSide(color: Color(0xFFD1D5DB)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Xabar yuborish',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (!chatUnlocked) ...[
+                          const Icon(Icons.lock_outline_rounded, size: 15),
+                          const SizedBox(width: 6),
+                        ],
+                        const Text(
+                          'Xabar yuborish',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

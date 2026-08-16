@@ -58,7 +58,7 @@ String applicationStatusLabel(String s) => switch (s) {
       'hired' => 'Ishga kirdi',
       'missed' => 'Kelmadi',
       'rejected' => 'Rad etildi',
-      _ => s,
+      _ => 'Jarayonda',
     };
 
 /// Ish beruvchi qo'ya oladigan statuslar (§4.3 `EMPLOYER_ALLOWED_STATUSES`).
@@ -134,5 +134,5 @@ String assignmentStatusLabel(String? s) => switch (s) {
       'bormadi' => 'Bormadi',
       'qabul_qilindi' => 'Qabul qilindi',
       'mos_kelmadi' => 'Mos kelmadi',
-      _ => s,
+      _ => 'Jarayonda',
     };

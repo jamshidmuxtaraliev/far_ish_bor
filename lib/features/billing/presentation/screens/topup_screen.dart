@@ -16,7 +16,13 @@ import '../logic/billing_bloc.dart';
 class TopUpScreen extends StatefulWidget {
   /// Employer vs job-seeker balance (different endpoints).
   final bool isEmployer;
-  const TopUpScreen({super.key, required this.isEmployer});
+
+  /// Pre-selected top-up amount — used when the screen is opened from a paid
+  /// action that failed on an insufficient balance (e.g. buying a premium
+  /// tariff), so the missing sum is already filled in.
+  final int? initialAmount;
+
+  const TopUpScreen({super.key, required this.isEmployer, this.initialAmount});
 
   @override
   State<TopUpScreen> createState() => _TopUpScreenState();
@@ -40,6 +46,14 @@ class _TopUpScreenState extends State<TopUpScreen> {
   @override
   void initState() {
     super.initState();
+    final initial = widget.initialAmount;
+    if (initial != null && initial > 0) {
+      if (_presets.contains(initial)) {
+        _selectedAmount = initial;
+      } else {
+        _amountCtrl.text = initial.toString();
+      }
+    }
     final bloc = context.read<BillingBloc>();
     bloc.add(LoadBalanceEvent(widget.isEmployer));
     bloc.add(const LoadPaymentSystemsEvent());

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
+import '../../data/models/application_access.dart';
 import '../../data/models/application_model.dart';
 import '../logic/vacancy_bloc.dart';
 
@@ -11,38 +12,10 @@ class ApplicationDetailScreen extends StatelessWidget {
   final ApplicationModel application;
   const ApplicationDetailScreen({super.key, required this.application});
 
-  _StatusStyle _statusStyle(String status) {
-    switch (status) {
-      case 'pending':
-        return _StatusStyle(color: const Color(0xFFD97706), bgColor: const Color(0xFFFEF3C7), icon: Icons.timelapse_rounded, label: 'Kutilmoqda');
-      case 'viewed':
-        return _StatusStyle(color: const Color(0xFF4F46E5), bgColor: const Color(0xFFEEF2FF), icon: Icons.check_circle_outline_rounded, label: "Ko'rildi");
-      case 'invited':
-        return _StatusStyle(color: const Color(0xFF7C3AED), bgColor: const Color(0xFFF5F3FF), icon: Icons.mail_outline_rounded, label: 'Taklif qilindi');
-      case 'scheduled':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.calendar_month_rounded, label: 'Suhbatga chaqirildi');
-      case 'confirmed':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.check_circle_rounded, label: 'Tasdiqlandi');
-      case 'on_way':
-        return _StatusStyle(color: const Color(0xFF0891B2), bgColor: const Color(0xFFECFEFF), icon: Icons.directions_walk_rounded, label: "Yo'ldaman");
-      case 'arrived':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.location_on_rounded, label: 'Keldi');
-      case 'hired':
-        return _StatusStyle(color: const Color(0xFF16A34A), bgColor: const Color(0xFFF0FDF4), icon: Icons.handshake_outlined, label: 'Ishga olindi');
-      case 'missed':
-        return _StatusStyle(color: GRAY_TEXT, bgColor: const Color(0xFFF3F4F6), icon: Icons.event_busy_rounded, label: 'Kelmadi');
-      case 'rejected':
-        return _StatusStyle(color: const Color(0xFFDC2626), bgColor: const Color(0xFFFEF2F2), icon: Icons.cancel_outlined, label: 'Rad etildi');
-      default:
-        return _StatusStyle(color: GRAY_TEXT, bgColor: const Color(0xFFF3F4F6), icon: Icons.info_outline, label: application.statusLabel);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final a = application;
     final bottomPad = MediaQuery.of(context).padding.bottom;
-    final style = _statusStyle(a.status);
     final hasInterview = a.interviewDatetime != null &&
         (a.status == 'scheduled' || a.status == 'confirmed' || a.status == 'on_way');
     final showActions = a.canConfirm || a.canGoOnWay;
@@ -118,13 +91,13 @@ class ApplicationDetailScreen extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: style.bgColor,
+                          color: a.statusBgColor,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: style.color.withValues(alpha: 0.25)),
+                          border: Border.all(color: a.statusColor.withValues(alpha: 0.25)),
                         ),
                         child: Row(
                           children: [
-                            Icon(style.icon, size: 24, color: style.color),
+                            Icon(a.statusIcon, size: 24, color: a.statusColor),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -133,8 +106,8 @@ class ApplicationDetailScreen extends StatelessWidget {
                                   const Text('Ariza holati', style: TextStyle(fontSize: 11, color: GRAY_TEXT)),
                                   const SizedBox(height: 2),
                                   Text(
-                                    style.label,
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: style.color),
+                                    a.statusLabel,
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: a.statusColor),
                                   ),
                                 ],
                               ),
@@ -206,17 +179,40 @@ class ApplicationDetailScreen extends StatelessWidget {
                         const SizedBox(height: 24),
                       ],
 
-                      // Company phone
+                      // Company phone — faqat ariza qabul qilingandan keyin.
                       if (a.companyPhone != null) ...[
                         const Text("Bog'lanish", style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: DARK_NAVY)),
                         const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            const Icon(Icons.phone_outlined, size: 18, color: PRIMARY_BLUE),
-                            const SizedBox(width: 8),
-                            Text(a.companyPhone!, style: const TextStyle(fontSize: 15, color: DARK_NAVY)),
-                          ],
-                        ),
+                        if (a.isAccepted)
+                          Row(
+                            children: [
+                              const Icon(Icons.phone_outlined, size: 18, color: PRIMARY_BLUE),
+                              const SizedBox(width: 8),
+                              Text(a.companyPhone!, style: const TextStyle(fontSize: 15, color: DARK_NAVY)),
+                            ],
+                          )
+                        else
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: LIGHT_GRAY_BG,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.lock_outline_rounded, size: 18, color: GRAY_TEXT),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    kContactLockedHint,
+                                    style: TextStyle(fontSize: 13.5, color: GRAY_TEXT, height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         const SizedBox(height: 24),
                       ],
 
@@ -359,12 +355,4 @@ class _InfoCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _StatusStyle {
-  final Color color;
-  final Color bgColor;
-  final IconData icon;
-  final String label;
-  const _StatusStyle({required this.color, required this.bgColor, required this.icon, required this.label});
 }

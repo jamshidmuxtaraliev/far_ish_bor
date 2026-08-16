@@ -23,8 +23,9 @@ import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isEmployer;
+  final ValueChanged<int>? onSelectTab;
 
-  const ProfileScreen({super.key, this.isEmployer = false});
+  const ProfileScreen({super.key, this.isEmployer = false, this.onSelectTab});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -520,13 +521,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icons.work_outline,
         label: 'Vakansiyalar',
         color: const Color(0xFF0891B2),
-        onTap: () {},
+        onTap: () => widget.onSelectTab?.call(0),
       ),
       _MenuItem(
         icon: Icons.people_outline,
         label: 'Nomzodlarni kuzatish',
         color: const Color(0xFF7C3AED),
-        onTap: () {},
+        onTap: () => widget.onSelectTab?.call(1),
       ),
       _MenuItem(
         icon: Icons.workspace_premium_outlined,
