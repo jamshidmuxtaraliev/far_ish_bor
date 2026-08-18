@@ -1,4 +1,5 @@
 import '../../../../core/constants/constants.dart';
+import 'contact_unlock_model.dart';
 
 class CandidateProfessionModel {
   final int jobTypeId;
@@ -144,6 +145,11 @@ class CandidateModel {
   // locked=true → only teaser fields returned; `fee` = one-time unlock price.
   final bool locked;
   final int? fee;
+  // PROMPT_OTKLIK §3.4 — yopiq kartada narx bilan birga keladigan balans holati.
+  final int? balance;
+  final bool? canPayFromBalance;
+  // §6 — ochilgan nomzodda: telefon · chat kaliti · suhbat.
+  final ContactCapabilitiesModel? capabilities;
   // Recommended endpoint extras
   final bool recommended;
   final CandidateAssignmentModel? assignment;
@@ -186,6 +192,9 @@ class CandidateModel {
     this.additionalContact,
     this.locked = false,
     this.fee,
+    this.balance,
+    this.canPayFromBalance,
+    this.capabilities,
     this.recommended = false,
     this.assignment,
     this.vacancy,
@@ -261,7 +270,13 @@ class CandidateModel {
       phoneRaw: json['phone'] as String? ?? json['phone_number'] as String?,
       additionalContact: json['additional_contact'] as String?,
       locked: json['locked'] as bool? ?? false,
-      fee: json['fee'] as int?,
+      fee: (json['fee'] as num?)?.toInt(),
+      balance: (json['balance'] as num?)?.toInt(),
+      canPayFromBalance: json['can_pay_from_balance'] as bool?,
+      capabilities: json['capabilities'] is Map
+          ? ContactCapabilitiesModel.fromJson(
+              Map<String, dynamic>.from(json['capabilities'] as Map))
+          : null,
       recommended: json['recommended'] as bool? ?? false,
       assignment: assignJson != null
           ? CandidateAssignmentModel.fromJson(assignJson)

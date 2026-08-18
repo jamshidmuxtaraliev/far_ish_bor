@@ -11,8 +11,8 @@ import '../logic/candidate_stages.dart';
 import '../logic/vacancy_bloc.dart';
 import '../screens/applicant_profile_screen.dart';
 import '../screens/candidate_detail_screen.dart';
-import 'candidate_card.dart'
-    show confirmPaidUnlock, formatAmount, matchBucketColor;
+import 'candidate_card.dart' show matchBucketColor;
+import 'otklik_actions.dart';
 
 /// PROMPT_NOMZODLAR_3TAB_MOBILE.md §12 — uch tab bitta karta tilini ulashadi:
 /// ism · status/mos badge · kasb · hudud · yosh · telefon (niqob) · [Batafsil]
@@ -279,38 +279,37 @@ class NomzodRow {
 }
 
 /// Tavsiya etilgan (§5) va Mos nomzodlar (§6) tablari uchun umumiy karta.
-/// `contactGate = true` (Mos tab) → telefon yopiq, avval "Ochish" kerak.
+/// Nomzod ochilmagan bo'lsa telefon/chat/suhbat yopiq — avval "Ochish"
+/// (PROMPT_OTKLIK §3–4).
 class NomzodCard extends StatelessWidget {
   final NomzodRow row;
   final VacancyState state;
   final bool showMatch;
-  final bool contactGate;
 
   const NomzodCard({
     super.key,
     required this.row,
     required this.state,
     this.showMatch = false,
-    this.contactGate = false,
   });
 
   CandidateModel get c => row.candidate;
 
   @override
   Widget build(BuildContext context) {
-    final unlocked = c.isUnlocked ||
-        state.unlockedAnketaIds.contains(c.id) ||
-        (c.phoneRaw ?? '').isNotEmpty;
-    final phone = c.phoneRaw ?? state.unlockedPhones[c.id];
-    final premium = state.contactAccess?.freeContacts ?? false;
-    final fee = state.contactAccess?.fee ?? 30000;
+    final unlocked = state.isUnlocked(c);
+    final phone = state.phoneOf(c);
+    final free = state.isFreeUnlock(c);
+    final fee = state.feeFor(c);
     final busy = state.assignmentActionStatus.isInProgress ||
         state.unlockStatus.isInProgress;
 
+    // Yopiq kartada hudud kelmaydi (§3.2) — ochilgach ko'rsatiladi.
     final meta = [
       if ((c.jobTypeName ?? '').isNotEmpty) c.jobTypeName!,
-      if (c.region != null) c.region!.name,
+      if (unlocked && c.region != null) c.region!.name,
       if (c.age != null) '${c.age} yosh',
+      if (c.genderLabel.isNotEmpty) c.genderLabel,
     ].join(' · ');
 
     return JBCard(
@@ -394,19 +393,19 @@ class NomzodCard extends StatelessWidget {
                 ],
               ),
             ),
-          _phoneRow(
-            phone: unlocked ? phone : null,
-            masked: c.maskedPhone,
-          ),
+          if (unlocked)
+            _phoneRow(phone: phone, masked: c.maskedPhone)
+          else
+            const LockedNoticeRow(),
           const SizedBox(height: 14),
-          ..._actions(context, unlocked, premium, fee, busy),
+          ..._actions(context, unlocked, free, fee, busy),
         ],
       ),
     );
   }
 
-  List<Widget> _actions(BuildContext context, bool unlocked, bool premium,
-      int fee, bool busy) {
+  List<Widget> _actions(
+      BuildContext context, bool unlocked, bool free, int fee, bool busy) {
     final detail = actionButton(
       label: 'Batafsil',
       icon: Icons.visibility_outlined,
@@ -421,45 +420,39 @@ class NomzodCard extends StatelessWidget {
       ),
     );
 
-    // Kontakt gate (Mos tab): avval ochish (§6.4).
-    if (contactGate && !unlocked && !premium) {
+    // Kontakt gate: avval ochish — telefon · chat · suhbat shundan keyin (§4).
+    // Tavsiya tabidagi yopiq nomzod ham shu yerga tushadi (u yerda ochish bepul).
+    if (!unlocked) {
       return [
         Row(
           children: [
             detail,
             const SizedBox(width: 10),
             actionButton(
-              label: 'Ochish · ${formatAmount(fee)}',
-              icon: Icons.lock_outline_rounded,
-              color: JB_BLUE,
+              label: free ? 'Bepul ochish' : 'Ochish · ${formatAmount(fee)}',
+              icon: free ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+              color: free ? JB_GREEN_FG : JB_BLUE,
               onTap: busy
                   ? null
-                  : () => confirmPaidUnlock(context,
-                      anketaId: c.id, vacancyId: row.requirementId, fee: fee),
+                  : () => startUnlock(context,
+                      candidate: c, vacancyId: row.requirementId),
             ),
           ],
         ),
       ];
     }
-    if (contactGate && !unlocked && premium) {
-      return [
-        Row(
-          children: [
-            detail,
-            const SizedBox(width: 10),
-            actionButton(
-              label: 'Bepul ochish',
-              icon: Icons.lock_open_rounded,
-              color: JB_GREEN_FG,
-              onTap: busy
-                  ? null
-                  : () => context.read<VacancyBloc>().add(UnlockContactEvent(
-                      anketaId: c.id, vacancyId: row.requirementId)),
+
+    // Ochilgan nomzod — §6 dagi uchta imkoniyat, so'ng bosqich harakatlari.
+    final capabilityRow = unlocked
+        ? [
+            UnlockedActionsRow(
+              candidate: c,
+              requirementId: row.requirementId,
+              busy: busy,
             ),
-          ],
-        ),
-      ];
-    }
+            const SizedBox(height: 8),
+          ]
+        : const <Widget>[];
 
     // Bosqich harakatlari (§5.3 / PROMPT_MOS_NOMZODLAR §5).
     final status = row.assignmentStatus ?? '';
@@ -495,6 +488,7 @@ class NomzodCard extends StatelessWidget {
 
     // Birinchi qator: [Batafsil] + birinchi amal; qolganlari 2 tadan.
     final rows = <Widget>[
+      ...capabilityRow,
       Row(children: [
         detail,
         if (buttons.isNotEmpty) ...[const SizedBox(width: 10), buttons.first],

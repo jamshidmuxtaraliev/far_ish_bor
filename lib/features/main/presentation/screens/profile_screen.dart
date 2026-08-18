@@ -17,6 +17,8 @@ import '../../../chat/presentation/logic/chat_bloc.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
 import '../../../faq/presentation/screens/faq_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../widgets/resume_actions.dart';
+import '../widgets/resume_card.dart';
 import 'edit_employer_screen.dart';
 import 'my_applications_screen.dart';
 import 'settings_screen.dart';
@@ -32,6 +34,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  /// Rezyume holati birinchi marta tekshirilmoqda. Bloc'dagi status
+  /// muvaffaqiyatdan keyin darhol `initial`ga qaytariladi, shuning uchun
+  /// "tekshirilmoqda / xato" ko'rinishini shu yerda ushlab turamiz.
+  bool _resumeChecking = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +48,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bloc.add(LoadEmployerEvent());
     } else {
       bloc.add(LoadAnketaEvent());
+      _resumeChecking = true;
+      bloc.add(LoadResumeInfoEvent());
     }
+  }
+
+  void _loadResumeInfo() {
+    setState(() => _resumeChecking = true);
+    context.read<AuthBloc>().add(LoadResumeInfoEvent());
+  }
+
+  void _onAuthStateChanged(BuildContext context, AuthState state) {
+    if (state.resumeInfoStatus.isSuccess || state.resumeInfoStatus.isFailure) {
+      if (_resumeChecking) setState(() => _resumeChecking = false);
+    }
+    if (state.downloadResumeStatus.isSuccess && state.resumeFilePath != null) {
+      ResumeActions.showReadySheet(context, state.resumeFilePath!);
+    } else if (state.downloadResumeStatus.isFailure) {
+      showError(
+        context,
+        state.error?.errorMessage ?? "Rezyumeni yuklab bo'lmadi",
+      );
+    }
+  }
+
+  Widget _buildResumeCard(AuthState state) {
+    return ResumeCard(
+      resume: state.resume,
+      loading: _resumeChecking,
+      downloading: state.downloadResumeStatus.isInProgress,
+      progress: state.resumeProgress,
+      savedFilePath: state.resumeFilePath,
+      anketaMissing: state.anketaMissing,
+      onDownload: () => context.read<AuthBloc>().add(DownloadResumeEvent()),
+      onUploadPhoto: _pickAndUploadAvatar,
+      onRetry: _loadResumeInfo,
+      onFillAnketa: _openAnketa,
+      onOpenSaved: () => ResumeActions.open(context, state.resumeFilePath!),
+      onShareSaved: () => ResumeActions.share(context, state.resumeFilePath!),
+    );
+  }
+
+  void _openAnketa() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const AnketaScreen()))
+        // Anketa tahrirlansa submission_status "yangi"ga qaytadi — qaytgach
+        // rezyume holatini qayta so'raymiz.
+        .then((_) {
+          if (mounted) _loadResumeInfo();
+        });
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -116,7 +171,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Scaffold(
         backgroundColor: JB_BG,
-        body: BlocBuilder<AuthBloc, AuthState>(
+        body: BlocConsumer<AuthBloc, AuthState>(
+          listenWhen:
+              (prev, curr) =>
+                  prev.resumeInfoStatus != curr.resumeInfoStatus ||
+                  prev.downloadResumeStatus != curr.downloadResumeStatus,
+          listener: _onAuthStateChanged,
           builder: (context, state) {
             final user = state.user;
             final isLoading = state.getMeStatus.isInProgress && user == null;
@@ -150,6 +210,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 16),
                       if (showPhotoBanner) ...[
                         _buildPhotoBanner(),
+                        const SizedBox(height: 16),
+                      ],
+                      if (!widget.isEmployer) ...[
+                        _buildResumeCard(state),
                         const SizedBox(height: 16),
                       ],
                       if (!widget.isEmployer &&
@@ -483,10 +547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icons.person_outline,
         label: "Anketa to'ldirish",
         color: PRIMARY_BLUE,
-        onTap:
-            () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const AnketaScreen())),
+        onTap: _openAnketa,
       ),
       _MenuItem(
         icon: Icons.folder_open_outlined,

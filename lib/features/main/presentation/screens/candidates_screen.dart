@@ -5,6 +5,7 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
+import '../../../billing/data/models/balance_model.dart' show formatSom;
 import '../../../billing/presentation/logic/billing_bloc.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../data/models/employer_application_model.dart';
@@ -320,13 +321,12 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     );
   }
 
-  /// Premium bo'lsa → "Bepul", aks holda balans (bosilsa — to'ldirish).
+  /// Tarifli bo'lsa → "Premium" (otklik yo'q, §9.1), aks holda balans chipi.
   Widget _balanceChip(BuildContext context) {
     return BlocBuilder<VacancyBloc, VacancyState>(
       buildWhen: (p, c) => p.contactAccess != c.contactAccess,
       builder: (context, vacState) {
-        final premium = vacState.contactAccess?.freeContacts ?? false;
-        if (premium) {
+        if (!vacState.isOtklikMode) {
           return const JBChip(
             text: '✦ Premium',
             bg: JB_GREEN_BG,
@@ -354,11 +354,19 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                 final balance = billing.balance;
                 final loading =
                     balance == null && billing.balanceStatus.isInProgress;
+                // Balans `contact-access` javobida ham keladi (§2) — biri
+                // yetib kelmasa ikkinchisini ko'rsatamiz.
+                final fallback = vacState.contactAccess?.balance;
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      loading ? '...' : (balance?.balanceDisplay ?? "0 so'm"),
+                      loading
+                          ? '...'
+                          : (balance?.balanceDisplay ??
+                              (fallback != null
+                                  ? formatSom(fallback)
+                                  : "0 so'm")),
                       style: const TextStyle(
                           color: JB_BLUE,
                           fontSize: 12,
@@ -617,6 +625,15 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   // ── Kontent ─────────────────────────────────────────────────────────────────
 
   Widget _body(VacancyState state) {
+    // §2 — operator nomzod bazasini yopgan bo'lsa mos nomzodlar ko'rsatilmaydi.
+    final access = state.contactAccess;
+    if (_tab == _MainTab.matched && access != null && !access.canSearchCandidates) {
+      return EmptyView(
+        icon: Icons.lock_outline_rounded,
+        message: 'Nomzodlar bazasi yopiq',
+        subtitle: 'Bazadan foydalanish uchun operator bilan bog\'laning.',
+      );
+    }
     if (_loadingCurrentTab(state)) {
       return const Center(child: CircularProgressIndicator(color: JB_BLUE));
     }
@@ -643,7 +660,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       _MainTab.matched => _matchedRows(state)
           .where((r) => bucketFromAssignment(r.assignmentStatus) == bucket)
           .map<Widget>((r) =>
-              NomzodCard(row: r, state: state, showMatch: true, contactGate: true))
+              NomzodCard(row: r, state: state, showMatch: true))
           .toList(),
     };
 

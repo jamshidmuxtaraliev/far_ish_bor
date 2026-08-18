@@ -47,11 +47,18 @@ class CheckoutResponse {
   final bool isTest;
   final String? testConfirmUrl;
 
+  /// Dev simulyatsiyasi: server to'lovni o'zi yakunlagan va balansni to'ldirgan
+  /// (PROMPT_OTKLIK_MOBILE.md §5.2 B-varianti). Prod'da hech qachon kelmaydi.
+  final bool testCompleted;
+  final int? balance;
+
   const CheckoutResponse({
     required this.payment,
     this.checkoutUrl,
     this.isTest = false,
     this.testConfirmUrl,
+    this.testCompleted = false,
+    this.balance,
   });
 
   factory CheckoutResponse.fromJson(Map<String, dynamic> json) {
@@ -63,10 +70,13 @@ class CheckoutResponse {
           json['checkoutUrl'] as String? ?? json['checkout_url'] as String?,
       isTest: json['is_test'] as bool? ?? false,
       testConfirmUrl: json['test_confirm_url'] as String?,
+      testCompleted: json['test_completed'] as bool? ?? false,
+      balance: parseAmount(json['balance']) == 0 ? null : parseAmount(json['balance']),
     );
   }
 
   /// True when the payment must be confirmed in-app (test provider, no WebView).
   bool get needsTestConfirm =>
-      isTest || (checkoutUrl == null || checkoutUrl!.isEmpty);
+      !testCompleted &&
+      (isTest || (checkoutUrl == null || checkoutUrl!.isEmpty));
 }

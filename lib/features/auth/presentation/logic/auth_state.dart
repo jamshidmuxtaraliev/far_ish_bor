@@ -15,6 +15,8 @@ class AuthState extends Equatable {
   final FormzSubmissionStatus updateEmployerStatus;
   final FormzSubmissionStatus uploadLogoStatus;
   final FormzSubmissionStatus uploadPhotoStatus;
+  final FormzSubmissionStatus resumeInfoStatus;
+  final FormzSubmissionStatus downloadResumeStatus;
   final ErrorModel? error;
   final UserModel? user;
   final AnketaModel? anketa;
@@ -22,6 +24,16 @@ class AuthState extends Equatable {
   final List<RegionModel> regions;
   final List<JobTypeModel> jobTypes;
   final List<LanguageModel> languages;
+  final ResumeInfoModel? resume;
+
+  /// 0..1 — yuklab olish foizi.
+  final double resumeProgress;
+
+  /// Oxirgi saqlangan PDF yo'li (offline ochish uchun).
+  final String? resumeFilePath;
+
+  /// `/anketa/resume` 404 qaytardi — foydalanuvchi hali anketa to'ldirmagan.
+  final bool anketaMissing;
 
   const AuthState({
     this.sendCodeStatus = FormzSubmissionStatus.initial,
@@ -37,6 +49,8 @@ class AuthState extends Equatable {
     this.updateEmployerStatus = FormzSubmissionStatus.initial,
     this.uploadLogoStatus = FormzSubmissionStatus.initial,
     this.uploadPhotoStatus = FormzSubmissionStatus.initial,
+    this.resumeInfoStatus = FormzSubmissionStatus.initial,
+    this.downloadResumeStatus = FormzSubmissionStatus.initial,
     this.error,
     this.user,
     this.anketa,
@@ -44,6 +58,10 @@ class AuthState extends Equatable {
     this.regions = const [],
     this.jobTypes = const [],
     this.languages = const [],
+    this.resume,
+    this.resumeProgress = 0,
+    this.resumeFilePath,
+    this.anketaMissing = false,
   });
 
   AuthState copyWith({
@@ -60,6 +78,8 @@ class AuthState extends Equatable {
     FormzSubmissionStatus? updateEmployerStatus,
     FormzSubmissionStatus? uploadLogoStatus,
     FormzSubmissionStatus? uploadPhotoStatus,
+    FormzSubmissionStatus? resumeInfoStatus,
+    FormzSubmissionStatus? downloadResumeStatus,
     ErrorModel? error,
     UserModel? user,
     AnketaModel? anketa,
@@ -67,6 +87,10 @@ class AuthState extends Equatable {
     List<RegionModel>? regions,
     List<JobTypeModel>? jobTypes,
     List<LanguageModel>? languages,
+    ResumeInfoModel? resume,
+    double? resumeProgress,
+    String? resumeFilePath,
+    bool? anketaMissing,
   }) {
     return AuthState(
       sendCodeStatus: sendCodeStatus ?? this.sendCodeStatus,
@@ -82,6 +106,8 @@ class AuthState extends Equatable {
       updateEmployerStatus: updateEmployerStatus ?? this.updateEmployerStatus,
       uploadLogoStatus: uploadLogoStatus ?? this.uploadLogoStatus,
       uploadPhotoStatus: uploadPhotoStatus ?? this.uploadPhotoStatus,
+      resumeInfoStatus: resumeInfoStatus ?? this.resumeInfoStatus,
+      downloadResumeStatus: downloadResumeStatus ?? this.downloadResumeStatus,
       error: error ?? this.error,
       user: user ?? this.user,
       anketa: anketa ?? this.anketa,
@@ -89,6 +115,10 @@ class AuthState extends Equatable {
       regions: regions ?? this.regions,
       jobTypes: jobTypes ?? this.jobTypes,
       languages: languages ?? this.languages,
+      resume: resume ?? this.resume,
+      resumeProgress: resumeProgress ?? this.resumeProgress,
+      resumeFilePath: resumeFilePath ?? this.resumeFilePath,
+      anketaMissing: anketaMissing ?? this.anketaMissing,
     );
   }
 
@@ -97,6 +127,8 @@ class AuthState extends Equatable {
         sendCodeStatus, registerStatus, loginStatus, getMeStatus,
         anketaStatus, updateAnketaStatus, regionsStatus, jobTypesStatus, languagesStatus,
         employerStatus, updateEmployerStatus, uploadLogoStatus, uploadPhotoStatus,
+        resumeInfoStatus, downloadResumeStatus,
         error, user, anketa, employer, regions, jobTypes, languages,
+        resume, resumeProgress, resumeFilePath, anketaMissing,
       ];
 }

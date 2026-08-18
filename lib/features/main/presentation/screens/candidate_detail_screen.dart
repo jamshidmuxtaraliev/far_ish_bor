@@ -5,10 +5,10 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/custom_cached_network_image.dart';
-import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../data/models/candidate_model.dart';
-import '../../data/models/contact_unlock_model.dart';
 import '../logic/vacancy_bloc.dart';
+import '../widgets/candidate_card.dart' show showUnlockSuccessSheet;
+import '../widgets/otklik_actions.dart';
 
 /// "Batafsil" — nomzod to'liq rezyumesi (struktura: web reference 2-rasm; light).
 /// B varianti: `detail.locked == true` bo'lsa rezyume yopiq panel ko'rsatiladi.
@@ -34,6 +34,10 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
     final bloc = context.read<VacancyBloc>();
     bloc.add(LoadCandidateDetailEvent(widget.candidateId));
     bloc.add(LoadContactAccessEvent());
+    // Suhbatga chaqirishda vakansiya tanlash uchun kerak (§8).
+    if (bloc.state.employerVacancies.isEmpty) {
+      bloc.add(LoadEmployerVacanciesEvent());
+    }
   }
 
   void _reload() => context
@@ -60,29 +64,64 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: BlocListener<VacancyBloc, VacancyState>(
-          listenWhen: (prev, curr) => prev.unlockStatus != curr.unlockStatus,
-          listener: (context, state) {
-            if (state.unlockStatus.isSuccess && state.unlockResult != null) {
-              _showUnlockSuccess(context, state.unlockResult!);
-              // Ochilgach to'liq rezyume + telefon kelishi uchun qayta yuklaymiz
-              _reload();
-            } else if (state.unlockStatus.isFailure) {
-              final code = state.error?.errorCode;
-              if (code == 402) {
-                _showInsufficientBalance(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(state.error?.errorMessage ?? 'Xatolik'),
-                  backgroundColor: Colors.red,
-                ));
-              }
-            }
-          },
+        body: MultiBlocListener(
+          listeners: [
+            // §8 — suhbatga chaqirish natijasi (kontakt gate → 402).
+            BlocListener<VacancyBloc, VacancyState>(
+              listenWhen: (p, c) =>
+                  p.assignmentActionStatus != c.assignmentActionStatus,
+              listener: (context, state) {
+                if (state.assignmentActionStatus.isSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Nomzod suhbatga chaqirildi'),
+                    backgroundColor: GREEN_COLOR,
+                  ));
+                } else if (state.assignmentActionStatus.isFailure) {
+                  final is402 = state.error?.errorCode == 402;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(is402
+                        ? 'Avval nomzod kontaktini oching'
+                        : (state.error?.errorMessage ??
+                            'Amalni bajarib bo\'lmadi')),
+                    backgroundColor: is402 ? const Color(0xFFD97706) : Colors.red,
+                  ));
+                }
+              },
+            ),
+            BlocListener<VacancyBloc, VacancyState>(
+              listenWhen: (prev, curr) => prev.unlockStatus != curr.unlockStatus,
+              listener: _onUnlockStatus,
+            ),
+          ],
           child: _buildContent(),
         ),
       ),
     );
+  }
+
+  void _onUnlockStatus(BuildContext context, VacancyState state) {
+    if (state.unlockStatus.isSuccess && state.unlockResult != null) {
+      showUnlockSuccessSheet(
+        context,
+        state.unlockResult!,
+        candidate: state.candidateDetail ?? widget.card,
+      );
+      // Ochilgach to'liq rezyume + telefon kelishi uchun qayta yuklaymiz
+      _reload();
+    } else if (state.unlockStatus.isFailure) {
+      if (state.error?.errorCode == 402) {
+        showInsufficientBalanceDialog(
+          context,
+          candidate: state.candidateDetail ?? widget.card,
+          fee: state.candidateDetail?.fee ?? state.contactAccess?.fee,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(state.error?.errorMessage ?? 'Xatolik'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
   }
 
   Widget _buildContent() {
@@ -106,9 +145,8 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
               child: CircularProgressIndicator(color: PRIMARY_BLUE));
         }
 
-        final phone = detail.phoneRaw ?? state.unlockedPhones[detail.id];
-        final isUnlocked =
-            detail.isUnlocked || state.unlockedAnketaIds.contains(detail.id);
+        final phone = state.phoneOf(detail);
+        final isUnlocked = state.isUnlocked(detail);
         final isRecommended = widget.card?.recommended ?? detail.recommended;
 
         return SingleChildScrollView(
@@ -118,12 +156,11 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
             children: [
               _ProfileHeader(detail: detail, card: widget.card),
               const SizedBox(height: 14),
-              if (detail.locked)
+              if (detail.locked && !isUnlocked)
                 _LockedResumePanel(
                   detail: detail,
-                  access: state.contactAccess,
+                  state: state,
                   isRecommended: isRecommended,
-                  isUnlocking: state.unlockStatus.isInProgress,
                 )
               else ...[
                 _ContactBlock(
@@ -131,8 +168,7 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
                   phone: phone,
                   isUnlocked: isUnlocked,
                   isRecommended: isRecommended,
-                  access: state.contactAccess,
-                  isUnlocking: state.unlockStatus.isInProgress,
+                  state: state,
                 ),
                 const SizedBox(height: 14),
                 _InfoGrid(detail: detail),
@@ -161,103 +197,6 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
       (d.previousJobReason?.isNotEmpty ?? false) ||
       (d.professionText?.isNotEmpty ?? false);
 
-  void _showUnlockSuccess(BuildContext context, ContactUnlockResultModel r) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      backgroundColor: Colors.white,
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                  color: Color(0xFFDCFCE7), shape: BoxShape.circle),
-              child: const Icon(Icons.check_circle, color: GREEN_COLOR, size: 32),
-            ),
-            const SizedBox(height: 16),
-            const Text('Nomzod ochildi!',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: DARK_NAVY)),
-            const SizedBox(height: 8),
-            Text(r.phone,
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: PRIMARY_BLUE,
-                    letterSpacing: 1)),
-            if (r.additionalContact != null) ...[
-              const SizedBox(height: 4),
-              Text(r.additionalContact!,
-                  style: const TextStyle(fontSize: 14, color: GRAY_TEXT)),
-            ],
-            const SizedBox(height: 8),
-            if (!r.free && r.fee > 0)
-              Text('${_money(r.fee)} yechildi',
-                  style: const TextStyle(fontSize: 12, color: GRAY_TEXT))
-            else
-              const Text('Bepul ochildi',
-                  style: TextStyle(fontSize: 12, color: GREEN_COLOR)),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: PRIMARY_BLUE,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
-                child: const Text('Yopish'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showInsufficientBalance(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Balans yetarli emas',
-            style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY)),
-        content: const Text('Nomzodni ochish uchun balansni to\'ldiring.',
-            style: TextStyle(color: GRAY_TEXT)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const TopUpScreen(isEmployer: true)));
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: PRIMARY_BLUE,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
-            child: const Text("To'ldirish"),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Profil sarlavhasi ─────────────────────────────────────────────────────────
@@ -341,65 +280,76 @@ class _ContactBlock extends StatelessWidget {
   final String? phone;
   final bool isUnlocked;
   final bool isRecommended;
-  final ContactAccessModel? access;
-  final bool isUnlocking;
+  final VacancyState state;
 
   const _ContactBlock({
     required this.detail,
     required this.phone,
     required this.isUnlocked,
     required this.isRecommended,
-    required this.access,
-    required this.isUnlocking,
+    required this.state,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isFree = isRecommended || (access?.freeContacts ?? false);
-    final fee = detail.fee ?? access?.fee ?? 30000;
+    final isFree = isRecommended || state.isFreeUnlock(detail);
+    final fee = state.feeFor(detail);
 
     if (isUnlocked && phone != null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF0FDF4),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: GREEN_COLOR.withValues(alpha: 0.35)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      return Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: GREEN_COLOR.withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.phone, color: GREEN_COLOR, size: 20),
-                const SizedBox(width: 10),
-                Text(phone!,
-                    style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: DARK_NAVY,
-                        letterSpacing: 0.5)),
+                Row(
+                  children: [
+                    const Icon(Icons.phone, color: GREEN_COLOR, size: 20),
+                    const SizedBox(width: 10),
+                    Text(phone!,
+                        style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: DARK_NAVY,
+                            letterSpacing: 0.5)),
+                  ],
+                ),
+                if (detail.additionalContact != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_in_talk_outlined,
+                          color: GREEN_COLOR, size: 18),
+                      const SizedBox(width: 10),
+                      Text(detail.additionalContact!,
+                          style:
+                              const TextStyle(fontSize: 14, color: DARK_NAVY)),
+                    ],
+                  ),
+                ],
               ],
             ),
-            if (detail.additionalContact != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.phone_in_talk_outlined,
-                      color: GREEN_COLOR, size: 18),
-                  const SizedBox(width: 10),
-                  Text(detail.additionalContact!,
-                      style: const TextStyle(fontSize: 14, color: DARK_NAVY)),
-                ],
-              ),
-            ],
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          // §6 — telefon · chat · suhbat.
+          UnlockedActionsRow(
+            candidate: detail,
+            requirementId: detail.vacancy?.id,
+            phone: phone,
+            busy: state.assignmentActionStatus.isInProgress,
+          ),
+        ],
       );
     }
 
-    // locked == false, lekin hali ochilmagan (premium/tavsiya) → kontakt yopiq
+    // locked == false, lekin hali ochilmagan (tavsiya) → kontakt yopiq
     return _Card(
       child: Column(
         children: [
@@ -420,12 +370,15 @@ class _ContactBlock extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Kontakt yopiq',
+                    const Text('Telefon, chat va suhbat yopiq',
                         style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: DARK_NAVY)),
-                    Text(isFree ? 'Bepul ochish mumkin' : '${_money(fee)} evaziga',
+                    Text(
+                        isFree
+                            ? 'Bepul ochish mumkin'
+                            : '${_money(fee)} evaziga',
                         style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
                   ],
                 ),
@@ -434,10 +387,10 @@ class _ContactBlock extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _UnlockWideButton(
-            anketaId: detail.id,
+            candidate: detail,
             isFree: isFree,
             fee: fee,
-            isUnlocking: isUnlocking,
+            isUnlocking: state.unlockStatus.isInProgress,
           ),
         ],
       ),
@@ -447,26 +400,34 @@ class _ContactBlock extends StatelessWidget {
 
 // ── Rezyume yopiq paneli (B varianti: locked == true) ─────────────────────────
 
+/// §3.4 — yopiq holatdagi "Batafsil": qisqa ma'lumot + ochilgach nima berilishi.
 class _LockedResumePanel extends StatelessWidget {
   final CandidateModel detail;
-  final ContactAccessModel? access;
+  final VacancyState state;
   final bool isRecommended;
-  final bool isUnlocking;
 
   const _LockedResumePanel({
     required this.detail,
-    required this.access,
+    required this.state,
     required this.isRecommended,
-    required this.isUnlocking,
   });
+
+  static const _perks = [
+    (Icons.phone_rounded, 'Telefon raqami'),
+    (Icons.chat_bubble_outline_rounded, 'Chat — nomzod bilan yozishish'),
+    (Icons.event_available_rounded, 'Suhbatga chaqirish'),
+    (Icons.description_outlined,
+        "To'liq rezyume: hudud, ish tarixi, tillar, oylik"),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final isFree = isRecommended || (access?.freeContacts ?? false);
-    final fee = detail.fee ?? access?.fee ?? 30000;
+    final isFree = isRecommended || state.isFreeUnlock(detail);
+    final fee = state.feeFor(detail);
+    final balance = detail.balance ?? state.contactAccess?.balance;
 
     return _Card(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       child: Column(
         children: [
           Container(
@@ -479,26 +440,53 @@ class _LockedResumePanel extends StatelessWidget {
             child: const Icon(Icons.lock_outline, color: GRAY_TEXT, size: 30),
           ),
           const SizedBox(height: 16),
-          const Text("To'liq rezyume yopiq",
+          const Text("Telefon, chat va suhbat yopiq",
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: DARK_NAVY)),
-          const SizedBox(height: 8),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+          const SizedBox(height: 6),
           Text(
             isFree
-                ? 'Bu nomzodning to\'liq rezyumesi va kontaktini bepul ochishingiz mumkin.'
-                : 'To\'liq rezyume va kontaktni ochish uchun ${_money(fee)} bir marta yechiladi.',
+                ? 'Bu nomzodni bepul ochishingiz mumkin.'
+                : 'Ochish uchun ${_money(fee)} bir marta yechiladi.',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.4),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Ochilgach nima beriladi',
+                style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: DARK_NAVY)),
+          ),
+          const SizedBox(height: 10),
+          ..._perks.map((p) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(p.$1, size: 17, color: PRIMARY_BLUE),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(p.$2,
+                          style: const TextStyle(
+                              fontSize: 13, color: DARK_NAVY, height: 1.3)),
+                    ),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 14),
           _UnlockWideButton(
-            anketaId: detail.id,
+            candidate: detail,
             isFree: isFree,
             fee: fee,
-            isUnlocking: isUnlocking,
+            isUnlocking: state.unlockStatus.isInProgress,
           ),
+          if (!isFree && balance != null) ...[
+            const SizedBox(height: 10),
+            Text('Joriy balans: ${_money(balance)}',
+                style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+          ],
         ],
       ),
     );
@@ -507,13 +495,13 @@ class _LockedResumePanel extends StatelessWidget {
 
 /// Keng "ochish" tugmasi — kontakt va rezyume yopiq panellarda umumiy.
 class _UnlockWideButton extends StatelessWidget {
-  final int anketaId;
+  final CandidateModel candidate;
   final bool isFree;
   final int fee;
   final bool isUnlocking;
 
   const _UnlockWideButton({
-    required this.anketaId,
+    required this.candidate,
     required this.isFree,
     required this.fee,
     required this.isUnlocking,
@@ -524,7 +512,10 @@ class _UnlockWideButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isUnlocking ? null : () => _onUnlock(context),
+        onPressed: isUnlocking
+            ? null
+            : () => startUnlock(context,
+                candidate: candidate, vacancyId: candidate.vacancy?.id),
         icon: isUnlocking
             ? const SizedBox(
                 width: 16,
@@ -534,7 +525,7 @@ class _UnlockWideButton extends StatelessWidget {
             : Icon(isFree ? Icons.lock_open : Icons.lock_open_outlined,
                 size: 18),
         label: Text(isUnlocking
-            ? 'Ochilmoqda...'
+            ? 'Ochilmoqda…'
             : (isFree ? 'Bepul ochish' : 'Ochish · ${_money(fee)}')),
         style: ElevatedButton.styleFrom(
           backgroundColor: isFree ? GREEN_COLOR : PRIMARY_BLUE,
@@ -544,46 +535,6 @@ class _UnlockWideButton extends StatelessWidget {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-      ),
-    );
-  }
-
-  void _onUnlock(BuildContext context) {
-    if (isFree) {
-      context.read<VacancyBloc>().add(UnlockContactEvent(anketaId: anketaId));
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Nomzodni ochish',
-            style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY)),
-        content: Text(
-          '${_money(fee)} balansingizdan yechiladi.\nDavom etasizmi?',
-          style: const TextStyle(color: GRAY_TEXT),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context
-                  .read<VacancyBloc>()
-                  .add(UnlockContactEvent(anketaId: anketaId));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: PRIMARY_BLUE,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text("To'lab ochish"),
-          ),
-        ],
       ),
     );
   }

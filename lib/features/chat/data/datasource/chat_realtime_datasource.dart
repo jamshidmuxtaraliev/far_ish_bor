@@ -25,6 +25,8 @@ class ChatRealtimeDatasource {
   final _typingController = StreamController<Map<String, dynamic>>.broadcast();
   final _presenceController = StreamController<Map<String, dynamic>>.broadcast();
   final _assignedController = StreamController<Map<String, dynamic>>.broadcast();
+  final _balanceController = StreamController<int>.broadcast();
+  final _unlockedController = StreamController<int>.broadcast();
   final _errorController = StreamController<String>.broadcast();
 
   Stream<ChatMessageModel> get onMessage => _messageController.stream;
@@ -38,6 +40,13 @@ class ChatRealtimeDatasource {
   /// `{'joined': bool, 'audience': String?, 'userId': int?}` from
   /// chat:user_joined / chat:user_left.
   Stream<Map<String, dynamic>> get onPresence => _presenceController.stream;
+
+  /// `balance:updated` — webhook kelganda serverdan yangi balans (PROMPT_OTKLIK §5.3).
+  Stream<int> get onBalanceUpdated => _balanceController.stream;
+
+  /// `contact:unlocked` — nomzod ochildi (boshqa qurilmadan / to'lovdan keyin);
+  /// payload'dagi `anketa_id`.
+  Stream<int> get onContactUnlocked => _unlockedController.stream;
   Stream<String> get onError => _errorController.stream;
 
   bool get isConnected => _connected;
@@ -118,6 +127,16 @@ class ChatRealtimeDatasource {
 
     _socket!.on('chat:assigned', (data) {
       if (data is Map) _assignedController.add(Map<String, dynamic>.from(data));
+    });
+
+    _socket!.on('balance:updated', (data) {
+      final v = data is Map ? (data['balance'] as num?)?.toInt() : null;
+      if (v != null) _balanceController.add(v);
+    });
+
+    _socket!.on('contact:unlocked', (data) {
+      final id = data is Map ? (data['anketa_id'] as num?)?.toInt() : null;
+      if (id != null) _unlockedController.add(id);
     });
 
     _socket!.on('chat:error', (data) {
@@ -210,6 +229,8 @@ class ChatRealtimeDatasource {
     _typingController.close();
     _presenceController.close();
     _assignedController.close();
+    _balanceController.close();
+    _unlockedController.close();
     _errorController.close();
   }
 }

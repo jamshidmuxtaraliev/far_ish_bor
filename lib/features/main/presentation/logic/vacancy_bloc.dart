@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
 import 'package:meta/meta.dart';
 
 import '../../../../core/error/error_model.dart';
+import '../../../chat/data/datasource/chat_realtime_datasource.dart';
 import '../../data/datasource/remote/vacancy_remote_data_source.dart';
 import '../../data/models/application_model.dart';
 import '../../data/models/candidate_model.dart';
@@ -22,7 +25,14 @@ part 'vacancy_state.dart';
 class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   final VacancyRemoteDataSource dataSource;
 
-  VacancyBloc(this.dataSource) : super(const VacancyState()) {
+  /// Socket (chat bilan umumiy): `balance:updated` va `contact:unlocked`
+  /// eventlari otklik oqimini real vaqtda yangilaydi (PROMPT_OTKLIK §5.3, §7.3).
+  final ChatRealtimeDatasource realtime;
+
+  StreamSubscription<int>? _balanceSub;
+  StreamSubscription<int>? _unlockedSub;
+
+  VacancyBloc(this.dataSource, this.realtime) : super(const VacancyState()) {
     on<LoadSeekerVacanciesEvent>(_onLoadSeekerVacancies);
     on<LoadEmployerVacanciesEvent>(_onLoadEmployerVacancies);
     on<ApplyVacancyEvent>(_onApply);
@@ -47,6 +57,22 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     on<CreateAssignmentEvent>(_onCreateAssignment);
     on<UpdateAssignmentEvent>(_onUpdateAssignment);
     on<DeleteAssignmentEvent>(_onDeleteAssignment);
+    on<BalanceUpdatedEvent>(_onBalanceUpdated);
+    on<ContactUnlockedRemotelyEvent>(_onContactUnlockedRemotely);
+
+    _balanceSub = realtime.onBalanceUpdated.listen(
+      (balance) => add(BalanceUpdatedEvent(balance)),
+    );
+    _unlockedSub = realtime.onContactUnlocked.listen(
+      (anketaId) => add(ContactUnlockedRemotelyEvent(anketaId)),
+    );
+  }
+
+  @override
+  Future<void> close() async {
+    await _balanceSub?.cancel();
+    await _unlockedSub?.cancel();
+    return super.close();
   }
 
   Future<void> _onLoadSeekerVacancies(LoadSeekerVacanciesEvent event, Emitter<VacancyState> emit) async {
@@ -110,7 +136,11 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     final result = await dataSource.getCandidates();
     result.fold(
       (failure) => emit(state.copyWith(candidatesStatus: FormzSubmissionStatus.failure, error: failure)),
-      (list) => emit(state.copyWith(candidatesStatus: FormzSubmissionStatus.success, candidates: list)),
+      (list) => emit(state.copyWith(
+        candidatesStatus: FormzSubmissionStatus.success,
+        candidates: list,
+        unlockedCapabilities: _mergeCapabilities(list),
+      )),
     );
   }
 
@@ -201,8 +231,24 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     final result = await dataSource.getRecommendedCandidates();
     result.fold(
       (failure) => emit(state.copyWith(recommendedStatus: FormzSubmissionStatus.failure, error: failure)),
-      (list) => emit(state.copyWith(recommendedStatus: FormzSubmissionStatus.success, recommendedCandidates: list)),
+      (list) => emit(state.copyWith(
+        recommendedStatus: FormzSubmissionStatus.success,
+        recommendedCandidates: list,
+        unlockedCapabilities: _mergeCapabilities(list),
+      )),
     );
+  }
+
+  /// Ro'yxat javoblaridagi ochiq nomzodlarning `capabilities`ini yig'ib boradi
+  /// (§6: `candidates`, `recommended`, `pipeline` — ochilganlarida keladi).
+  Map<int, ContactCapabilitiesModel> _mergeCapabilities(
+      Iterable<CandidateModel> list) {
+    final caps =
+        Map<int, ContactCapabilitiesModel>.from(state.unlockedCapabilities);
+    for (final c in list) {
+      if (c.capabilities != null) caps[c.id] = c.capabilities!;
+    }
+    return caps;
   }
 
   Future<void> _onLoadContactAccess(LoadContactAccessEvent event, Emitter<VacancyState> emit) async {
@@ -215,27 +261,74 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   }
 
   Future<void> _onUnlockContact(UnlockContactEvent event, Emitter<VacancyState> emit) async {
-    emit(state.copyWith(unlockStatus: FormzSubmissionStatus.inProgress));
+    emit(state.copyWith(
+      unlockStatus: FormzSubmissionStatus.inProgress,
+      lastUnlockAttemptId: event.anketaId,
+    ));
     final result = await dataSource.unlockContact(
       anketaId: event.anketaId,
       vacancyId: event.vacancyId,
       trigger: event.trigger,
     );
     result.fold(
-      (failure) => emit(state.copyWith(unlockStatus: FormzSubmissionStatus.failure, error: failure)),
+      (failure) {
+        // §10 — nomzod o'chirilgan (404): kartani ro'yxatlardan olib tashlaymiz.
+        if (failure.errorCode == 404) {
+          emit(state.copyWith(
+            unlockStatus: FormzSubmissionStatus.failure,
+            error: failure,
+            candidates:
+                state.candidates.where((c) => c.id != event.anketaId).toList(),
+            recommendedCandidates: state.recommendedCandidates
+                .where((c) => c.id != event.anketaId)
+                .toList(),
+          ));
+          return;
+        }
+        emit(state.copyWith(
+            unlockStatus: FormzSubmissionStatus.failure, error: failure));
+      },
       (unlockResult) {
         final newUnlocked = Set<int>.from(state.unlockedAnketaIds)..add(event.anketaId);
         final newPhones = Map<int, String>.from(state.unlockedPhones)
           ..[event.anketaId] = unlockResult.phone;
+        // §6 — ochilgach uchta imkoniyat (telefon · chat · suhbat) shu yerda
+        // saqlanadi; ro'yxatni qayta yuklashni kutmasdan karta ochiq bo'ladi.
+        final caps = Map<int, ContactCapabilitiesModel>.from(
+            state.unlockedCapabilities);
+        if (unlockResult.capabilities != null) {
+          caps[event.anketaId] = unlockResult.capabilities!;
+        }
         emit(state.copyWith(
           unlockStatus: FormzSubmissionStatus.success,
           unlockResult: unlockResult,
           unlockedAnketaIds: newUnlocked,
           unlockedPhones: newPhones,
+          unlockedCapabilities: caps,
+          contactAccess: unlockResult.balance != null
+              ? state.contactAccess?.copyWith(balance: unlockResult.balance)
+              : null,
         ));
       },
     );
     emit(state.copyWith(unlockStatus: FormzSubmissionStatus.initial));
+  }
+
+  /// `balance:updated` — to'lov webhook'i kelgach serverdan yangi balans.
+  void _onBalanceUpdated(BalanceUpdatedEvent event, Emitter<VacancyState> emit) {
+    final access = state.contactAccess;
+    if (access == null) return;
+    emit(state.copyWith(contactAccess: access.copyWith(balance: event.balance)));
+  }
+
+  /// `contact:unlocked` — nomzod boshqa qurilmada/to'lovdan keyin ochildi.
+  void _onContactUnlockedRemotely(
+      ContactUnlockedRemotelyEvent event, Emitter<VacancyState> emit) {
+    if (state.unlockedAnketaIds.contains(event.anketaId)) return;
+    emit(state.copyWith(
+      unlockedAnketaIds: Set<int>.from(state.unlockedAnketaIds)
+        ..add(event.anketaId),
+    ));
   }
 
   Future<void> _onLoadCandidateDetail(LoadCandidateDetailEvent event, Emitter<VacancyState> emit) async {
@@ -246,10 +339,22 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
         candidateDetailStatus: FormzSubmissionStatus.failure,
         error: failure,
       )),
-      (detail) => emit(state.copyWith(
-        candidateDetailStatus: FormzSubmissionStatus.success,
-        candidateDetail: detail,
-      )),
+      (detail) {
+        // Ochilgan nomzodda detal javobi `capabilities` bilan keladi (§6).
+        final caps = Map<int, ContactCapabilitiesModel>.from(
+            state.unlockedCapabilities);
+        if (detail.capabilities != null) caps[detail.id] = detail.capabilities!;
+        final unlocked = Set<int>.from(state.unlockedAnketaIds);
+        if (detail.isUnlocked || (!detail.locked && detail.phoneRaw != null)) {
+          unlocked.add(detail.id);
+        }
+        emit(state.copyWith(
+          candidateDetailStatus: FormzSubmissionStatus.success,
+          candidateDetail: detail,
+          unlockedCapabilities: caps,
+          unlockedAnketaIds: unlocked,
+        ));
+      },
     );
   }
 
@@ -274,7 +379,12 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     final result = await dataSource.getPipeline();
     result.fold(
       (failure) => emit(state.copyWith(pipelineStatus: FormzSubmissionStatus.failure, error: failure)),
-      (data) => emit(state.copyWith(pipelineStatus: FormzSubmissionStatus.success, pipeline: data)),
+      (data) => emit(state.copyWith(
+        pipelineStatus: FormzSubmissionStatus.success,
+        pipeline: data,
+        unlockedCapabilities: _mergeCapabilities(
+            data.candidatesByReq.expand((g) => g.candidates)),
+      )),
     );
   }
 

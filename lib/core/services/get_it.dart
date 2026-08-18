@@ -10,6 +10,7 @@ import 'package:jobUp24/features/billing/presentation/logic/billing_bloc.dart';
 import 'package:jobUp24/features/chat/data/datasource/chat_realtime_datasource.dart';
 import 'package:jobUp24/features/chat/data/datasource/remote/chat_remote_datasource.dart';
 import 'package:jobUp24/features/chat/presentation/logic/chat_bloc.dart';
+import 'package:jobUp24/features/chat/presentation/logic/direct_chat_bloc.dart';
 import 'package:jobUp24/features/faq/data/datasource/remote/faq_remote_data_source.dart';
 import 'package:jobUp24/features/faq/presentation/logic/faq_bloc.dart';
 import 'package:jobUp24/features/notifications/data/datasource/remote/notification_remote_data_source.dart';
@@ -47,10 +48,14 @@ Future<void> setupDI({required Alice alice}) async {
     )
     ..registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(getIt()))
     ..registerLazySingleton<AuthBloc>(() => AuthBloc(getIt()))
+    ..registerLazySingleton<ChatRealtimeDatasource>(
+      () => ChatRealtimeDatasource(),
+    )
     ..registerLazySingleton<VacancyRemoteDataSource>(
       () => VacancyRemoteDataSourceImpl(getIt()),
     )
-    ..registerLazySingleton<VacancyBloc>(() => VacancyBloc(getIt()))
+    // Socket: `balance:updated` / `contact:unlocked` (PROMPT_OTKLIK §7.3).
+    ..registerLazySingleton<VacancyBloc>(() => VacancyBloc(getIt(), getIt()))
     ..registerLazySingleton<InterviewRemoteDataSource>(
       () => InterviewRemoteDataSourceImpl(getIt()),
     )
@@ -64,13 +69,14 @@ Future<void> setupDI({required Alice alice}) async {
       () => BillingRemoteDataSourceImpl(getIt()),
     )
     ..registerLazySingleton<BillingBloc>(() => BillingBloc(getIt()))
-    ..registerLazySingleton<ChatRealtimeDatasource>(
-      () => ChatRealtimeDatasource(),
-    )
     ..registerLazySingleton<ChatRemoteDatasource>(
       () => ChatRemoteDatasourceImpl(getIt()),
     )
     ..registerLazySingleton<ChatBloc>(() => ChatBloc(getIt(), getIt()))
+    // Nomzod bilan to'g'ridan-to'g'ri suhbat — operator chatidan mustaqil nusxa.
+    ..registerLazySingleton<DirectChatBloc>(
+      () => DirectChatBloc(getIt(), getIt()),
+    )
     ..registerLazySingleton<NotificationRemoteDataSource>(
       () => NotificationRemoteDataSourceImpl(getIt()),
     )

@@ -27,9 +27,13 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
     _load();
   }
 
-  void _load() => context
-      .read<VacancyBloc>()
-      .add(LoadVacancyCandidatesEvent(widget.vacancy.id));
+  void _load() {
+    final bloc = context.read<VacancyBloc>();
+    bloc.add(LoadVacancyCandidatesEvent(widget.vacancy.id));
+    // Rejim · narx · balans — otklik UI'si shunga qarab quriladi (§2).
+    bloc.add(LoadContactAccessEvent());
+    bloc.add(LoadUnlockHistoryEvent());
+  }
 
   @override
   Widget build(BuildContext context) {

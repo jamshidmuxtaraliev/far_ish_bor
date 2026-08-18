@@ -31,6 +31,10 @@ class VacancyState extends Equatable {
   final Set<int> unlockedAnketaIds;
   // anketa_id → phone (from in-session unlocks, so list cards refresh without reload)
   final Map<int, String> unlockedPhones;
+  // anketa_id → §6 imkoniyatlar: telefon · chat session_key · suhbat
+  final Map<int, ContactCapabilitiesModel> unlockedCapabilities;
+  // Oxirgi "ochish" urinishi — 402 dan keyin qaysi nomzodga qaytishni bilish uchun
+  final int? lastUnlockAttemptId;
 
   final CandidateModel? candidateDetail;
   final FormzSubmissionStatus candidateDetailStatus;
@@ -71,6 +75,8 @@ class VacancyState extends Equatable {
     this.unlockHistoryStatus = FormzSubmissionStatus.initial,
     this.unlockedAnketaIds = const {},
     this.unlockedPhones = const {},
+    this.unlockedCapabilities = const {},
+    this.lastUnlockAttemptId,
     this.candidateDetail,
     this.candidateDetailStatus = FormzSubmissionStatus.initial,
     this.pipeline,
@@ -78,6 +84,51 @@ class VacancyState extends Equatable {
     this.assignmentActionStatus = FormzSubmissionStatus.initial,
     this.error,
   });
+
+  // ── Otklik yordamchilari (PROMPT_OTKLIK_MOBILE.md) ──────────────────────────
+
+  /// Tarifli ish beruvchida qulf UI'si umuman chizilmaydi (§9.1).
+  bool get isOtklikMode => contactAccess?.isOtklik ?? true;
+
+  /// Bitta nomzodni ochish narxi — doim serverdan (§9.3).
+  int feeFor(CandidateModel c) => c.fee ?? contactAccess?.fee ?? 30000;
+
+  /// Nomzod ochilganmi: server bayrog'i yoki shu sessiyadagi otklik.
+  bool isUnlocked(CandidateModel c) =>
+      c.isUnlocked ||
+      unlockedAnketaIds.contains(c.id) ||
+      (c.phoneRaw ?? '').isNotEmpty;
+
+  /// Bepul ochiladigan holatlar (§4.1): tarifli yoki operator tavsiyasi.
+  bool isFreeUnlock(CandidateModel c) =>
+      !isOtklikMode || c.recommended || c.assignment != null;
+
+  String? phoneOf(CandidateModel c) =>
+      c.phoneRaw ?? unlockedPhones[c.id] ?? unlockedCapabilities[c.id]?.phone;
+
+  ContactCapabilitiesModel? capabilitiesOf(int anketaId) =>
+      unlockedCapabilities[anketaId];
+
+  /// Yuklangan manbalardan nomzodni topadi (402/success oynalarida kerak).
+  CandidateModel? findCandidate(int anketaId) {
+    for (final c in candidates) {
+      if (c.id == anketaId) return c;
+    }
+    for (final c in recommendedCandidates) {
+      if (c.id == anketaId) return c;
+    }
+    for (final grp in pipeline?.candidatesByReq ?? const <PipelineReqCandidates>[]) {
+      for (final c in grp.candidates) {
+        if (c.id == anketaId) return c;
+      }
+    }
+    if (candidateDetail?.id == anketaId) return candidateDetail;
+    return null;
+  }
+
+  /// Balans yetadimi — `contact-access.balance` bo'lmasa so'rovni serverga
+  /// yuboramiz va 402'ni kutamiz (§4.2).
+  bool canAfford(int fee) => contactAccess?.canAfford(fee) ?? true;
 
   VacancyState copyWith({
     FormzSubmissionStatus? vacanciesStatus,
@@ -107,6 +158,8 @@ class VacancyState extends Equatable {
     FormzSubmissionStatus? unlockHistoryStatus,
     Set<int>? unlockedAnketaIds,
     Map<int, String>? unlockedPhones,
+    Map<int, ContactCapabilitiesModel>? unlockedCapabilities,
+    int? lastUnlockAttemptId,
     CandidateModel? candidateDetail,
     FormzSubmissionStatus? candidateDetailStatus,
     PipelineModel? pipeline,
@@ -142,6 +195,9 @@ class VacancyState extends Equatable {
       unlockHistoryStatus: unlockHistoryStatus ?? this.unlockHistoryStatus,
       unlockedAnketaIds: unlockedAnketaIds ?? this.unlockedAnketaIds,
       unlockedPhones: unlockedPhones ?? this.unlockedPhones,
+      unlockedCapabilities:
+          unlockedCapabilities ?? this.unlockedCapabilities,
+      lastUnlockAttemptId: lastUnlockAttemptId ?? this.lastUnlockAttemptId,
       candidateDetail: candidateDetail ?? this.candidateDetail,
       candidateDetailStatus:
           candidateDetailStatus ?? this.candidateDetailStatus,
@@ -164,7 +220,7 @@ class VacancyState extends Equatable {
         contactAccess, contactAccessStatus,
         unlockResult, unlockStatus,
         unlockHistory, unlockHistoryStatus, unlockedAnketaIds,
-        unlockedPhones,
+        unlockedPhones, unlockedCapabilities, lastUnlockAttemptId,
         candidateDetail, candidateDetailStatus,
         pipeline, pipelineStatus, assignmentActionStatus,
         error,

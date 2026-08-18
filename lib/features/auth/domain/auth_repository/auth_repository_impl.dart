@@ -6,6 +6,7 @@ import '../../data/datasource/remote/auth_remote_data_source.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_response_model.dart';
 import '../../data/models/employer_model.dart';
+import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -64,4 +65,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<ErrorModel, String>> uploadPhoto(String filePath) =>
       remoteDataSource.uploadPhoto(filePath);
+
+  @override
+  Future<Either<ErrorModel, ResumeInfoModel>> getResumeInfo() =>
+      remoteDataSource.getResumeInfo();
+
+  @override
+  Future<Either<ErrorModel, String>> downloadResume(
+    String url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) =>
+      remoteDataSource.downloadResume(url, savePath, onProgress: onProgress);
+
+  @override
+  Future<Either<ErrorModel, String>> downloadResumeDirect(
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) =>
+      remoteDataSource.downloadResumeDirect(savePath, onProgress: onProgress);
 }

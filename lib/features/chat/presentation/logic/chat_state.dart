@@ -17,6 +17,10 @@ class ChatState extends Equatable {
   final bool authFailed; // invalid_token & co. → logout (one-shot)
   final String? error;
 
+  /// `GET /mobile/chats` — support + otklik bilan ochilgan direct suhbatlar.
+  final List<ChatSessionModel> chats;
+  final FormzSubmissionStatus chatsStatus;
+
   const ChatState({
     this.sessionKey = '',
     this.messages = const [],
@@ -33,9 +37,14 @@ class ChatState extends Equatable {
     this.sessionStatus,
     this.authFailed = false,
     this.error,
+    this.chats = const [],
+    this.chatsStatus = FormzSubmissionStatus.initial,
   });
 
   bool get sessionClosed => sessionStatus == 'yopilgan';
+
+  /// `direct:e<employer_id>:a<anketa_id>` — ish beruvchi ↔ nomzod suhbati.
+  bool get isDirect => sessionKey.startsWith('direct:');
 
   ChatState copyWith({
     String? sessionKey,
@@ -53,6 +62,8 @@ class ChatState extends Equatable {
     String? sessionStatus,
     bool? authFailed,
     String? error,
+    List<ChatSessionModel>? chats,
+    FormzSubmissionStatus? chatsStatus,
   }) {
     return ChatState(
       sessionKey: sessionKey ?? this.sessionKey,
@@ -70,6 +81,8 @@ class ChatState extends Equatable {
       sessionStatus: sessionStatus ?? this.sessionStatus,
       authFailed: authFailed ?? this.authFailed,
       error: error ?? this.error,
+      chats: chats ?? this.chats,
+      chatsStatus: chatsStatus ?? this.chatsStatus,
     );
   }
 
@@ -90,5 +103,7 @@ class ChatState extends Equatable {
     sessionStatus,
     authFailed,
     error,
+    chats,
+    chatsStatus,
   ];
 }

@@ -83,6 +83,18 @@ class UnlockContactEvent extends VacancyEvent {
 
 class LoadUnlockHistoryEvent extends VacancyEvent {}
 
+/// Socket `balance:updated` — to'lov webhook'idan keyin yangi balans (§5.3).
+class BalanceUpdatedEvent extends VacancyEvent {
+  final int balance;
+  BalanceUpdatedEvent(this.balance);
+}
+
+/// Socket `contact:unlocked` — nomzod ochildi (§7.3).
+class ContactUnlockedRemotelyEvent extends VacancyEvent {
+  final int anketaId;
+  ContactUnlockedRemotelyEvent(this.anketaId);
+}
+
 class LoadCandidateDetailEvent extends VacancyEvent {
   final int id;
   LoadCandidateDetailEvent(this.id);

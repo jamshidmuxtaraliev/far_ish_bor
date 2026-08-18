@@ -22,7 +22,16 @@ class TopUpScreen extends StatefulWidget {
   /// tariff), so the missing sum is already filled in.
   final int? initialAmount;
 
-  const TopUpScreen({super.key, required this.isEmployer, this.initialAmount});
+  /// Nima uchun to'lanayotgani — otklikdan kelinganda nomzod nomi va narx
+  /// (PROMPT_OTKLIK_MOBILE.md §5). Ekran sarlavhasi ostida ko'rsatiladi.
+  final String? purpose;
+
+  const TopUpScreen({
+    super.key,
+    required this.isEmployer,
+    this.initialAmount,
+    this.purpose,
+  });
 
   @override
   State<TopUpScreen> createState() => _TopUpScreenState();
@@ -42,6 +51,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
   bool _waiting = false;
   bool _testMode = false;
   bool _checkoutHandled = false;
+
+  /// Ekrandan chiqishda `true` qaytadi — chaqirgan joy (otklik) nomzodni
+  /// avtomatik ochishi uchun (§5.3).
+  bool _paid = false;
 
   @override
   void initState() {
@@ -96,6 +109,11 @@ class _TopUpScreenState extends State<TopUpScreen> {
   }
 
   void _onCheckoutReady(CheckoutResponse checkout) {
+    // Dev simulyatsiyasi: server balansni allaqachon to'ldirgan (§5.2).
+    if (checkout.testCompleted) {
+      _onPaid();
+      return;
+    }
     if (checkout.needsTestConfirm) {
       // Test provider: no WebView — user confirms in-app via test-confirm.
       setState(() {
@@ -129,6 +147,16 @@ class _TopUpScreenState extends State<TopUpScreen> {
       _testMode = false;
     });
     _startPolling(checkout.payment.id);
+  }
+
+  Future<void> _copyCheckoutUrl() async {
+    final url = context.read<BillingBloc>().state.checkout?.checkoutUrl;
+    if (url == null || url.isEmpty) {
+      _snack("To'lov havolasi topilmadi", color: Colors.orange);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: url));
+    _snack('Havola nusxalandi', color: const Color(0xFF10B981));
   }
 
   void _confirmTestPayment() {
@@ -174,6 +202,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
     setState(() {
       _waiting = false;
       _testMode = false;
+      _paid = true;
     });
     context.read<BillingBloc>().add(LoadBalanceEvent(widget.isEmployer));
     context.read<BillingBloc>().add(const ResetCheckoutEvent());
@@ -213,6 +242,22 @@ class _TopUpScreenState extends State<TopUpScreen> {
                 onPressed: () => Navigator.pop(dCtx),
                 child: const Text('Yopish'),
               ),
+              // Otklikdan kelingan bo'lsa — ortga qaytib nomzodni ochamiz (§5.3).
+              if (widget.purpose != null)
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dCtx);
+                    Navigator.pop(context, true);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: PRIMARY_BLUE,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Davom etish'),
+                ),
             ],
           ),
     );
@@ -344,18 +389,36 @@ class _TopUpScreenState extends State<TopUpScreen> {
           children: [
             Row(
               children: [
-                JBCircleButton(onTap: () => Navigator.pop(context)),
+                JBCircleButton(onTap: () => Navigator.pop(context, _paid)),
                 const SizedBox(width: 14),
-                const Text(
-                  'Balansni to\'ldirish',
-                  style: TextStyle(
-                    color: JB_INK,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
+                const Expanded(
+                  child: Text(
+                    'Balansni to\'ldirish',
+                    style: TextStyle(
+                      color: JB_INK,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
             ),
+            if (widget.purpose != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.lock_open_rounded,
+                      size: 16, color: JB_GRAY_LIGHT),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.purpose!,
+                      style: const TextStyle(fontSize: 13, color: JB_GRAY),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             Padding(
               padding: EdgeInsets.zero,
@@ -995,7 +1058,16 @@ class _TopUpScreenState extends State<TopUpScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, color: GRAY_TEXT),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
+        // §5 — havolani nusxalash: to'lovni boshqa qurilmada / buxgalter
+        // yakunlashi mumkin.
+        TextButton.icon(
+          onPressed: _copyCheckoutUrl,
+          icon: const Icon(Icons.copy_rounded, size: 16),
+          label: const Text("To'lov havolasini nusxalash"),
+          style: TextButton.styleFrom(foregroundColor: PRIMARY_BLUE),
+        ),
+        const SizedBox(height: 6),
         Row(
           children: [
             Expanded(

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:jobUp24/core/network/dio_response_extension.dart';
@@ -7,6 +10,7 @@ import '../../../../../core/network/dio_client.dart';
 import '../../models/anketa_models.dart';
 import '../../models/auth_response_model.dart';
 import '../../models/employer_model.dart';
+import '../../models/resume_model.dart';
 import '../../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -23,6 +27,18 @@ abstract class AuthRemoteDataSource {
   Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data);
   Future<Either<ErrorModel, String>> uploadLogo(String filePath);
   Future<Either<ErrorModel, String>> uploadPhoto(String filePath);
+  Future<Either<ErrorModel, ResumeInfoModel>> getResumeInfo();
+  Future<Either<ErrorModel, String>> downloadResume(
+    String url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  });
+
+  /// Zaxira yo'l: bitta so'rovda token bilan xom PDF baytlarini oladi.
+  Future<Either<ErrorModel, String>> downloadResumeDirect(
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -156,5 +172,90 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
       (json) => (json as Map<String, dynamic>)['photo'] as String,
     );
+  }
+
+  @override
+  Future<Either<ErrorModel, ResumeInfoModel>> getResumeInfo() {
+    return dioClient.dio.wrapResponse<ResumeInfoModel>(
+      () => dioClient.dio.get('mobile/anketa/resume'),
+      (json) => ResumeInfoModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, String>> downloadResume(
+    String url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) async {
+    // Havola tokensiz ochiladi va javob — xom PDF baytlari. Shuning uchun
+    // konvertni yechadigan interceptorlar aralashmasligi kerak: toza Dio.
+    try {
+      await Dio().download(
+        url,
+        savePath,
+        onReceiveProgress: onProgress,
+        options: Options(receiveTimeout: const Duration(seconds: 60)),
+      );
+      return Right(savePath);
+    } on DioException catch (e) {
+      return Left(ErrorModel(
+        e.response?.statusCode == 404
+            ? 'Rezyume fayli topilmadi, qaytadan urinib ko\'ring'
+            : (e.message ?? 'Faylni yuklab bo\'lmadi'),
+        errorCode: e.response?.statusCode,
+      ));
+    } catch (e) {
+      return Left(ErrorModel('Faylni saqlashda xatolik: $e', errorCode: -1));
+    }
+  }
+
+  @override
+  Future<Either<ErrorModel, String>> downloadResumeDirect(
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) async {
+    try {
+      final response = await dioClient.dio.get<List<int>>(
+        'mobile/anketa/resume.pdf',
+        options: Options(
+          responseType: ResponseType.bytes,
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+        onReceiveProgress: onProgress,
+      );
+
+      final bytes = response.data ?? const <int>[];
+      final contentType = response.headers.value(Headers.contentTypeHeader) ?? '';
+
+      // Xato bo'lsa PDF emas, odatdagi JSON konverti keladi.
+      if (!contentType.contains('application/pdf')) {
+        return Left(_parseErrorEnvelope(bytes));
+      }
+
+      await File(savePath).writeAsBytes(bytes);
+      return Right(savePath);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is List<int>) return Left(_parseErrorEnvelope(data));
+      return Left(ErrorModel(
+        e.message ?? 'Rezyumeni olib bo\'lmadi',
+        errorCode: e.response?.statusCode,
+      ));
+    } catch (e) {
+      return Left(ErrorModel('Faylni saqlashda xatolik: $e', errorCode: -1));
+    }
+  }
+
+  ErrorModel _parseErrorEnvelope(List<int> bytes) {
+    try {
+      final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+      return ErrorModel(
+        json['message'] as String? ?? 'Rezyumeni olib bo\'lmadi',
+        errorCode: json['error_code'] as int?,
+      );
+    } catch (_) {
+      return ErrorModel('Rezyumeni olib bo\'lmadi', errorCode: -1);
+    }
   }
 }

@@ -4,6 +4,7 @@ import '../../../../core/error/error_model.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_response_model.dart';
 import '../../data/models/employer_model.dart';
+import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
 
 abstract class AuthRepository {
@@ -20,4 +21,14 @@ abstract class AuthRepository {
   Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data);
   Future<Either<ErrorModel, String>> uploadLogo(String filePath);
   Future<Either<ErrorModel, String>> uploadPhoto(String filePath);
+  Future<Either<ErrorModel, ResumeInfoModel>> getResumeInfo();
+  Future<Either<ErrorModel, String>> downloadResume(
+    String url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  });
+  Future<Either<ErrorModel, String>> downloadResumeDirect(
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  });
 }

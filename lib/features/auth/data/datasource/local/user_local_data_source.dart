@@ -21,6 +21,11 @@ abstract class UserLocalDatasource {
   bool isFirstRun();
   Future<void> setFirstRun(bool value);
 
+  /// Oxirgi yuklab olingan rezyume PDF'ining fayl nomi. To'liq yo'l saqlanmaydi
+  /// — hujjatlar papkasi yangi o'rnatishda o'zgarib ketishi mumkin.
+  String? getResumeFilename();
+  Future<void> saveResumeFilename(String filename);
+
   Future<void> clearCache();
 }
 
@@ -67,6 +72,13 @@ class UserLocalDataSourceImpl implements UserLocalDatasource {
   @override
   Future<void> setFirstRun(bool value) =>
       sharedPreferences.setBool(FIRST_RUN, value);
+
+  @override
+  String? getResumeFilename() => sharedPreferences.getString(PREF_RESUME_FILE);
+
+  @override
+  Future<void> saveResumeFilename(String filename) =>
+      sharedPreferences.setString(PREF_RESUME_FILE, filename);
 
   @override
   Future<void> clearCache() => sharedPreferences.clear();

@@ -76,6 +76,11 @@ class UserTypingEvent extends ChatEvent {
   List<Object?> get props => [isTyping];
 }
 
+/// Suhbatlar ro'yxati — `GET /mobile/chats` (PROMPT_OTKLIK §7.1).
+class LoadChatsEvent extends ChatEvent {
+  const LoadChatsEvent();
+}
+
 // ── Internal events fed from socket streams ────────────────────────────────────
 
 class _MessageReceived extends ChatEvent {
@@ -94,6 +99,7 @@ class _ConnectionChanged extends ChatEvent {
   List<Object?> get props => [connected];
 }
 
+/// Suhbatdoshning (operator yoki nomzod) "yozmoqda…" holati.
 class _OperatorTyping extends ChatEvent {
   final bool isTyping;
   const _OperatorTyping(this.isTyping);

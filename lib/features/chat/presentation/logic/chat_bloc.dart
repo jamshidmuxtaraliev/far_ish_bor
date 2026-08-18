@@ -9,6 +9,7 @@ import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../data/datasource/chat_realtime_datasource.dart';
 import '../../data/datasource/remote/chat_remote_datasource.dart';
 import '../../data/models/chat_message_model.dart';
+import '../../data/models/chat_session_model.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';
@@ -22,6 +23,10 @@ String? buildSupportSessionKey() {
   if (role.isEmpty || userId == null) return null;
   return 'support:$role:$userId';
 }
+
+/// Joriy mobil foydalanuvchi id'si — `direct:*` suhbatda "meniki" xabarni
+/// aniqlash uchun (ikkala tomon ham `author_audience: mobile`).
+int? currentMobileUserId() => getIt<UserLocalDatasource>().getCachedUser()?.id;
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRealtimeDatasource realtime;
@@ -45,6 +50,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<SendAttachmentEvent>(_onSendAttachment);
     on<RetryMessageEvent>(_onRetry);
     on<UserTypingEvent>(_onUserTyping);
+    on<LoadChatsEvent>(_onLoadChats);
     on<ChatScreenOpenedEvent>(_onScreenOpened);
     on<ChatScreenClosedEvent>(_onScreenClosed);
     on<_MessageReceived>(_onMessageReceived);
@@ -59,15 +65,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       (c) => add(_ConnectionChanged(c)),
     );
     _typingSub = realtime.onTyping.listen((d) {
-      // Only show "operator is typing" for staff audience.
-      if (d['audience'] == 'staff') {
-        add(_OperatorTyping(d['is_typing'] as bool? ?? false));
-      }
+      if (!_isOwnSession(d)) return;
+      // Support: faqat operator (staff). Direct: suhbatdosh — o'zimdan boshqa
+      // har qanday `mobile` qatnashuvchi (ikkalasi ham 'mobile' audience).
+      final isPeer = d['audience'] == 'staff' ||
+          (state.isDirect && (d['userId'] as num?)?.toInt() != _myUserId);
+      if (isPeer) add(_OperatorTyping(d['is_typing'] as bool? ?? false));
     });
     _presenceSub = realtime.onPresence.listen((d) {
-      if (d['audience'] == 'staff') {
-        add(_OperatorPresenceChanged(d['joined'] as bool? ?? false));
-      }
+      if (!_isOwnSession(d)) return;
+      final isPeer = d['audience'] == 'staff' ||
+          (state.isDirect && (d['userId'] as num?)?.toInt() != _myUserId);
+      if (isPeer) add(_OperatorPresenceChanged(d['joined'] as bool? ?? false));
     });
     _assignedSub = realtime.onAssigned.listen((d) {
       if (d['session_key'] != state.sessionKey) return;
@@ -77,6 +86,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       if (name.isNotEmpty) add(_OperatorAssigned(name));
     });
     _errorSub = realtime.onError.listen((e) => add(_ChatErrored(e)));
+  }
+
+  int? get _myUserId => currentMobileUserId();
+
+  /// Socket eventlari barcha sessiyalar uchun bitta oqimda keladi; ilovada
+  /// support va direct suhbatlar uchun alohida bloc bor, shuning uchun har biri
+  /// faqat o'z `session_key`ini oladi (kalitsiz eventlar — eski backend — o'tadi).
+  bool _isOwnSession(Map<String, dynamic> payload) {
+    final key = payload['session_key'] as String?;
+    return key == null || key == state.sessionKey;
+  }
+
+  /// Xabar meniki (o'ng tomonda) — direct suhbatda `author_id` bo'yicha.
+  bool _isMine(ChatMessageModel m) {
+    if (m.authorAudience != 'mobile') return false;
+    final me = _myUserId;
+    if (!state.isDirect || me == null || m.authorId == null) return true;
+    return m.authorId == me;
   }
 
   @override
@@ -139,7 +166,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     bool deliveredByServer(ChatMessageModel pending) => fetched.any(
       (f) =>
-          f.isMine &&
+          _isMine(f) &&
           (f.localId != null
               ? f.localId == pending.localId
               : f.text == pending.text &&
@@ -239,7 +266,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           authorAudience: 'mobile',
           text: (caption?.isEmpty ?? true) ? null : caption,
           attachmentUrl: uploaded.url,
-          attachmentType: chatMimeType(event.path),
+          // Server aniqlagan tur ustun; bo'lmasa kengaytmadan chiqaramiz.
+          attachmentType: uploaded.type ?? chatMimeType(event.path),
           at: DateTime.now(),
           localId: DateTime.now().microsecondsSinceEpoch.toString(),
           sendStatus: ChatSendStatus.sending,
@@ -277,6 +305,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     realtime.sendTyping(state.sessionKey, event.isTyping);
   }
 
+  Future<void> _onLoadChats(LoadChatsEvent event, Emitter<ChatState> emit) async {
+    emit(state.copyWith(chatsStatus: FormzSubmissionStatus.inProgress));
+    final result = await remote.getChats();
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          chatsStatus: FormzSubmissionStatus.failure,
+          error: failure.errorMessage,
+        ),
+      ),
+      (list) {
+        // Operator suhbati doim birinchi (§7.1), qolganlari — yangi xabar bo'yicha.
+        final sorted = [...list]..sort((a, b) {
+            if (a.isSupport != b.isSupport) return a.isSupport ? -1 : 1;
+            final at = a.lastMessageAt;
+            final bt = b.lastMessageAt;
+            if (at == null && bt == null) return 0;
+            if (at == null) return 1;
+            if (bt == null) return -1;
+            return bt.compareTo(at);
+          });
+        emit(state.copyWith(
+          chats: sorted,
+          chatsStatus: FormzSubmissionStatus.success,
+        ));
+      },
+    );
+  }
+
+  /// Ekran uchun: xabar joriy foydalanuvchiniki (o'ng tomonda chiziladi).
+  bool isMineMessage(ChatMessageModel m) => _isMine(m);
+
   void _onScreenOpened(ChatScreenOpenedEvent event, Emitter<ChatState> emit) {
     emit(state.copyWith(screenOpen: true, unreadCount: 0));
   }
@@ -305,7 +365,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     // Own echo → resolve the matching optimistic bubble (⏳ → ✓) instead of
     // appending a duplicate. Matched by client_msg_id (TODO-3) or by content.
-    if (m.isMine) {
+    if (_isMine(m)) {
       final idx = state.messages.indexWhere(
         (e) =>
             e.id == null &&
@@ -323,20 +383,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
     }
 
-    final fromStaff = m.authorAudience == 'staff';
+    // Suhbatdosh xabari: support'da operator (staff), direct'da nomzod.
+    final fromPeer = !_isMine(m) && !m.isSystem;
     emit(
       state.copyWith(
         messages: [...state.messages, m],
-        operatorTyping: fromStaff ? false : null,
+        operatorTyping: fromPeer ? false : null,
         // Header fallback when chat:assigned was missed (e.g. app was closed).
         operatorName:
-            fromStaff && (m.authorName?.isNotEmpty ?? false)
+            fromPeer && (m.authorName?.isNotEmpty ?? false)
                 ? m.authorName
                 : null,
-        // Tab badge (§7.8): only operator messages count, and only while the
+        // Tab badge (§7.8): only the peer's messages count, and only while the
         // chat screen itself is not open.
         unreadCount:
-            fromStaff && !state.screenOpen ? state.unreadCount + 1 : null,
+            fromPeer && !state.screenOpen ? state.unreadCount + 1 : null,
         sessionStatus: sessionStatus,
       ),
     );

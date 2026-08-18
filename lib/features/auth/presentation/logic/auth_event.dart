@@ -53,3 +53,15 @@ class UploadPhotoEvent extends AuthEvent {
   final String filePath;
   UploadPhotoEvent(this.filePath);
 }
+
+/// Rezyume tugmasining holatini aniqlash uchun `/mobile/anketa/resume`.
+class LoadResumeInfoEvent extends AuthEvent {}
+
+/// Yangi havola olib, PDF'ni qurilmaga saqlaydi.
+class DownloadResumeEvent extends AuthEvent {}
+
+/// Yuklab olish foizini yangilash uchun ichki hodisa.
+class ResumeProgressEvent extends AuthEvent {
+  final double progress;
+  ResumeProgressEvent(this.progress);
+}

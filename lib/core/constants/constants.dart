@@ -12,6 +12,7 @@ const String PREF_ROLE = "PREF_ROLE";
 const String FIRST_RUN = "FIRST_RUN";
 const String PREF_LANG = "PREF_LANG";
 const String PREF_THEME = "PREF_THEME";
+const String PREF_RESUME_FILE = "PREF_RESUME_FILE";
 
 const String SourceSerifPro = 'Montserrat';
 const String SFPRODISPLAY = 'GothamPro';

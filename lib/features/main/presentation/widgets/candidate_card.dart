@@ -4,12 +4,13 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
-import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../../core/utils/custom_cached_network_image.dart';
 import '../../data/models/candidate_model.dart';
 import '../../data/models/contact_unlock_model.dart';
 import '../logic/candidate_stages.dart';
 import '../logic/vacancy_bloc.dart';
 import '../screens/candidate_detail_screen.dart';
+import 'otklik_actions.dart';
 
 /// Mos foiz / bucket bo'yicha badge rangi (§5.2):
 /// 🟢 auto (≥80) yashil · 🔵 operator (60–79) ko'k · ⚪ past (<60) kulrang.
@@ -42,8 +43,9 @@ const _assignmentLabels = {
 
 String assignmentLabel(String status) => _assignmentLabels[status] ?? status;
 
-/// Kontakt ochilganda muvaffaqiyat sheet / balans yetmaganida dialog ko'rsatadigan
-/// wrapper. Nomzod kartalari bo'lgan ekranni shu bilan o'rang.
+/// Kontakt ochilganda muvaffaqiyat sheet'i, 402 da esa to'lov oynasini
+/// ko'rsatadigan wrapper (PROMPT_OTKLIK §4, §10). Nomzod kartalari bo'lgan
+/// ekranni shu bilan o'rang.
 class CandidateUnlockListener extends StatelessWidget {
   final Widget child;
   const CandidateUnlockListener({super.key, required this.child});
@@ -54,16 +56,27 @@ class CandidateUnlockListener extends StatelessWidget {
       listenWhen: (prev, curr) => prev.unlockStatus != curr.unlockStatus,
       listener: (context, state) {
         if (state.unlockStatus.isSuccess && state.unlockResult != null) {
-          showUnlockSuccessSheet(context, state.unlockResult!);
+          final id = state.unlockResult!.anketaId != 0
+              ? state.unlockResult!.anketaId
+              : state.lastUnlockAttemptId;
+          showUnlockSuccessSheet(
+            context,
+            state.unlockResult!,
+            candidate: id != null ? state.findCandidate(id) : null,
+          );
         } else if (state.unlockStatus.isFailure) {
-          final isInsufficientBalance = state.error?.errorCode == 402;
-          if (isInsufficientBalance) {
-            showInsufficientBalanceDialog(context);
+          if (state.error?.errorCode == 402) {
+            final id = state.lastUnlockAttemptId;
+            showInsufficientBalanceDialog(
+              context,
+              candidate: id != null ? state.findCandidate(id) : null,
+              fee: state.contactAccess?.fee,
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error?.errorMessage ?? 'Xatolik'),
-                backgroundColor: Colors.red,
+                backgroundColor: JB_RED_FG,
               ),
             );
           }
@@ -74,28 +87,20 @@ class CandidateUnlockListener extends StatelessWidget {
   }
 }
 
-String formatAmount(int amount) {
-  final s = amount.toString();
-  final buf = StringBuffer();
-  int count = 0;
-  for (int i = s.length - 1; i >= 0; i--) {
-    if (count > 0 && count % 3 == 0) buf.write(' ');
-    buf.write(s[i]);
-    count++;
-  }
-  return buf.toString().split('').reversed.join();
-}
-
+/// §4.3 — ochilgach darhol uchta imkoniyat ko'rsatiladi.
 void showUnlockSuccessSheet(
-    BuildContext context, ContactUnlockResultModel result) {
+  BuildContext context,
+  ContactUnlockResultModel result, {
+  CandidateModel? candidate,
+}) {
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     backgroundColor: Colors.white,
-    builder: (_) => Padding(
+    builder: (sheetCtx) => Padding(
       padding: EdgeInsets.fromLTRB(
-          24, 24, 24, MediaQuery.of(context).padding.bottom + 24),
+          24, 24, 24, MediaQuery.of(sheetCtx).padding.bottom + 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -103,51 +108,48 @@ void showUnlockSuccessSheet(
             width: 56,
             height: 56,
             decoration: const BoxDecoration(
-                color: Color(0xFFDCFCE7), shape: BoxShape.circle),
-            child: const Icon(Icons.check_circle, color: GREEN_COLOR, size: 32),
+                color: JB_GREEN_BG, shape: BoxShape.circle),
+            child: const Icon(Icons.lock_open_rounded,
+                color: JB_GREEN_FG, size: 30),
           ),
           const SizedBox(height: 16),
-          const Text('Kontakt ochildi!',
+          const Text('Nomzod ochildi!',
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: DARK_NAVY)),
+                  fontSize: 18, fontWeight: FontWeight.w800, color: JB_INK)),
           const SizedBox(height: 8),
           Text(
             result.phone,
             style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: PRIMARY_BLUE,
+                color: JB_BLUE,
                 letterSpacing: 1),
           ),
           if (result.additionalContact != null) ...[
             const SizedBox(height: 4),
             Text(result.additionalContact!,
-                style: const TextStyle(fontSize: 14, color: GRAY_TEXT)),
+                style: const TextStyle(fontSize: 14, color: JB_GRAY)),
           ],
           const SizedBox(height: 8),
-          if (!result.free && result.fee > 0)
+          if (result.charged && !result.free && result.fee > 0)
             Text(
-              '${formatAmount(result.fee)} so\'m yechildi • Qolgan balans: ${formatAmount(result.balance ?? 0)} so\'m',
-              style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+              "${formatAmount(result.fee)} so'm yechildi"
+              "${result.balance != null ? ' • Qolgan balans: ${formatAmount(result.balance!)} so\'m' : ''}",
+              style: const TextStyle(fontSize: 12, color: JB_GRAY),
               textAlign: TextAlign.center,
             )
           else
             const Text('Bepul ochildi',
-                style: TextStyle(fontSize: 12, color: GREEN_COLOR)),
-          const SizedBox(height: 20),
+                style: TextStyle(fontSize: 12, color: JB_GREEN_FG)),
+          const SizedBox(height: 18),
+          if (candidate != null)
+            UnlockedActionsRow(candidate: candidate, phone: result.phone),
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: PRIMARY_BLUE,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12))),
-              child: const Text('Yopish'),
+            child: TextButton(
+              onPressed: () => Navigator.pop(sheetCtx),
+              child: const Text('Yopish', style: TextStyle(color: JB_GRAY)),
             ),
           ),
         ],
@@ -156,82 +158,7 @@ void showUnlockSuccessSheet(
   );
 }
 
-void showInsufficientBalanceDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('Balans yetarli emas',
-          style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY)),
-      content: const Text('Kontaktni ochish uchun balansni to\'ldiring.',
-          style: TextStyle(color: GRAY_TEXT)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(ctx);
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const TopUpScreen(isEmployer: true)));
-          },
-          style: ElevatedButton.styleFrom(
-              backgroundColor: PRIMARY_BLUE,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10))),
-          child: const Text("To'ldirish"),
-        ),
-      ],
-    ),
-  );
-}
-
-/// Pulli ochishni tasdiqlash dialogi (umumiy — karta va detalda ishlatiladi).
-void confirmPaidUnlock(
-  BuildContext context, {
-  required int anketaId,
-  int? vacancyId,
-  required int fee,
-}) {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('Nomzodni ochish',
-          style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY)),
-      content: Text(
-        '${formatAmount(fee)} so\'m balansingizdan yechiladi.\nDavom etasizmi?',
-        style: const TextStyle(color: GRAY_TEXT),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(ctx);
-            context.read<VacancyBloc>().add(
-                UnlockContactEvent(anketaId: anketaId, vacancyId: vacancyId));
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: PRIMARY_BLUE,
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          child: const Text("To'lab ochish"),
-        ),
-      ],
-    ),
-  );
-}
-
-// ── Nomzod kartasi (struktura: web reference 1-rasm; uslub: light) ────────────
+// ── Nomzod kartasi (§3.3 yopiq / §6 ochilgan) ────────────────────────────────
 
 class CandidateCard extends StatelessWidget {
   final CandidateModel candidate;
@@ -245,29 +172,27 @@ class CandidateCard extends StatelessWidget {
     this.vacancyId,
   });
 
-  String _metaLine() {
+  /// Yopiq kartada **hudud ko'rsatilmaydi** (§3.3) — server uni yubormaydi ham.
+  String _metaLine({required bool unlocked}) {
     final parts = <String>[
-      (candidate.jobTypeName != null && candidate.jobTypeName!.isNotEmpty)
-          ? candidate.jobTypeName!
-          : '—',
-      if (candidate.region != null) candidate.region!.name,
+      if ((candidate.jobTypeName ?? '').isNotEmpty) candidate.jobTypeName!,
+      if (unlocked && candidate.region != null) candidate.region!.name,
       if (candidate.age != null) '${candidate.age} yosh',
+      if (candidate.genderLabel.isNotEmpty) candidate.genderLabel,
     ];
-    return parts.join(' · ');
+    return parts.isEmpty ? '—' : parts.join(' · ');
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<VacancyBloc, VacancyState>(
       builder: (context, vacState) {
-        final phone =
-            candidate.phoneRaw ?? vacState.unlockedPhones[candidate.id];
-        final isUnlocked = candidate.isUnlocked ||
-            vacState.unlockedAnketaIds.contains(candidate.id);
+        final isUnlocked = vacState.isUnlocked(candidate);
+        final phone = vacState.phoneOf(candidate);
         final isUnlocking = vacState.unlockStatus.isInProgress;
-        final isFree =
-            isRecommended || (vacState.contactAccess?.freeContacts ?? false);
-        final fee = vacState.contactAccess?.fee ?? 30000;
+        final isFree = isRecommended || vacState.isFreeUnlock(candidate);
+        final fee = vacState.feeFor(candidate);
+        final experience = candidate.experienceYear;
 
         return Container(
           padding: const EdgeInsets.all(14),
@@ -277,68 +202,94 @@ class CandidateCard extends StatelessWidget {
                 ? JB_PURPLE_FG.withValues(alpha: 0.28)
                 : JB_BORDER,
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      candidate.fullname ?? "Ism noma'lum",
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: JB_INK),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Yopiq kartada foto yo'q → ism bosh harflari (§3.3).
+                  _Avatar(candidate: candidate, showPhoto: isUnlocked),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          candidate.fullname ?? "Ism noma'lum",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: JB_INK),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(_metaLine(unlocked: isUnlocked),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 12.5, color: JB_GRAY)),
+                        if (experience != null && experience > 0) ...[
+                          const SizedBox(height: 3),
+                          Text('Tajriba: $experience yil',
+                              style: const TextStyle(
+                                  fontSize: 12.5, color: JB_GRAY)),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    if (isRecommended)
-                      const _Badge('Operator tavsiyasi', JB_PURPLE_FG)
-                    else if (candidate.matchPercent > 0)
-                      _Badge('${candidate.matchPercent}%',
-                          matchBucketColor(candidate)),
-                    const SizedBox(height: 6),
-                    Text(_metaLine(),
-                        style:
-                            const TextStyle(fontSize: 12.5, color: JB_GRAY)),
-                    if (isRecommended && candidate.assignment != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        assignmentLabel(candidate.assignment!.status),
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: JB_PURPLE_FG),
+                  ),
+                  const SizedBox(width: 8),
+                  if (isRecommended)
+                    const _Badge('Operator tavsiyasi', JB_PURPLE_FG)
+                  else if (candidate.matchPercent > 0)
+                    _Badge('${candidate.matchPercent}%',
+                        matchBucketColor(candidate)),
+                ],
+              ),
+              if (isRecommended && candidate.assignment != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  assignmentLabel(candidate.assignment!.status),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: JB_PURPLE_FG),
+                ),
+              ],
+              const SizedBox(height: 12),
+              if (isUnlocked)
+                _PhoneRow(phone: phone)
+              else
+                const LockedNoticeRow(),
+              const SizedBox(height: 12),
+              if (isUnlocked) ...[
+                UnlockedActionsRow(
+                  candidate: candidate,
+                  requirementId: vacancyId,
+                  phone: phone,
+                  busy: vacState.assignmentActionStatus.isInProgress,
+                ),
+                const SizedBox(height: 8),
+                _DetailButton(candidate: candidate, expand: true),
+              ] else
+                Row(
+                  children: [
+                    Expanded(child: _DetailButton(candidate: candidate)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: UnlockButton(
+                        candidate: candidate,
+                        isUnlocking: isUnlocking,
+                        isFree: isFree,
+                        fee: fee,
+                        vacancyId: vacancyId,
                       ),
-                    ],
-                    const SizedBox(height: 10),
-                    _PhoneRow(
-                      phone: isUnlocked ? phone : null,
-                      masked: candidate.maskedPhone,
-                    ),
-                    if (isRecommended && candidate.assignment != null)
-                      _StageControl(assignment: candidate.assignment!),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              SizedBox(
-                width: 124,
-                child: Column(
-                  children: [
-                    _DetailButton(candidate: candidate),
-                    const SizedBox(height: 8),
-                    _UnlockButton(
-                      candidate: candidate,
-                      isUnlocked: isUnlocked,
-                      isUnlocking: isUnlocking,
-                      isFree: isFree,
-                      fee: fee,
-                      vacancyId: vacancyId,
                     ),
                   ],
                 ),
-              ),
+              if (isRecommended && candidate.assignment != null)
+                _StageControl(assignment: candidate.assignment!),
             ],
           ),
         );
@@ -348,6 +299,41 @@ class CandidateCard extends StatelessWidget {
 }
 
 // ── Karta ichi kichik widgetlar ───────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  final CandidateModel candidate;
+  final bool showPhoto;
+  const _Avatar({required this.candidate, required this.showPhoto});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = showPhoto ? candidate.photoUrl : null;
+    if (url != null) {
+      return CustomCachedNetworkImage(
+        url: url,
+        width: 46,
+        height: 46,
+        fit: BoxFit.cover,
+        forUserImages: true,
+        borderRadius: BorderRadius.circular(14),
+      );
+    }
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: JB_INDIGO_TINT,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        candidate.initials,
+        style: const TextStyle(
+            fontSize: 15, fontWeight: FontWeight.w800, color: JB_BLUE),
+      ),
+    );
+  }
+}
 
 class _Badge extends StatelessWidget {
   final String text;
@@ -368,28 +354,22 @@ class _Badge extends StatelessWidget {
 }
 
 class _PhoneRow extends StatelessWidget {
-  /// Ochilgan bo'lsa to'liq telefon; aks holda `null`.
   final String? phone;
-
-  /// Yopiq holatda ko'rsatiladigan maskalangan telefon (PROMPT §3.4).
-  final String masked;
-  const _PhoneRow({required this.phone, required this.masked});
+  const _PhoneRow({required this.phone});
 
   @override
   Widget build(BuildContext context) {
-    final unlocked = phone != null && phone!.isNotEmpty;
-    final display = unlocked ? phone! : masked;
+    final value = (phone ?? '').isNotEmpty ? phone! : '—';
     return Row(
       children: [
-        Icon(Icons.phone,
-            size: 15, color: unlocked ? JB_GREEN_FG : JB_GRAY_LIGHT),
+        const Icon(Icons.phone_rounded, size: 15, color: JB_GREEN_FG),
         const SizedBox(width: 7),
         Flexible(
-          child: Text(display,
-              style: TextStyle(
+          child: Text(value,
+              style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  color: unlocked ? JB_INK : JB_GRAY)),
+                  color: JB_INK)),
         ),
       ],
     );
@@ -398,13 +378,14 @@ class _PhoneRow extends StatelessWidget {
 
 class _DetailButton extends StatelessWidget {
   final CandidateModel candidate;
-  const _DetailButton({required this.candidate});
+  final bool expand;
+  const _DetailButton({required this.candidate, this.expand = false});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 34,
-      width: double.infinity,
+      height: 38,
+      width: expand ? double.infinity : null,
       child: OutlinedButton.icon(
         onPressed: () => Navigator.push(
           context,
@@ -421,72 +402,55 @@ class _DetailButton extends StatelessWidget {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         ),
-        label: const Text('Batafsil', style: TextStyle(fontSize: 12.5)),
+        label: const Text('Batafsil',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
       ),
     );
   }
 }
 
-class _UnlockButton extends StatelessWidget {
+/// "Ochish · 30 000" / "Bepul ochish" / "Ochilmoqda…" (§12 lug'ati).
+class UnlockButton extends StatelessWidget {
   final CandidateModel candidate;
-  final bool isUnlocked;
   final bool isUnlocking;
   final bool isFree;
   final int fee;
   final int? vacancyId;
 
-  const _UnlockButton({
+  const UnlockButton({
+    super.key,
     required this.candidate,
-    required this.isUnlocked,
     required this.isUnlocking,
     required this.isFree,
     required this.fee,
-    required this.vacancyId,
+    this.vacancyId,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (isUnlocked) {
-      return SizedBox(
-        height: 34,
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: null,
-          icon: const Icon(Icons.lock_open, size: 15),
-          label: const Text('Ochilgan', style: TextStyle(fontSize: 12.5)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: JB_GREEN_BG,
-            disabledBackgroundColor: JB_GREEN_BG,
-            foregroundColor: JB_GREEN_FG,
-            disabledForegroundColor: JB_GREEN_FG,
-            elevation: 0,
-            padding: EdgeInsets.zero,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-          ),
-        ),
-      );
-    }
-
     final label = isUnlocking
-        ? 'Ochilmoqda...'
+        ? 'Ochilmoqda…'
         : (isFree ? 'Bepul ochish' : 'Ochish · ${formatAmount(fee)}');
 
     return SizedBox(
-      height: 34,
-      width: double.infinity,
+      height: 38,
       child: ElevatedButton.icon(
-        onPressed: isUnlocking ? null : () => _onUnlock(context),
+        onPressed: isUnlocking
+            ? null
+            : () => startUnlock(context,
+                candidate: candidate, vacancyId: vacancyId),
         icon: isUnlocking
             ? const SizedBox(
                 width: 13,
                 height: 13,
                 child: CircularProgressIndicator(
                     color: Colors.white, strokeWidth: 2))
-            : Icon(isFree ? Icons.lock_open : Icons.lock_outline, size: 15),
+            : Icon(isFree ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                size: 15),
         label: Text(label,
-            style: const TextStyle(fontSize: 11.5),
-            overflow: TextOverflow.ellipsis),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
         style: ElevatedButton.styleFrom(
           backgroundColor: isFree ? JB_GREEN_FG : JB_BLUE,
           foregroundColor: Colors.white,
@@ -497,16 +461,6 @@ class _UnlockButton extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _onUnlock(BuildContext context) {
-    if (isFree) {
-      context.read<VacancyBloc>().add(
-          UnlockContactEvent(anketaId: candidate.id, vacancyId: vacancyId));
-      return;
-    }
-    confirmPaidUnlock(context,
-        anketaId: candidate.id, vacancyId: vacancyId, fee: fee);
   }
 }
 
