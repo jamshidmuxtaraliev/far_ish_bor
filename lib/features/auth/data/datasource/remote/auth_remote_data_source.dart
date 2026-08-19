@@ -8,15 +8,18 @@ import 'package:jobUp24/core/network/dio_response_extension.dart';
 import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';
 import '../../models/anketa_models.dart';
+import '../../models/auth_flow_models.dart';
 import '../../models/auth_response_model.dart';
 import '../../models/employer_model.dart';
 import '../../models/resume_model.dart';
 import '../../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<Either<ErrorModel, bool>> sendCode(String phone);
+  Future<Either<ErrorModel, CheckPhoneModel>> checkPhone(String phone);
+  Future<Either<ErrorModel, SendCodeModel>> sendCode(String phone, {String? channel});
+  Future<Either<ErrorModel, VerifyCodeModel>> verifyCode(String phone, String smsCode);
   Future<Either<ErrorModel, AuthResponseModel>> register(Map<String, dynamic> data);
-  Future<Either<ErrorModel, AuthResponseModel>> login(String phone, String smsCode);
+  Future<Either<ErrorModel, AuthResponseModel>> login(String phone, {String? smsCode, String? regToken});
   Future<Either<ErrorModel, UserModel>> getMe();
   Future<Either<ErrorModel, AnketaModel>> getAnketa();
   Future<Either<ErrorModel, bool>> updateAnketa(Map<String, dynamic> data);
@@ -47,10 +50,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this.dioClient);
 
   @override
-  Future<Either<ErrorModel, bool>> sendCode(String phone) {
-    return dioClient.dio.wrapResponse<bool>(
-      () => dioClient.dio.post('mobile/send-code', data: {'phone': phone}),
-      (_) => true,
+  Future<Either<ErrorModel, CheckPhoneModel>> checkPhone(String phone) {
+    return dioClient.dio.wrapResponse<CheckPhoneModel>(
+      () => dioClient.dio.post('mobile/check-phone', data: {'phone': phone}),
+      (json) => CheckPhoneModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, SendCodeModel>> sendCode(String phone, {String? channel}) {
+    return dioClient.dio.wrapResponse<SendCodeModel>(
+      () => dioClient.dio.post('mobile/send-code', data: {
+        'phone': phone,
+        if (channel != null) 'channel': channel,
+      }),
+      (json) => SendCodeModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, VerifyCodeModel>> verifyCode(String phone, String smsCode) {
+    return dioClient.dio.wrapResponse<VerifyCodeModel>(
+      () => dioClient.dio.post('mobile/verify-code', data: {
+        'phone': phone,
+        'sms_code': smsCode,
+      }),
+      (json) => VerifyCodeModel.fromJson(json as Map<String, dynamic>),
     );
   }
 
@@ -63,9 +88,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<Either<ErrorModel, AuthResponseModel>> login(String phone, String smsCode) {
+  Future<Either<ErrorModel, AuthResponseModel>> login(String phone, {String? smsCode, String? regToken}) {
     return dioClient.dio.wrapResponse<AuthResponseModel>(
-      () => dioClient.dio.post('mobile/login', data: {'phone': phone, 'sms_code': smsCode}),
+      () => dioClient.dio.post('mobile/login', data: {
+        'phone': phone,
+        // reg_token bor bo'lsa sms_code yuborilmaydi — kod allaqachon sarflangan.
+        if (regToken != null) 'reg_token': regToken else 'sms_code': smsCode,
+      }),
       (json) => AuthResponseModel.fromJson(json as Map<String, dynamic>),
     );
   }

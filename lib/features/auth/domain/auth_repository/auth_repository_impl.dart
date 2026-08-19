@@ -4,6 +4,7 @@ import 'package:jobUp24/features/auth/domain/auth_repository/auth_repository.dar
 import '../../../../../core/error/error_model.dart';
 import '../../data/datasource/remote/auth_remote_data_source.dart';
 import '../../data/models/anketa_models.dart';
+import '../../data/models/auth_flow_models.dart';
 import '../../data/models/auth_response_model.dart';
 import '../../data/models/employer_model.dart';
 import '../../data/models/resume_model.dart';
@@ -15,16 +16,24 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<ErrorModel, bool>> sendCode(String phone) =>
-      remoteDataSource.sendCode(phone);
+  Future<Either<ErrorModel, CheckPhoneModel>> checkPhone(String phone) =>
+      remoteDataSource.checkPhone(phone);
+
+  @override
+  Future<Either<ErrorModel, SendCodeModel>> sendCode(String phone, {String? channel}) =>
+      remoteDataSource.sendCode(phone, channel: channel);
+
+  @override
+  Future<Either<ErrorModel, VerifyCodeModel>> verifyCode(String phone, String smsCode) =>
+      remoteDataSource.verifyCode(phone, smsCode);
 
   @override
   Future<Either<ErrorModel, AuthResponseModel>> register(Map<String, dynamic> data) =>
       remoteDataSource.register(data);
 
   @override
-  Future<Either<ErrorModel, AuthResponseModel>> login(String phone, String smsCode) =>
-      remoteDataSource.login(phone, smsCode);
+  Future<Either<ErrorModel, AuthResponseModel>> login(String phone, {String? smsCode, String? regToken}) =>
+      remoteDataSource.login(phone, smsCode: smsCode, regToken: regToken);
 
   @override
   Future<Either<ErrorModel, UserModel>> getMe() =>

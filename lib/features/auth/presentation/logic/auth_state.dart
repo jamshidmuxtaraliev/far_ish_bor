@@ -2,7 +2,9 @@ part of 'auth_bloc.dart';
 
 @immutable
 class AuthState extends Equatable {
+  final FormzSubmissionStatus checkPhoneStatus;
   final FormzSubmissionStatus sendCodeStatus;
+  final FormzSubmissionStatus verifyCodeStatus;
   final FormzSubmissionStatus registerStatus;
   final FormzSubmissionStatus loginStatus;
   final FormzSubmissionStatus getMeStatus;
@@ -26,6 +28,18 @@ class AuthState extends Equatable {
   final List<LanguageModel> languages;
   final ResumeInfoModel? resume;
 
+  /// Oxirgi `check-phone` natijasi — qaysi ekranga o'tishni hal qiladi.
+  final CheckPhoneModel? checkPhone;
+
+  /// Oxirgi `send-code` natijasi; orqa sanoq `ttlSeconds` dan boshlanadi.
+  final SendCodeModel? sendCodeInfo;
+
+  /// Tasdiqlangan kod o'rniga berilgan 30 daqiqalik chipta.
+  final String? regToken;
+
+  /// [regToken] qachon eskirishi — ekranlar shunga qarab qayta kod so'raydi.
+  final DateTime? regTokenExpiresAt;
+
   /// 0..1 — yuklab olish foizi.
   final double resumeProgress;
 
@@ -36,7 +50,9 @@ class AuthState extends Equatable {
   final bool anketaMissing;
 
   const AuthState({
+    this.checkPhoneStatus = FormzSubmissionStatus.initial,
     this.sendCodeStatus = FormzSubmissionStatus.initial,
+    this.verifyCodeStatus = FormzSubmissionStatus.initial,
     this.registerStatus = FormzSubmissionStatus.initial,
     this.loginStatus = FormzSubmissionStatus.initial,
     this.getMeStatus = FormzSubmissionStatus.initial,
@@ -59,13 +75,19 @@ class AuthState extends Equatable {
     this.jobTypes = const [],
     this.languages = const [],
     this.resume,
+    this.checkPhone,
+    this.sendCodeInfo,
+    this.regToken,
+    this.regTokenExpiresAt,
     this.resumeProgress = 0,
     this.resumeFilePath,
     this.anketaMissing = false,
   });
 
   AuthState copyWith({
+    FormzSubmissionStatus? checkPhoneStatus,
     FormzSubmissionStatus? sendCodeStatus,
+    FormzSubmissionStatus? verifyCodeStatus,
     FormzSubmissionStatus? registerStatus,
     FormzSubmissionStatus? loginStatus,
     FormzSubmissionStatus? getMeStatus,
@@ -88,12 +110,22 @@ class AuthState extends Equatable {
     List<JobTypeModel>? jobTypes,
     List<LanguageModel>? languages,
     ResumeInfoModel? resume,
+    CheckPhoneModel? checkPhone,
+    SendCodeModel? sendCodeInfo,
+    String? regToken,
+    DateTime? regTokenExpiresAt,
+
+    /// Chipta faqat shu bayroq bilan tozalanadi — `copyWith` null'ni e'tiborsiz
+    /// qoldiradi.
+    bool clearRegToken = false,
     double? resumeProgress,
     String? resumeFilePath,
     bool? anketaMissing,
   }) {
     return AuthState(
+      checkPhoneStatus: checkPhoneStatus ?? this.checkPhoneStatus,
       sendCodeStatus: sendCodeStatus ?? this.sendCodeStatus,
+      verifyCodeStatus: verifyCodeStatus ?? this.verifyCodeStatus,
       registerStatus: registerStatus ?? this.registerStatus,
       loginStatus: loginStatus ?? this.loginStatus,
       getMeStatus: getMeStatus ?? this.getMeStatus,
@@ -116,6 +148,11 @@ class AuthState extends Equatable {
       jobTypes: jobTypes ?? this.jobTypes,
       languages: languages ?? this.languages,
       resume: resume ?? this.resume,
+      checkPhone: checkPhone ?? this.checkPhone,
+      sendCodeInfo: sendCodeInfo ?? this.sendCodeInfo,
+      regToken: clearRegToken ? null : (regToken ?? this.regToken),
+      regTokenExpiresAt:
+          clearRegToken ? null : (regTokenExpiresAt ?? this.regTokenExpiresAt),
       resumeProgress: resumeProgress ?? this.resumeProgress,
       resumeFilePath: resumeFilePath ?? this.resumeFilePath,
       anketaMissing: anketaMissing ?? this.anketaMissing,
@@ -124,11 +161,13 @@ class AuthState extends Equatable {
 
   @override
   List<Object?> get props => [
-        sendCodeStatus, registerStatus, loginStatus, getMeStatus,
+        checkPhoneStatus, sendCodeStatus, verifyCodeStatus,
+        registerStatus, loginStatus, getMeStatus,
         anketaStatus, updateAnketaStatus, regionsStatus, jobTypesStatus, languagesStatus,
         employerStatus, updateEmployerStatus, uploadLogoStatus, uploadPhotoStatus,
         resumeInfoStatus, downloadResumeStatus,
         error, user, anketa, employer, regions, jobTypes, languages,
-        resume, resumeProgress, resumeFilePath, anketaMissing,
+        resume, checkPhone, sendCodeInfo, regToken, regTokenExpiresAt,
+        resumeProgress, resumeFilePath, anketaMissing,
       ];
 }

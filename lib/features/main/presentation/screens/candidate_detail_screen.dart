@@ -214,6 +214,7 @@ class _ProfileHeader extends StatelessWidget {
         ? const Color(0xFF16A34A)
         : (matchPct >= 60 ? PRIMARY_BLUE : GRAY_TEXT);
     final photoUrl = detail.photoUrl ?? card?.photoUrl;
+    final category = detail.candidateCategoryLabel ?? card?.candidateCategoryLabel;
 
     return Row(
       children: [
@@ -257,12 +258,17 @@ class _ProfileHeader extends StatelessWidget {
               Text(detail.jobTypeName ?? '—',
                   style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
                 children: [
                   if (isRecommended)
                     const _Pill('Operator tavsiyasi', VIOLET)
                   else if (matchPct > 0)
                     _Pill('$matchPct% mos', matchColor),
+                  if (category != null) _Pill(category, const Color(0xFFD97706)),
+                  if (detail.isBlacklisted)
+                    const _Pill("Qora ro'yxatda", Color(0xFFDC2626)),
                 ],
               ),
             ],
@@ -557,14 +563,15 @@ class _InfoGrid extends StatelessWidget {
       if (detail.district != null) detail.district!.name,
     ].join(', ');
 
+    // Tajriba ko'pincha faqat `professions[]` ichida keladi — ildizdagi
+    // `experience_year` null bo'lsa ham ko'rsatiladigan qiymat bor.
+    final experience = detail.experienceYear;
+
     final pairs = <(String, String)>[
       ('HUDUD', hudud.isEmpty ? '—' : hudud),
       ('YOSH', detail.age != null ? '${detail.age} yosh' : '—'),
       ('JINSI', _orDash(detail.genderLabel)),
-      ('TAJRIBA',
-          detail.rawExperienceYear != null
-              ? '${detail.rawExperienceYear} yil'
-              : '—'),
+      ('TAJRIBA', experience != null ? '$experience yil' : '—'),
       ('KUTILAYOTGAN OYLIK',
           detail.expectedSalary != null ? _money(detail.expectedSalary!) : '—'),
       ('OXIRGI OYLIK',
@@ -576,11 +583,14 @@ class _InfoGrid extends StatelessWidget {
               ? detail.workScheduleLabels.join(', ')
               : '—'),
       ('TILLAR',
-          detail.languages.isNotEmpty ? detail.languages.join(', ') : '—'),
+          detail.languageLabels.isNotEmpty
+              ? detail.languageLabels.join(', ')
+              : '—'),
       ('HAYDOVCHILIK GUVOHNOMASI', _bool(detail.hasLicense)),
       ('SHAXSIY AVTOMOBIL', _bool(detail.hasCar)),
-      ('KOMPYUTER SAVODXONLIGI', _orDash(detail.computerLiteracy)),
+      ('KOMPYUTER SAVODXONLIGI', _bool(detail.computerLiteracy)),
       ('JISMONIY ISHGA ROZI', _bool(detail.physicalWorkOk)),
+      if (detail.publicId != null) ('NOMZOD ID', '#${detail.publicId}'),
     ];
 
     final rows = <Widget>[];

@@ -5,30 +5,38 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:formz/formz.dart';
 import '../../../../core/constants/colors.dart';
 import '../../data/models/anketa_models.dart';
+import '../../data/models/auth_error_kind.dart';
 import '../logic/auth_bloc.dart';
+import '../widgets/auth_snack.dart';
+import '../widgets/otp_countdown.dart';
+import 'login_screen.dart';
 import 'verification_success_screen.dart';
 
 class EmployerRegistrationScreen extends StatefulWidget {
   final String language;
-  const EmployerRegistrationScreen({super.key, required this.language});
+
+  /// Kirish ekranidan o'tkazilganda raqam avtomatik to'ldiriladi.
+  final String? initialPhone;
+
+  const EmployerRegistrationScreen({super.key, required this.language, this.initialPhone});
 
   @override
   State<EmployerRegistrationScreen> createState() => _EmployerRegistrationScreenState();
 }
 
-class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen> {
+class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
+    with OtpCountdownMixin {
   final PageController _pageCtrl = PageController();
   int _step = 0;
   static const int _total = 7;
 
   final _companyName = TextEditingController();
-  final _phone = TextEditingController();
-  final _phoneMask = MaskTextInputFormatter(
-    mask: '+998 (##) ### ## ##',
-    filter: {'#': RegExp(r'[0-9]')},
-    type: MaskAutoCompletionType.lazy,
-  );
+  late final TextEditingController _phone;
+  late final MaskTextInputFormatter _phoneMask;
   final _sms = TextEditingController();
+
+  /// Kod ana shu raqamga yuborilgan.
+  String _pendingPhone = '';
   final _contactPerson = TextEditingController();
   final _email = TextEditingController();
   RegionModel? _region;
@@ -46,22 +54,56 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
 
   // Phone entry is on step 1, SMS on step 2
   static const int _phoneStep = 1;
+  static const int _smsStep = 2;
   static const int _lastStep = _total - 1;
 
   @override
   void initState() {
     super.initState();
+    // Maskaga faqat 9 xonali lokal qism beriladi — '+998' mask ichida literal.
+    final digits = (widget.initialPhone ?? '').replaceAll(RegExp(r'\D'), '');
+    final local = digits.length > 9 ? digits.substring(digits.length - 9) : digits;
+    _phoneMask = MaskTextInputFormatter(
+      mask: '+998 (##) ### ## ##',
+      filter: {'#': RegExp(r'[0-9]')},
+      type: MaskAutoCompletionType.lazy,
+      initialText: local.isEmpty ? null : local,
+    );
+    _phone = TextEditingController(text: local.isEmpty ? '' : _phoneMask.getMaskedText());
     context.read<AuthBloc>().add(LoadRegionsEvent());
+    // Oldingi ekranda qolgan chipta bu oqimga tegishli emas.
+    context.read<AuthBloc>().add(ClearRegTokenEvent());
   }
 
   void _next() {
     if (_step == _phoneStep) {
       final phone = _cleanPhone;
-      if (phone.isEmpty) {
-        _showError(isUz ? 'Telefon raqam kiriting' : 'Введите номер телефона');
+      if (!phone.startsWith('+998') || phone.length < 13) {
+        _showError(isUz
+            ? 'To\'g\'ri telefon raqam kiriting (+998...)'
+            : 'Введите корректный номер (+998...)');
         return;
       }
-      context.read<AuthBloc>().add(SendCodeEvent(phone));
+      // Bekorga SMS ketmasin: raqam bazada bo'lsa Kirish ekraniga o'tkazamiz.
+      _pendingPhone = phone;
+      context.read<AuthBloc>().add(CheckPhoneEvent(phone));
+      return;
+    }
+    if (_step == _smsStep) {
+      // Tasdiqlangan kod bilan orqaga qaytib kelingan bo'lsa qayta so'ramaymiz.
+      if (otpVerified) {
+        _advance();
+        return;
+      }
+      if (otpExpired) {
+        _showError(isUz ? 'Kod muddati tugadi — yangi kod oling' : 'Срок кода истёк — запросите новый');
+        return;
+      }
+      if (_sms.text.trim().length < 6) {
+        _showError(isUz ? 'SMS kodni to\'liq kiriting' : 'Введите код полностью');
+        return;
+      }
+      context.read<AuthBloc>().add(VerifyCodeEvent(_pendingPhone, _sms.text.trim()));
       return;
     }
     if (_step == _lastStep) {
@@ -79,10 +121,12 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
   }
 
   void _doRegister() {
+    final regToken = context.read<AuthBloc>().state.regToken;
     final data = <String, dynamic>{
       'role': 'employer',
-      'phone': _cleanPhone,
-      'sms_code': _sms.text.trim(),
+      'phone': _pendingPhone.isEmpty ? _cleanPhone : _pendingPhone,
+      // Chipta bor bo'lsa kod allaqachon sarflangan — `sms_code` yuborilmaydi.
+      if (regToken != null) 'reg_token': regToken else 'sms_code': _sms.text.trim(),
     };
     if (_companyName.text.trim().isNotEmpty) data['company_name'] = _companyName.text.trim();
     if (_contactPerson.text.trim().isNotEmpty) data['name'] = _contactPerson.text.trim();
@@ -100,16 +144,126 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red.shade600),
+  void _showError(String message, {String? actionLabel, VoidCallback? onAction}) {
+    showAuthSnack(context, message, actionLabel: actionLabel, onAction: onAction);
+  }
+
+  /// Chipta eskirganda kod qadamiga qaytadi — to'ldirilgan anketa saqlanadi.
+  void _returnToSmsStep() {
+    _sms.clear();
+    stopOtpCountdown();
+    setState(() {
+      otpVerified = false;
+      _step = _smsStep;
+    });
+    _pageCtrl.jumpToPage(_smsStep);
+    context.read<AuthBloc>().add(SendCodeEvent(_pendingPhone));
+  }
+
+  void _goToLogin(String notice) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => LoginScreen(
+          language: widget.language,
+          initialPhone: _pendingPhone.isEmpty ? _cleanPhone : _pendingPhone,
+          notice: notice,
+        ),
+      ),
     );
+  }
+
+  String _messageFor(AuthState state, {required String fallback}) {
+    final error = state.error;
+    if (error == null) return fallback;
+    if (error.kind == AuthErrorKind.rateLimited) {
+      return isUz
+          ? 'Juda ko\'p so\'rov — biroz kutib qayta urinib ko\'ring'
+          : 'Слишком много запросов — попробуйте позже';
+    }
+    return error.errorMessage.isEmpty ? fallback : error.errorMessage;
+  }
+
+  static const String _alreadyRegisteredUz =
+      'Bu raqam allaqachon ro\'yxatdan o\'tgan — kirish uchun kod oling';
+  static const String _alreadyRegisteredRu =
+      'Этот номер уже зарегистрирован — получите код для входа';
+
+  void _handleState(AuthState state) {
+    if (state.checkPhoneStatus == FormzSubmissionStatus.success) {
+      if (state.checkPhone?.registered == true) {
+        _goToLogin(isUz ? _alreadyRegisteredUz : _alreadyRegisteredRu);
+        return;
+      }
+      context.read<AuthBloc>().add(SendCodeEvent(_pendingPhone));
+    }
+    if (state.checkPhoneStatus == FormzSubmissionStatus.failure) {
+      _showError(_messageFor(state, fallback: isUz ? 'Raqamni tekshirib bo\'lmadi' : 'Не удалось проверить номер'));
+    }
+
+    if (state.sendCodeStatus == FormzSubmissionStatus.success) {
+      _sms.clear();
+      startOtpCountdown(state.sendCodeInfo?.ttlSeconds ?? 300);
+      if (_step == _phoneStep) _advance();
+      final info = state.sendCodeInfo;
+      if (info != null) showSendCodeChannelHint(context, info, isUz: isUz);
+    }
+    if (state.sendCodeStatus == FormzSubmissionStatus.failure) {
+      final gatewayDown = state.error?.kind == AuthErrorKind.smsGatewayDown;
+      _showError(
+        _messageFor(state, fallback: isUz ? 'SMS yuborilmadi' : 'SMS не отправлен'),
+        // SMS shlyuzi ishlamasa — Telegram muqobili.
+        actionLabel: gatewayDown ? (isUz ? 'Telegram orqali' : 'Через Telegram') : null,
+        onAction: gatewayDown
+            ? () => context.read<AuthBloc>().add(SendCodeEvent(_pendingPhone, channel: 'telegram'))
+            : null,
+      );
+    }
+
+    if (state.verifyCodeStatus == FormzSubmissionStatus.success) {
+      if (state.checkPhone?.registered == true) {
+        _goToLogin(isUz ? _alreadyRegisteredUz : _alreadyRegisteredRu);
+        return;
+      }
+      markOtpVerified();
+      _advance();
+    }
+    if (state.verifyCodeStatus == FormzSubmissionStatus.failure) {
+      // Xato kod bilan keyingi qadamga o'tkazilmaydi.
+      _sms.clear();
+      if (state.error?.needsFreshCode ?? false) stopOtpCountdown();
+      _showError(_messageFor(state, fallback: isUz ? 'Kod tasdiqlanmadi' : 'Код не подтверждён'));
+    }
+
+    if (state.registerStatus == FormzSubmissionStatus.success) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => VerificationSuccessScreen(
+            language: widget.language,
+            isEmployer: true,
+            name: _companyName.text.isEmpty ? 'Kompaniya' : _companyName.text,
+          ),
+        ),
+      );
+    }
+    if (state.registerStatus == FormzSubmissionStatus.failure) {
+      final error = state.error;
+      if (error?.kind == AuthErrorKind.phoneAlreadyRegistered) {
+        _goToLogin(error!.errorMessage);
+        return;
+      }
+      if (error?.kind == AuthErrorKind.regTokenInvalid) {
+        _showError(error!.errorMessage);
+        _returnToSmsStep();
+        return;
+      }
+      _showError(_messageFor(state, fallback: isUz ? "Ro'yxatdan o'tishda xato" : 'Ошибка регистрации'));
+    }
   }
 
   String get _btnLabel {
     if (_step == _lastStep) return isUz ? 'Yakunlash' : 'Завершить';
     if (_step == _phoneStep) return isUz ? 'Kod olish' : 'Получить код';
-    if (_step == 2) return isUz ? 'Tasdiqlash' : 'Подтвердить';
+    if (_step == _smsStep) return isUz ? 'Davom etish' : 'Продолжить';
     return isUz ? 'Keyingi' : 'Далее';
   }
 
@@ -242,24 +396,10 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state.sendCodeStatus == FormzSubmissionStatus.failure) {
-          _showError(state.error?.errorMessage ?? (isUz ? 'Xato yuz berdi' : 'Произошла ошибка'));
-        } else if (state.sendCodeStatus == FormzSubmissionStatus.success) {
-          _advance();
-        }
-        if (state.registerStatus == FormzSubmissionStatus.failure) {
-          _showError(state.error?.errorMessage ?? (isUz ? "Ro'yxatdan o'tishda xato" : 'Ошибка регистрации'));
-        } else if (state.registerStatus == FormzSubmissionStatus.success) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => VerificationSuccessScreen(
-                language: widget.language,
-                isEmployer: true,
-                name: _companyName.text.isEmpty ? 'Kompaniya' : _companyName.text,
-              ),
-            ),
-          );
-        }
+        // AuthBloc ilova bo'yicha yagona — boshqa ekran ustimizda ochiq bo'lsa
+        // uning holat o'zgarishlariga aralashmaymiz.
+        if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+        _handleState(state);
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: const SystemUiOverlayStyle(
@@ -339,10 +479,18 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         icon: Icons.chat_bubble_outline,
                         title: isUz ? 'SMS kodni kiriting' : 'Введите SMS код',
                         subtitle: _phone.text,
+                        footer: OtpCountdownBar(
+                          secondsLeft: otpSecondsLeft,
+                          verified: otpVerified,
+                          isUz: isUz,
+                          onResend: () => context.read<AuthBloc>().add(SendCodeEvent(_pendingPhone)),
+                        ),
                         child: TextField(
                           controller: _sms,
                           keyboardType: TextInputType.number,
                           maxLength: 6,
+                          enabled: !otpVerified && !otpExpired,
+                          onChanged: (_) => setState(() {}),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 24, letterSpacing: 12, fontWeight: FontWeight.bold, color: DARK_NAVY),
                           decoration: _inputDeco('_ _ _ _ _ _', counter: true),
@@ -424,8 +572,13 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                 ),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
-                    final isLoading = (_step == _phoneStep && state.sendCodeStatus.isInProgress) ||
+                    final isLoading = (_step == _phoneStep &&
+                            (state.checkPhoneStatus.isInProgress || state.sendCodeStatus.isInProgress)) ||
+                        (_step == _smsStep &&
+                            (state.verifyCodeStatus.isInProgress || state.sendCodeStatus.isInProgress)) ||
                         (_step == _lastStep && state.registerStatus.isInProgress);
+                    // Kod qadamida: sanoq tugagan bo'lsa faqat "Qayta yuborish" ishlaydi.
+                    final blockedOnOtp = _step == _smsStep && !otpVerified && otpExpired;
                     return Container(
                       padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 12),
                       decoration: const BoxDecoration(
@@ -436,11 +589,12 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: isLoading ? null : _next,
+                          onPressed: isLoading || blockedOnOtp ? null : _next,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: PRIMARY_BLUE,
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: PRIMARY_BLUE.withValues(alpha: 0.7),
+                            disabledBackgroundColor:
+                                blockedOnOtp ? const Color(0xFFCBD5E1) : PRIMARY_BLUE.withValues(alpha: 0.7),
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
@@ -464,7 +618,15 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     );
   }
 
-  Widget _page({required IconData icon, required String title, String? subtitle, required Widget child}) {
+  Widget _page({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Widget child,
+
+    /// Maydondan keyin qo'yiladigan qo'shimcha blok (masalan, orqa sanoq).
+    Widget? footer,
+  }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       child: Column(
@@ -487,6 +649,10 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
           ],
           const SizedBox(height: 24),
           child,
+          if (footer != null) ...[
+            const SizedBox(height: 16),
+            footer,
+          ],
         ],
       ),
     );

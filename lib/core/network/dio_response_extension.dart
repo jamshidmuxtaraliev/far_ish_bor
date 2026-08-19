@@ -19,7 +19,9 @@ extension DioWrapper on Dio {
           final base = BaseData<T?>.fromJson(data, (_) => null);
           return Left(ErrorModel(
             base.message ?? 'Xatolik yuz berdi',
-            errorCode: base.errorCode,
+            // Rate-limitda konvertda `error_code` bo'lmaydi — haqiqiy HTTP
+            // status (429) yo'qolib ketmasin.
+            errorCode: base.errorCode ?? dioError.response?.statusCode,
           ));
         } catch (_) {
           return Left(ErrorModel(

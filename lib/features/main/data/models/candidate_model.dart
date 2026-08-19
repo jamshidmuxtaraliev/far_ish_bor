@@ -106,6 +106,20 @@ class CandidateVacancyRefModel {
   }
 }
 
+/// Bayroqlar backend'da goh `true`, goh `"ha"`/`1` bo'lib keladi. Qattiq
+/// `as bool?` bitta maydon uchun butun rezyume parse'ini yiqitardi.
+bool? _asBool(Object? value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final v = value.trim().toLowerCase();
+    if (v.isEmpty) return null;
+    return const {'true', '1', 'ha', 'yes', 'bor', 'da'}.contains(v);
+  }
+  return null;
+}
+
 class CandidateModel {
   final int id;
   final int? publicId;
@@ -127,7 +141,7 @@ class CandidateModel {
   final List<String> languages;
   final bool? hasLicense;
   final bool? hasCar;
-  final String? computerLiteracy;
+  final bool? computerLiteracy;
   final bool? physicalWorkOk;
   final String? motivation;
   final String? previousJobReason;
@@ -254,22 +268,22 @@ class CandidateModel {
       rawExperienceYear: json['experience_year'] as int?,
       information: json['information'] as String?,
       languages: langs,
-      hasLicense: json['has_license'] as bool?,
-      hasCar: json['has_car'] as bool?,
-      computerLiteracy: json['computer_literacy'] as String?,
-      physicalWorkOk: json['physical_work_ok'] as bool?,
+      hasLicense: _asBool(json['has_license']),
+      hasCar: _asBool(json['has_car']),
+      computerLiteracy: _asBool(json['computer_literacy']),
+      physicalWorkOk: _asBool(json['physical_work_ok']),
       motivation: json['motivation'] as String?,
       previousJobReason: json['previous_job_reason'] as String?,
       workStatus: json['work_status'] as String?,
       workSchedule: schedule,
       candidateCategory: json['candidate_category'] as String?,
-      isBlacklisted: json['is_blacklisted'] as bool? ?? false,
+      isBlacklisted: _asBool(json['is_blacklisted']) ?? false,
       matchScore: (json['match_score'] as num?)?.toDouble(),
       matchBucket: json['match_bucket'] as String?,
-      isUnlocked: json['is_unlocked'] as bool? ?? false,
+      isUnlocked: _asBool(json['is_unlocked']) ?? false,
       phoneRaw: json['phone'] as String? ?? json['phone_number'] as String?,
       additionalContact: json['additional_contact'] as String?,
-      locked: json['locked'] as bool? ?? false,
+      locked: _asBool(json['locked']) ?? false,
       fee: (json['fee'] as num?)?.toInt(),
       balance: (json['balance'] as num?)?.toInt(),
       canPayFromBalance: json['can_pay_from_balance'] as bool?,
@@ -277,7 +291,7 @@ class CandidateModel {
           ? ContactCapabilitiesModel.fromJson(
               Map<String, dynamic>.from(json['capabilities'] as Map))
           : null,
-      recommended: json['recommended'] as bool? ?? false,
+      recommended: _asBool(json['recommended']) ?? false,
       assignment: assignJson != null
           ? CandidateAssignmentModel.fromJson(assignJson)
           : null,
@@ -360,6 +374,34 @@ class CandidateModel {
       'takliflar' => 'Takliflarni ko\'rmoqda',
       _ => workStatus ?? '',
     };
+  }
+
+  /// Til kodlari o'rniga o'qiladigan nom: `uz` → `O'zbek`.
+  List<String> get languageLabels {
+    const map = {
+      'uz': "O'zbek",
+      'ru': 'Rus',
+      'en': 'Ingliz',
+      'kk': 'Qozoq',
+      'tr': 'Turk',
+      'tj': 'Tojik',
+      'kaa': 'Qoraqalpoq',
+    };
+    return languages.map((c) => map[c.toLowerCase()] ?? c).toList();
+  }
+
+  /// `premium_a` → `Premium A`. Toifalar ro'yxati CRM'da o'sib boradi,
+  /// shuning uchun qat'iy jadval emas — formatlash.
+  String? get candidateCategoryLabel {
+    final raw = candidateCategory;
+    if (raw == null || raw.isEmpty) return null;
+    return raw
+        .split(RegExp(r'[_\s]+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => w.length <= 2
+            ? w.toUpperCase()
+            : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
   }
 
   List<String> get workScheduleLabels {

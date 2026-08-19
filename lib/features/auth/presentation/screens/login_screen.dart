@@ -8,27 +8,41 @@ import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../../main/presentation/screens/main_screen.dart';
+import '../../data/models/auth_error_kind.dart';
 import '../logic/auth_bloc.dart';
+import '../widgets/auth_snack.dart';
+import '../widgets/otp_countdown.dart';
+import 'user_type_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String language;
 
-  const LoginScreen({super.key, required this.language});
+  /// Ro'yxatdan o'tish ekranidan o'tkazilganda raqam avtomatik to'ldiriladi.
+  final String? initialPhone;
+
+  /// Nega bu ekranga tushib qolgani haqida izoh.
+  final String? notice;
+
+  const LoginScreen({
+    super.key,
+    required this.language,
+    this.initialPhone,
+    this.notice,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
+  late final TextEditingController _phoneController;
   final _codeController = TextEditingController();
   final _phoneFocus = FocusNode();
   final _codeFocus = FocusNode();
-  final _phoneMask = MaskTextInputFormatter(
-    mask: '+998 (##) ### ## ##',
-    filter: {'#': RegExp(r'[0-9]')},
-    type: MaskAutoCompletionType.lazy,
-  );
+  late final MaskTextInputFormatter _phoneMask;
+
+  /// `check-phone` javobini kutayotgan raqam — SMS shu raqamga ketadi.
+  String _pendingPhone = '';
 
   // Strips spaces and parentheses, e.g. "+998 (90) 123 45 67" -> "+998901234567"
   String get _cleanPhone => _phoneController.text.replaceAll(RegExp(r'[\s()]'), '');
@@ -36,6 +50,21 @@ class _LoginScreenState extends State<LoginScreen> {
   int _step = 0; // 0 = phone, 1 = otp
 
   bool get isUz => widget.language == 'uz';
+
+  @override
+  void initState() {
+    super.initState();
+    // Maskaga faqat 9 xonali lokal qism beriladi — '+998' mask ichida literal.
+    final digits = (widget.initialPhone ?? '').replaceAll(RegExp(r'\D'), '');
+    final local = digits.length > 9 ? digits.substring(digits.length - 9) : digits;
+    _phoneMask = MaskTextInputFormatter(
+      mask: '+998 (##) ### ## ##',
+      filter: {'#': RegExp(r'[0-9]')},
+      type: MaskAutoCompletionType.lazy,
+      initialText: local.isEmpty ? null : local,
+    );
+    _phoneController = TextEditingController(text: local.isEmpty ? '' : _phoneMask.getMaskedText());
+  }
 
   @override
   void dispose() {
@@ -46,44 +75,124 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onSendCode(BuildContext context) {
+  void _showError(String message, {String? actionLabel, VoidCallback? onAction}) {
+    showAuthSnack(context, message, actionLabel: actionLabel, onAction: onAction);
+  }
+
+  /// 1-qadam: raqam bazada bormi? Yo'q bo'lsa bekorga SMS yubormaymiz.
+  void _onContinuePhone(BuildContext context) {
     final phone = _cleanPhone;
-    if (phone.isEmpty) return;
-    context.read<AuthBloc>().add(SendCodeEvent(phone));
+    if (phone.isEmpty || !phone.startsWith('+998') || phone.length < 13) {
+      _showError(isUz
+          ? 'To\'g\'ri telefon raqam kiriting (+998...)'
+          : 'Введите корректный номер (+998...)');
+      return;
+    }
+    _pendingPhone = phone;
+    context.read<AuthBloc>().add(CheckPhoneEvent(phone));
+  }
+
+  void _sendCode(BuildContext context) {
+    context.read<AuthBloc>().add(SendCodeEvent(_pendingPhone.isEmpty ? _cleanPhone : _pendingPhone));
   }
 
   void _onLogin(BuildContext context) {
-    final phone = _cleanPhone;
     final code = _codeController.text.trim();
-    if (phone.isEmpty || code.isEmpty) return;
-    context.read<AuthBloc>().add(LoginEvent(phone, code));
+    if (code.length < 6 || otpExpired) return;
+    context.read<AuthBloc>().add(LoginEvent(_pendingPhone, smsCode: code));
+  }
+
+  void _goToRegistration() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => UserTypeScreen(
+          language: widget.language,
+          initialPhone: _pendingPhone.isEmpty ? _cleanPhone : _pendingPhone,
+          notice: isUz
+              ? 'Bu raqam hali ro\'yxatdan o\'tmagan'
+              : 'Этот номер ещё не зарегистрирован',
+        ),
+      ),
+    );
+  }
+
+  void _handleState(BuildContext context, AuthState state) {
+    if (state.checkPhoneStatus == FormzSubmissionStatus.success) {
+      // Ro'yxatdan o'tmagan raqamga SMS yubormaymiz.
+      if (state.checkPhone?.canLogin == false) {
+        _goToRegistration();
+        return;
+      }
+      _sendCode(context);
+    }
+    if (state.checkPhoneStatus == FormzSubmissionStatus.failure) {
+      _showError(_messageFor(state, fallback: isUz ? 'Xato yuz berdi' : 'Произошла ошибка'));
+    }
+
+    if (state.sendCodeStatus == FormzSubmissionStatus.success) {
+      _codeController.clear();
+      startOtpCountdown(state.sendCodeInfo?.ttlSeconds ?? 300);
+      final info = state.sendCodeInfo;
+      if (info != null) showSendCodeChannelHint(context, info, isUz: isUz);
+      setState(() => _step = 1);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) _codeFocus.requestFocus();
+      });
+    }
+    if (state.sendCodeStatus == FormzSubmissionStatus.failure) {
+      _showError(
+        _messageFor(state, fallback: isUz ? 'SMS yuborilmadi' : 'SMS не отправлен'),
+        // SMS shlyuzi ishlamasa — Telegram muqobili.
+        actionLabel: state.error?.kind == AuthErrorKind.smsGatewayDown
+            ? (isUz ? 'Telegram orqali' : 'Через Telegram')
+            : null,
+        onAction: state.error?.kind == AuthErrorKind.smsGatewayDown
+            ? () => context.read<AuthBloc>().add(SendCodeEvent(_pendingPhone, channel: 'telegram'))
+            : null,
+      );
+    }
+
+    if (state.loginStatus == FormzSubmissionStatus.success) {
+      final role = getIt<UserLocalDatasource>().getRole();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => MainScreen(isEmployer: role == 'employer')),
+        (route) => false,
+      );
+    }
+    if (state.loginStatus == FormzSubmissionStatus.failure) {
+      final error = state.error;
+      if (error?.kind == AuthErrorKind.userNotFound) {
+        _showError(error!.errorMessage);
+        _goToRegistration();
+        return;
+      }
+      if (error != null && error.needsFreshCode) {
+        _codeController.clear();
+        stopOtpCountdown();
+      }
+      _showError(_messageFor(state, fallback: isUz ? 'Kirish amalga oshmadi' : 'Не удалось войти'));
+    }
+  }
+
+  String _messageFor(AuthState state, {required String fallback}) {
+    final error = state.error;
+    if (error == null) return fallback;
+    if (error.kind == AuthErrorKind.rateLimited) {
+      return isUz
+          ? 'Juda ko\'p so\'rov — biroz kutib qayta urinib ko\'ring'
+          : 'Слишком много запросов — попробуйте позже';
+    }
+    return error.errorMessage.isEmpty ? fallback : error.errorMessage;
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state.sendCodeStatus == FormzSubmissionStatus.success) {
-          setState(() => _step = 1);
-          Future.delayed(const Duration(milliseconds: 100), () => _codeFocus.requestFocus());
-        }
-        if (state.sendCodeStatus == FormzSubmissionStatus.failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error?.errorMessage ?? 'Xato yuz berdi'), backgroundColor: Colors.red),
-          );
-        }
-        if (state.loginStatus == FormzSubmissionStatus.success) {
-          final role = getIt<UserLocalDatasource>().getRole();
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => MainScreen(isEmployer: role == 'employer')),
-            (route) => false,
-          );
-        }
-        if (state.loginStatus == FormzSubmissionStatus.failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error?.errorMessage ?? 'Kirish amalga oshmadi'), backgroundColor: Colors.red),
-          );
-        }
+        // AuthBloc ilova bo'yicha yagona — boshqa ekran ustimizda ochiq bo'lsa
+        // uning holat o'zgarishlariga aralashmaymiz.
+        if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+        _handleState(context, state);
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: const SystemUiOverlayStyle(
@@ -148,6 +257,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : 'Введите 6-значный код, отправленный на ${_phoneController.text}'),
                           style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
                         ),
+                        if (_step == 0 && widget.notice != null) ...[
+                          const SizedBox(height: 16),
+                          _Notice(text: widget.notice!),
+                        ],
                         const SizedBox(height: 40),
                         if (_step == 0) _buildPhoneStep(context),
                         if (_step == 1) _buildOtpStep(context),
@@ -167,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildPhoneStep(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        final isLoading = state.sendCodeStatus.isInProgress;
+        final isLoading = state.checkPhoneStatus.isInProgress || state.sendCodeStatus.isInProgress;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -200,7 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: isLoading ? null : () => _onSendCode(context),
+                onPressed: isLoading ? null : () => _onContinuePhone(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: PRIMARY_BLUE,
                   foregroundColor: Colors.white,
@@ -208,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : Text(isUz ? 'Kodni yuborish' : 'Отправить код', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
@@ -222,6 +335,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final isLoading = state.loginStatus.isInProgress;
+        final resending = state.sendCodeStatus.isInProgress;
+        // Sanoq tugagach faqat "Qayta yuborish" ishlaydi.
+        final canSubmit = !isLoading && !otpExpired && _codeController.text.trim().length == 6;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -238,6 +354,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 focusNode: _codeFocus,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
+                enabled: !otpExpired,
+                onChanged: (_) => setState(() {}),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: DARK_NAVY, letterSpacing: 8),
                 textAlign: TextAlign.center,
@@ -250,36 +368,68 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
+            OtpCountdownBar(
+              secondsLeft: otpSecondsLeft,
+              verified: false,
+              isUz: isUz,
+              resendInProgress: resending,
+              onResend: () => _sendCode(context),
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: isLoading ? null : () => _onLogin(context),
+                onPressed: canSubmit ? () => _onLogin(context) : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: PRIMARY_BLUE,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFCBD5E1),
+                  disabledForegroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : Text(isUz ? 'Kirish' : 'Войти', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton(
-                onPressed: isLoading ? null : () => _onSendCode(context),
-                child: Text(
-                  isUz ? 'Kodni qayta yuborish' : 'Отправить код повторно',
-                  style: const TextStyle(color: PRIMARY_BLUE, fontWeight: FontWeight.w600),
-                ),
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// Boshqa ekrandan o'tkazilganda ko'rsatiladigan sariq izoh.
+class _Notice extends StatelessWidget {
+  final String text;
+  const _Notice({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF9C3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, size: 18, color: Color(0xFFB45309)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF92400E), height: 1.35),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

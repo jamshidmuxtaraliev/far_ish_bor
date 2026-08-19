@@ -8,7 +8,19 @@ import 'login_screen.dart';
 
 class UserTypeScreen extends StatelessWidget {
   final String language;
-  const UserTypeScreen({super.key, required this.language});
+
+  /// Kirish ekranidan o'tkazilganda raqam qayta yozilmasin.
+  final String? initialPhone;
+
+  /// Nega bu ekranga tushib qolgani haqida izoh.
+  final String? notice;
+
+  const UserTypeScreen({
+    super.key,
+    required this.language,
+    this.initialPhone,
+    this.notice,
+  });
 
   bool get isUz => language == 'uz';
 
@@ -53,6 +65,31 @@ class UserTypeScreen extends StatelessWidget {
                     isUz ? 'Rolingizni tanlang' : 'Выберите вашу роль',
                     style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
                   ),
+                  if (notice != null) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF9C3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.info_outline, size: 18, color: Color(0xFFB45309)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              notice!,
+                              style: const TextStyle(fontSize: 13, color: Color(0xFF92400E), height: 1.35),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 48),
                   _TypeCard(
                     icon: Icons.person_outline,
@@ -61,7 +98,10 @@ class UserTypeScreen extends StatelessWidget {
                     gradientColors: const [PRIMARY_BLUE, SECONDARY_BLUE],
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => JobSeekerRegistrationScreen(language: language),
+                        builder: (_) => JobSeekerRegistrationScreen(
+                          language: language,
+                          initialPhone: initialPhone,
+                        ),
                       ),
                     ),
                   ),
@@ -73,14 +113,22 @@ class UserTypeScreen extends StatelessWidget {
                     gradientColors: const [DARK_NAVY, Color(0xFF334155)],
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => EmployerRegistrationScreen(language: language),
+                        builder: (_) => EmployerRegistrationScreen(
+                          language: language,
+                          initialPhone: initialPhone,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 32),
                   GestureDetector(
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => LoginScreen(language: language)),
+                      MaterialPageRoute(
+                        builder: (_) => LoginScreen(
+                          language: language,
+                          initialPhone: initialPhone,
+                        ),
+                      ),
                     ),
                     child: RichText(
                       text: TextSpan(

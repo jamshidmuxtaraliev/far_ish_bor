@@ -10,6 +10,7 @@ import '../../../../core/error/error_model.dart';
 import '../../../../core/services/get_it.dart';
 import '../../data/datasource/local/user_local_data_source.dart';
 import '../../data/models/anketa_models.dart';
+import '../../data/models/auth_flow_models.dart';
 import '../../data/models/employer_model.dart';
 import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
@@ -22,7 +23,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repository;
 
   AuthBloc(this.repository) : super(const AuthState()) {
+    on<CheckPhoneEvent>(_onCheckPhone);
     on<SendCodeEvent>(_onSendCode);
+    on<VerifyCodeEvent>(_onVerifyCode);
+    on<ClearRegTokenEvent>(
+      (event, emit) => emit(state.copyWith(clearRegToken: true)),
+    );
     on<RegisterEvent>(_onRegister);
     on<LoginEvent>(_onLogin);
     on<GetMeEvent>(_onGetMe);
@@ -42,14 +48,45 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  Future<void> _onCheckPhone(CheckPhoneEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(checkPhoneStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.checkPhone(event.phone);
+    result.fold(
+      (failure) => emit(state.copyWith(checkPhoneStatus: FormzSubmissionStatus.failure, error: failure)),
+      (info) => emit(state.copyWith(checkPhoneStatus: FormzSubmissionStatus.success, checkPhone: info)),
+    );
+    emit(state.copyWith(checkPhoneStatus: FormzSubmissionStatus.initial));
+  }
+
   Future<void> _onSendCode(SendCodeEvent event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(sendCodeStatus: FormzSubmissionStatus.inProgress));
-    final result = await repository.sendCode(event.phone);
+    // Yangi kod eskisining chiptasini kuchdan qoldiradi.
+    emit(state.copyWith(sendCodeStatus: FormzSubmissionStatus.inProgress, clearRegToken: true));
+    final result = await repository.sendCode(event.phone, channel: event.channel);
     result.fold(
       (failure) => emit(state.copyWith(sendCodeStatus: FormzSubmissionStatus.failure, error: failure)),
-      (_) => emit(state.copyWith(sendCodeStatus: FormzSubmissionStatus.success)),
+      (info) => emit(state.copyWith(sendCodeStatus: FormzSubmissionStatus.success, sendCodeInfo: info)),
     );
     emit(state.copyWith(sendCodeStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onVerifyCode(VerifyCodeEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(verifyCodeStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.verifyCode(event.phone, event.smsCode);
+    result.fold(
+      (failure) => emit(state.copyWith(verifyCodeStatus: FormzSubmissionStatus.failure, error: failure)),
+      (info) => emit(state.copyWith(
+        verifyCodeStatus: FormzSubmissionStatus.success,
+        regToken: info.regToken,
+        regTokenExpiresAt: DateTime.now().add(Duration(seconds: info.ttlSeconds)),
+        // `registered: true` — ro'yxat oqimini davom ettirmaslik uchun signal.
+        checkPhone: CheckPhoneModel(
+          registered: info.registered,
+          canLogin: info.registered,
+          role: info.role,
+        ),
+      )),
+    );
+    emit(state.copyWith(verifyCodeStatus: FormzSubmissionStatus.initial));
   }
 
   Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
@@ -64,7 +101,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (response.user != null) {
           getIt<UserLocalDatasource>().saveUser(response.user!);
         }
-        emit(state.copyWith(registerStatus: FormzSubmissionStatus.success, user: response.user));
+        // Chipta sarflandi.
+        emit(state.copyWith(registerStatus: FormzSubmissionStatus.success, user: response.user, clearRegToken: true));
       },
     );
     emit(state.copyWith(registerStatus: FormzSubmissionStatus.initial));
@@ -72,7 +110,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(state.copyWith(loginStatus: FormzSubmissionStatus.inProgress));
-    final result = await repository.login(event.phone, event.smsCode);
+    final result = await repository.login(
+      event.phone,
+      smsCode: event.smsCode,
+      regToken: event.regToken,
+    );
     result.fold(
       (failure) => emit(state.copyWith(loginStatus: FormzSubmissionStatus.failure, error: failure)),
       (response) {
@@ -81,7 +123,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (response.user != null) {
           getIt<UserLocalDatasource>().saveUser(response.user!);
         }
-        emit(state.copyWith(loginStatus: FormzSubmissionStatus.success, user: response.user));
+        emit(state.copyWith(loginStatus: FormzSubmissionStatus.success, user: response.user, clearRegToken: true));
       },
     );
     emit(state.copyWith(loginStatus: FormzSubmissionStatus.initial));
