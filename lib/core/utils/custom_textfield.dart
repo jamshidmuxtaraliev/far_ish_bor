@@ -1,12 +1,11 @@
 import 'package:jobUp24/core/extensions/extensions.dart';
-import 'package:jobUp24/core/theme/app_theme.dart';
 import 'package:jobUp24/core/utils/thousands_formatter.dart';
 import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../constants/colors.dart';
 import '../constants/constants.dart';
+import '../theme/jb_palette.dart';
 
 class CustomTextField extends StatelessWidget {
   final String title;
@@ -88,7 +87,7 @@ class CustomTextField extends StatelessWidget {
                 if (subTitle != null)
                   Text(
                     subTitle!,
-                    style: const TextStyle(fontFamily: 'Montserrat', fontSize: 12, color: Color(0xFF7A7A83), fontWeight: FontWeight.w400),
+                    style: TextStyle(fontFamily: 'Montserrat', fontSize: 12, color: context.jb.gray, fontWeight: FontWeight.w400),
                   ),
               ],
             ),
@@ -137,7 +136,7 @@ class CustomTextField extends StatelessWidget {
                 suffixIcon: suffixIcon,
                 suffix: suffix,
                 fillColor: fillColor ?? context.colorScheme.primaryContainer,
-                hintStyle: hintStyle ?? lightTheme().textTheme.bodyLarge?.copyWith(fontSize: 14, color: GREY_TEXT_9696),
+                hintStyle: hintStyle ?? Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 14, color: context.jb.grayLight),
                 hintText: hint,
               ),
             ),

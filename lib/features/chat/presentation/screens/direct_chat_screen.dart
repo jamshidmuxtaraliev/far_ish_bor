@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../../core/utils/custom_cached_network_image.dart';
 import '../logic/chat_bloc.dart';
 import '../logic/direct_chat_bloc.dart';
 import '../widgets/chat_view.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// PROMPT_OTKLIK_MOBILE.md §6–7 — ish beruvchi ↔ ochilgan nomzod suhbati.
 ///
@@ -36,12 +36,7 @@ class DirectChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       // Operator suhbati bilan bir vaqtda ochiq turishi uchun alohida bloc.
       child: BlocProvider<ChatBloc>.value(
         value: getIt<DirectChatBloc>(),
@@ -75,17 +70,17 @@ class DirectChatScreen extends StatelessWidget {
     return Container(
       width: 38,
       height: 38,
-      decoration: const BoxDecoration(
-        color: JB_INDIGO_TINT,
+      decoration: BoxDecoration(
+        color: jb.blueTint,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
         _initials,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w800,
-          color: JB_BLUE,
+          color: jb.blue,
         ),
       ),
     );

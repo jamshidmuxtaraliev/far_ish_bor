@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/theme/jb_palette.dart';
+import '../../../../core/theme/jb_ui.dart';
+import '../../../../core/theme/theme_cubit.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,25 +15,19 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notifications = true;
-  bool _darkMode = false;
 
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.jb.card,
         body: Column(
           children: [
             // White header
             Container(
               width: double.infinity,
-              color: Colors.white,
+              color: context.jb.card,
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 12,
                 left: 8,
@@ -40,13 +38,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        color: JB_INK, size: 20),
+                    icon: Icon(Icons.arrow_back_ios_new,
+                        color: context.jb.ink, size: 20),
                   ),
-                  const Text(
+                  Text(
                     'Sozlamalar',
                     style: TextStyle(
-                      color: JB_INK,
+                      color: context.jb.ink,
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                     ),
@@ -64,8 +62,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _SettingTile(
                     icon: Icons.language_outlined,
                     label: 'Til',
-                    trailing: const Text("O'zbek",
-                        style: TextStyle(color: GRAY_TEXT, fontSize: 14)),
+                    trailing: Text("O'zbek",
+                        style: TextStyle(color: context.jb.gray, fontSize: 14)),
                     onTap: () {},
                   ),
                   const SizedBox(height: 8),
@@ -75,21 +73,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Switch(
                       value: _notifications,
                       onChanged: (v) => setState(() => _notifications = v),
-                      activeThumbColor: PRIMARY_BLUE,
+                      activeThumbColor: context.jb.blue,
                     ),
                     onTap: () => setState(() => _notifications = !_notifications),
                   ),
                   const SizedBox(height: 8),
-                  _SettingTile(
-                    icon: Icons.dark_mode_outlined,
-                    label: 'Tungi rejim',
-                    trailing: Switch(
-                      value: _darkMode,
-                      onChanged: (v) => setState(() => _darkMode = v),
-                      activeThumbColor: PRIMARY_BLUE,
-                    ),
-                    onTap: () => setState(() => _darkMode = !_darkMode),
-                  ),
+                  const _ThemeModeTile(),
                   const SizedBox(height: 24),
                   _SectionTitle(title: 'Xavfsizlik'),
                   const SizedBox(height: 12),
@@ -99,10 +88,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () {},
                   ),
                   const SizedBox(height: 40),
-                  const Center(
+                  Center(
                     child: Text(
                       'Jobup24 v1.0.0',
-                      style: TextStyle(color: GRAY_TEXT, fontSize: 13),
+                      style: TextStyle(color: context.jb.gray, fontSize: 13),
                     ),
                   ),
                 ],
@@ -123,10 +112,10 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: DARK_NAVY,
+        color: context.jb.ink,
       ),
     );
   }
@@ -152,24 +141,79 @@ class _SettingTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.jb.card,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: context.jb.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: PRIMARY_BLUE, size: 22),
+            Icon(icon, color: context.jb.blue, size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+                style: TextStyle(fontSize: 15, color: context.jb.ink),
               ),
             ),
-            trailing ?? const Icon(Icons.chevron_right, color: GRAY_TEXT),
+            trailing ?? Icon(Icons.chevron_right, color: context.jb.gray),
           ],
         ),
       ),
+    );
+  }
+}
+
+
+/// Mavzu tanlovi: Yorug' · Tungi · Tizim. Tanlov `PREF_THEME`da saqlanadi.
+class _ThemeModeTile extends StatelessWidget {
+  const _ThemeModeTile();
+
+  static const _modes = [ThemeMode.light, ThemeMode.dark, ThemeMode.system];
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.jb;
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, mode) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          decoration: BoxDecoration(
+            color: p.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: p.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    mode == ThemeMode.dark
+                        ? Icons.dark_mode_rounded
+                        : Icons.dark_mode_outlined,
+                    color: p.blue,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      'Tungi rejim',
+                      style: TextStyle(fontSize: 15, color: p.ink),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              JBSegmented(
+                tabs: const ["Yorug'", 'Tungi', 'Tizim'],
+                index: _modes.indexOf(mode),
+                onChanged: (i) =>
+                    context.read<ThemeCubit>().setTheme(_modes[i]),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

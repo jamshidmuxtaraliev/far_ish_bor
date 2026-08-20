@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/interview_model.dart';
 import '../logic/interview_bloc.dart';
 import 'employer_track_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Employer — "Suhbatlar" ro'yxati (Jobup24 dizayni).
 class EmployerInterviewsScreen extends StatefulWidget {
@@ -34,14 +34,9 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: Column(
           children: [
             _header(context),
@@ -54,8 +49,8 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
                 builder: (context, state) {
                   if (state.employerStatus.isInProgress &&
                       state.employerInterviews.isEmpty) {
-                    return const Center(
-                        child: CircularProgressIndicator(color: JB_BLUE));
+                    return Center(
+                        child: CircularProgressIndicator(color: context.jb.blue));
                   }
                   if (state.employerStatus == FormzSubmissionStatus.failure &&
                       state.employerInterviews.isEmpty) {
@@ -82,7 +77,7 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
                       .where((i) => state.travelOf(i) == 'on_way')
                       .length;
                   return RefreshIndicator(
-                    color: JB_BLUE,
+                    color: context.jb.blue,
                     onRefresh: () async => _load(),
                     child: ListView.separated(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -122,13 +117,13 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
       child: Row(
         children: [
           Text('$total ta suhbat',
-              style: const TextStyle(fontSize: 13, color: JB_GRAY)),
+              style: TextStyle(fontSize: 13, color: jb.gray)),
           const Spacer(),
           if (onWay > 0)
             JBChip(
               text: "$onWay ta yo'lda",
-              bg: JB_AMBER_BG,
-              fg: JB_AMBER_FG,
+              bg: jb.amberBg,
+              fg: jb.amber,
               fontSize: 11.5,
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
             ),
@@ -140,7 +135,7 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
   Widget _header(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: context.jb.card,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 18,
         left: 20,
@@ -150,18 +145,18 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Suhbatlar',
                     style: TextStyle(
-                        color: JB_INK,
+                        color: context.jb.ink,
                         fontSize: 22,
                         fontWeight: FontWeight.w800)),
                 SizedBox(height: 3),
                 Text('Rejalashtirilgan suhbatlar',
-                    style: TextStyle(color: JB_GRAY, fontSize: 13)),
+                    style: TextStyle(color: context.jb.gray, fontSize: 13)),
               ],
             ),
           ),
@@ -182,8 +177,8 @@ class _LiveBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = online ? JB_GREEN_FG : JB_GRAY_LIGHT;
-    final bg = online ? JB_GREEN_BG : JB_CHIP_BG;
+    final fg = online ? context.jb.green : context.jb.grayLight;
+    final bg = online ? context.jb.greenBg : context.jb.chipBg;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
@@ -221,11 +216,11 @@ class _EmployerInterviewCard extends StatelessWidget {
 
   /// Suhbat statusi uchun JB chip ranglari.
   (Color, Color) get _statusColors => switch (interview.status) {
-        'confirmed' => (JB_INDIGO_TINT, JB_BLUE),
-        'done' => (JB_GREEN_BG, JB_GREEN_FG),
-        'cancelled' => (JB_RED_BG, JB_RED_FG),
-        'no_show' => (JB_AMBER_BG, JB_AMBER_FG),
-        _ => (JB_CHIP_BG, JB_GRAY),
+        'confirmed' => (jb.blueTint, jb.blue),
+        'done' => (jb.greenBg, jb.green),
+        'cancelled' => (jb.redBg, jb.red),
+        'no_show' => (jb.amberBg, jb.amber),
+        _ => (jb.chipBg, jb.gray),
       };
 
   String get _initials {
@@ -245,7 +240,7 @@ class _EmployerInterviewCard extends StatelessWidget {
 
     return JBCard(
       padding: const EdgeInsets.all(16),
-      border: onWay ? JB_AMBER_FG.withValues(alpha: 0.35) : JB_BORDER,
+      border: onWay ? context.jb.amber.withValues(alpha: 0.35) : context.jb.border,
       onTap: onWay ? onTrack : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +251,7 @@ class _EmployerInterviewCard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: onWay ? JB_AMBER_TILE_BG : JB_INDIGO_TINT,
+                  color: onWay ? context.jb.amberTile : context.jb.blueTint,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
@@ -265,7 +260,7 @@ class _EmployerInterviewCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: onWay ? JB_AMBER_FG : JB_BLUE,
+                    color: onWay ? context.jb.amber : context.jb.blue,
                   ),
                 ),
               ),
@@ -278,10 +273,10 @@ class _EmployerInterviewCard extends StatelessWidget {
                       interview.anketa?.fullname ?? 'Nomzod',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w700,
-                          color: JB_INK),
+                          color: context.jb.ink),
                     ),
                     if ((interview.vacancyJobType ?? '').isNotEmpty) ...[
                       const SizedBox(height: 3),
@@ -289,7 +284,7 @@ class _EmployerInterviewCard extends StatelessWidget {
                         interview.vacancyJobType!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, color: JB_GRAY),
+                        style: TextStyle(fontSize: 13, color: context.jb.gray),
                       ),
                     ],
                   ],
@@ -307,14 +302,14 @@ class _EmployerInterviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Divider(height: 1, thickness: 1, color: JB_DIVIDER),
+          Divider(height: 1, thickness: 1, color: context.jb.divider),
           const SizedBox(height: 12),
           Row(
             children: [
-              const JBIconTile(
+              JBIconTile(
                 icon: Icons.schedule_rounded,
-                bg: JB_CHIP_BG,
-                fg: JB_GRAY,
+                bg: context.jb.chipBg,
+                fg: context.jb.gray,
                 size: 32,
                 radius: 10,
                 iconSize: 16,
@@ -323,10 +318,10 @@ class _EmployerInterviewCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   interview.scheduledDisplay,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: JB_INK),
+                      color: context.jb.ink),
                 ),
               ),
             ],
@@ -335,10 +330,10 @@ class _EmployerInterviewCard extends StatelessWidget {
           if (onWay)
             Row(
               children: [
-                const JBChip(
+                JBChip(
                   text: "● Yo'lda",
-                  bg: JB_AMBER_BG,
-                  fg: JB_AMBER_FG,
+                  bg: context.jb.amberBg,
+                  fg: context.jb.amber,
                   fontSize: 12,
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 ),
@@ -360,7 +355,7 @@ class _EmployerInterviewCard extends StatelessWidget {
                       ? Icons.check_circle_rounded
                       : Icons.event_available_rounded,
                   size: 16,
-                  color: arrived ? JB_GREEN_FG : JB_GRAY_LIGHT,
+                  color: arrived ? context.jb.green : context.jb.grayLight,
                 ),
                 const SizedBox(width: 7),
                 Text(
@@ -368,7 +363,7 @@ class _EmployerInterviewCard extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: arrived ? JB_GREEN_FG : JB_GRAY),
+                      color: arrived ? context.jb.green : context.jb.gray),
                 ),
               ],
             ),
@@ -402,26 +397,26 @@ class _JbEmptyView extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: JB_INDIGO_TINT,
+                color: context.jb.blueTint,
                 borderRadius: BorderRadius.circular(24),
               ),
               alignment: Alignment.center,
-              child: Icon(icon, size: 34, color: JB_BLUE),
+              child: Icon(icon, size: 34, color: context.jb.blue),
             ),
             const SizedBox(height: 18),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 15.5, fontWeight: FontWeight.w700, color: JB_INK),
+              style: TextStyle(
+                  fontSize: 15.5, fontWeight: FontWeight.w700, color: context.jb.ink),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 13, color: JB_GRAY, height: 1.4),
+                style: TextStyle(
+                    fontSize: 13, color: context.jb.gray, height: 1.4),
               ),
             ],
           ],
@@ -450,19 +445,19 @@ class _JbErrorView extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: JB_RED_BG,
+                color: context.jb.redBg,
                 borderRadius: BorderRadius.circular(24),
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.cloud_off_rounded,
-                  size: 34, color: JB_RED_FG),
+              child: Icon(Icons.cloud_off_rounded,
+                  size: 34, color: context.jb.red),
             ),
             const SizedBox(height: 18),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 14, color: JB_GRAY, height: 1.4),
+              style: TextStyle(
+                  fontSize: 14, color: context.jb.gray, height: 1.4),
             ),
             const SizedBox(height: 18),
             JBPillButton(

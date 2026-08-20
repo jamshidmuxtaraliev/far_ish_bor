@@ -4,14 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/interview_model.dart';
 import '../logic/interview_bloc.dart';
 import '../widgets/state_views.dart';
 import 'seeker_track_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Seeker aksenti — indigo (PROMPT §3).
-const Color _indigo = Color(0xFF4F46E5);
+final Color _indigo = jb.violet;
 
 /// Seeker — "Suhbatlar" ro'yxati (PROMPT_SUHBATLAR_MOBILE.md §3.1).
 class SeekerInterviewsScreen extends StatefulWidget {
@@ -44,14 +44,9 @@ class _SeekerInterviewsScreenState extends State<SeekerInterviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: context.jb.bg,
         body: Column(
           children: [
             _header(context),
@@ -64,7 +59,7 @@ class _SeekerInterviewsScreenState extends State<SeekerInterviewsScreen> {
                 builder: (context, state) {
                   if (state.myStatus.isInProgress &&
                       state.myInterviews.isEmpty) {
-                    return const Center(
+                    return Center(
                         child: CircularProgressIndicator(color: _indigo));
                   }
                   if (state.myStatus == FormzSubmissionStatus.failure &&
@@ -125,7 +120,7 @@ class _SeekerInterviewsScreenState extends State<SeekerInterviewsScreen> {
         right: 20,
         bottom: 18,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _indigo,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
@@ -178,9 +173,9 @@ class _SeekerInterviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: CARD_BORDER),
+        border: Border.all(color: context.jb.border),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -196,10 +191,10 @@ class _SeekerInterviewCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   interview.employer?.name ?? 'Kompaniya',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: DARK_NAVY),
+                      color: context.jb.ink),
                 ),
               ),
               _Pill(interview.statusLabel, interview.statusColor),
@@ -238,7 +233,7 @@ class _SeekerInterviewCard extends StatelessWidget {
       return _wideButton(
         label: 'Yetib keldingiz 🤝',
         icon: Icons.check_circle_outline,
-        color: GREEN_COLOR,
+        color: jb.green,
         onTap: null,
       );
     }
@@ -246,7 +241,7 @@ class _SeekerInterviewCard extends StatelessWidget {
       return _wideButton(
         label: interview.statusLabel,
         icon: Icons.lock_outline,
-        color: GRAY_TEXT,
+        color: jb.gray,
         onTap: null,
       );
     }
@@ -255,7 +250,7 @@ class _SeekerInterviewCard extends StatelessWidget {
           ? 'Lokatsiyani davom ettirish'
           : 'Yo\'lga chiqish va lokatsiyani ulashish',
       icon: onWay ? Icons.navigation : Icons.my_location,
-      color: onWay ? AMBER_COLOR : _indigo,
+      color: onWay ? jb.amber : _indigo,
       onTap: onTrack,
     );
   }
@@ -291,11 +286,11 @@ class _SeekerInterviewCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: GRAY_TEXT),
+        Icon(icon, size: 16, color: jb.gray),
         const SizedBox(width: 8),
         Expanded(
           child: Text(text,
-              style: const TextStyle(fontSize: 13.5, color: DARK_NAVY)),
+              style: TextStyle(fontSize: 13.5, color: jb.ink)),
         ),
       ],
     );

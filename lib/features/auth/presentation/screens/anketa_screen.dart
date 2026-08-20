@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/anketa_models.dart';
 import '../logic/auth_bloc.dart';
 import '../widgets/anketa_steps/step1_personal.dart';
@@ -11,6 +10,7 @@ import '../widgets/anketa_steps/step2_location.dart';
 import '../widgets/anketa_steps/step3_job.dart';
 import '../widgets/anketa_steps/step4_skills.dart';
 import '../widgets/anketa_steps/step5_additional.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class AnketaScreen extends StatefulWidget {
   const AnketaScreen({super.key});
@@ -189,9 +189,9 @@ class _AnketaScreenState extends State<AnketaScreen> {
         }
         if (state.updateAnketaStatus.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text("Anketa muvaffaqiyatli saqlandi"),
-              backgroundColor: GREEN_COLOR,
+              backgroundColor: context.jb.green,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -201,19 +201,16 @@ class _AnketaScreenState extends State<AnketaScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.error?.errorMessage ?? "Xatolik yuz berdi"),
-              backgroundColor: RED_COLOR,
+              backgroundColor: context.jb.red,
               behavior: SnackBarBehavior.floating,
             ),
           );
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-        ),
+        value: context.jb.overlay,
         child: Scaffold(
-          backgroundColor: LIGHT_GRAY_BG,
+          backgroundColor: context.jb.bg,
           body: Column(
             children: [
               _buildHeader(),
@@ -292,7 +289,7 @@ class _AnketaScreenState extends State<AnketaScreen> {
         right: 16,
         bottom: 16,
       ),
-      color: Colors.white,
+      color: jb.card,
       child: Row(
         children: [
           GestureDetector(
@@ -301,10 +298,10 @@ class _AnketaScreenState extends State<AnketaScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: JB_CHIP_BG,
+                color: jb.chipBg,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: JB_INK, size: 18),
+              child: Icon(Icons.arrow_back_ios_new_rounded, color: jb.ink, size: 18),
             ),
           ),
           const SizedBox(width: 14),
@@ -314,11 +311,11 @@ class _AnketaScreenState extends State<AnketaScreen> {
               children: [
                 Text(
                   'Anketa to\'ldirish',
-                  style: const TextStyle(color: JB_GRAY, fontSize: 12),
+                  style: TextStyle(color: jb.gray, fontSize: 12),
                 ),
                 Text(
                   titles[_currentStep],
-                  style: const TextStyle(color: JB_INK, fontSize: 17, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: jb.ink, fontSize: 17, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
@@ -326,12 +323,12 @@ class _AnketaScreenState extends State<AnketaScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: JB_INDIGO_TINT,
+              color: jb.blueTint,
               borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
               '${_currentStep + 1} / $_totalSteps',
-              style: const TextStyle(color: JB_BLUE, fontSize: 12, fontWeight: FontWeight.w700),
+              style: TextStyle(color: jb.blue, fontSize: 12, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -341,7 +338,7 @@ class _AnketaScreenState extends State<AnketaScreen> {
 
   Widget _buildProgressBar() {
     return Container(
-      color: Colors.white,
+      color: jb.card,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: List.generate(_totalSteps, (i) {
@@ -353,10 +350,10 @@ class _AnketaScreenState extends State<AnketaScreen> {
               height: 4,
               decoration: BoxDecoration(
                 color: isCompleted
-                    ? GREEN_COLOR
+                    ? jb.green
                     : isActive
-                        ? PRIMARY_BLUE
-                        : JB_BORDER,
+                        ? jb.blue
+                        : jb.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -379,8 +376,8 @@ class _AnketaScreenState extends State<AnketaScreen> {
             top: 12,
             bottom: MediaQuery.of(context).padding.bottom + 12,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: jb.card,
             boxShadow: [BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, -2))],
           ),
           child: Row(
@@ -392,11 +389,11 @@ class _AnketaScreenState extends State<AnketaScreen> {
                     height: 52,
                     width: 52,
                     decoration: BoxDecoration(
-                      color: LIGHT_GRAY_BG,
+                      color: jb.bg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      border: Border.all(color: jb.border),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded, color: DARK_NAVY, size: 18),
+                    child: Icon(Icons.arrow_back_ios_new_rounded, color: jb.ink, size: 18),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -407,11 +404,11 @@ class _AnketaScreenState extends State<AnketaScreen> {
                   child: Container(
                     height: 52,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                      gradient: LinearGradient(colors: [jb.blue, jb.blueLight]),
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: PRIMARY_BLUE.withValues(alpha: 0.35),
+                          color: jb.blue.withValues(alpha: 0.35),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/colors.dart';
 import 'user_type_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class StatsScreen extends StatefulWidget {
   final String language;
@@ -98,14 +98,9 @@ class _StatsScreenState extends State<StatsScreen> {
     const cardOverlap = 60.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlayOnBrand,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.jb.card,
         body: Stack(
           children: [
             // ── Scrollable content ──────────────────────────────────────
@@ -123,8 +118,8 @@ class _StatsScreenState extends State<StatsScreen> {
                       Container(
                         padding: EdgeInsets.only(top: topPad + 20, left: 24, right: 24, bottom: cardOverlap + 20),
                         width: getScreenWidth(context),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [context.jb.blue, context.jb.blueLight]),
                           borderRadius: BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
                         ),
                         child: Column(
@@ -152,7 +147,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.jb.card,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 24, offset: const Offset(0, 8))],
                           ),
@@ -168,25 +163,25 @@ class _StatsScreenState extends State<StatsScreen> {
                                 icon: Icons.people_outline,
                                 value: _fmt(_totalUsers),
                                 label: isUz ? 'Jami foydalanuvchilar' : 'Всего пользователей',
-                                gradientColors: const [PRIMARY_BLUE, SECONDARY_BLUE],
+                                gradientColors: [context.jb.blue, context.jb.blueLight],
                               ),
                               _StatCell(
                                 icon: Icons.business_outlined,
                                 value: _fmt(_employers),
                                 label: isUz ? 'Ish beruvchilar' : 'Работодателей',
-                                gradientColors: const [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+                                gradientColors: [context.jb.violet, context.jb.violet],
                               ),
                               _StatCell(
                                 icon: Icons.person_outline,
                                 value: _fmt(_jobSeekers),
                                 label: isUz ? 'Ish izlovchilar' : 'Соискателей',
-                                gradientColors: const [GREEN_COLOR, Color(0xFF16A34A)],
+                                gradientColors: [context.jb.green, context.jb.green],
                               ),
                               _StatCell(
                                 icon: Icons.trending_up,
                                 value: _fmt(_activeToday),
                                 label: isUz ? 'Bugun faol' : 'Активны сегодня',
-                                gradientColors: const [Color(0xFFF97316), Color(0xFFEA580C)],
+                                gradientColors: [context.jb.amber, context.jb.amber],
                               ),
                             ],
                           ),
@@ -206,7 +201,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           icon: Icons.work_outline,
                           label: isUz ? 'Vakansiyalar' : 'Вакансий',
                           value: _fmt(_vacancies),
-                          gradientColors: const [PRIMARY_BLUE, SECONDARY_BLUE],
+                          gradientColors: [context.jb.blue, context.jb.blueLight],
                         ),
                         // const SizedBox(height: 12),
                         // _RowCard(
@@ -227,14 +222,14 @@ class _StatsScreenState extends State<StatsScreen> {
                           icon: Icons.calendar_today_outlined,
                           label: isUz ? 'Suhbatlar belgilandi' : 'Интервью назначено',
                           value: _fmt(_interviews),
-                          gradientColors: const [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+                          gradientColors: [context.jb.violet, context.jb.violet],
                         ),
                         const SizedBox(height: 12),
                         _RowCard(
                           icon: Icons.check_circle_outline,
                           label: isUz ? 'Muvaffaqiyatli ishga olindi' : 'Успешно приняты',
                           value: _fmt(_hires),
-                          gradientColors: const [GREEN_COLOR, Color(0xFF16A34A)],
+                          gradientColors: [context.jb.green, context.jb.green],
                         ),
                       ],
                     ),
@@ -250,7 +245,7 @@ class _StatsScreenState extends State<StatsScreen> {
               bottom: 0,
               child: Container(
                 padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 12),
-                decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFE5E7EB)))),
+                decoration: BoxDecoration(color: context.jb.card, border: Border(top: BorderSide(color: context.jb.border))),
                 child: SizedBox(
                   height: 52,
                   child: ElevatedButton(
@@ -258,7 +253,7 @@ class _StatsScreenState extends State<StatsScreen> {
                       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => UserTypeScreen(language: widget.language)));
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: PRIMARY_BLUE,
+                      backgroundColor: context.jb.blue,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -297,11 +292,11 @@ class _StatCell extends StatelessWidget {
           child: Icon(icon, color: Colors.white, size: 26),
         ),
         const SizedBox(height: 10),
-        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.jb.ink)),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: GRAY_TEXT),
+          style: TextStyle(fontSize: 11, color: context.jb.gray),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -324,7 +319,7 @@ class _RowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 4))],
       ),
@@ -340,9 +335,9 @@ class _RowCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+              Text(label, style: TextStyle(fontSize: 13, color: context.jb.gray)),
               const SizedBox(height: 3),
-              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+              Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: context.jb.ink)),
             ],
           ),
         ],

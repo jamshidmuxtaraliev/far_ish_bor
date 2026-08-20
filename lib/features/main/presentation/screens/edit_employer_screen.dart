@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../auth/data/models/anketa_models.dart';
 import '../../../auth/data/models/employer_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class EditEmployerScreen extends StatefulWidget {
   const EditEmployerScreen({super.key});
@@ -108,7 +108,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: jb.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -125,12 +125,12 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Qamrov hududi qo\'shish',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: DARK_NAVY,
+                    color: jb.ink,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -162,7 +162,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: PRIMARY_BLUE,
+                      backgroundColor: jb.blue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -202,20 +202,20 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
 
   InputDecoration _inputDecoration(String label) => InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: GRAY_TEXT, fontSize: 14),
+        labelStyle: TextStyle(color: jb.gray, fontSize: 14),
         filled: true,
-        fillColor: const Color(0xFFF9FAFB),
+        fillColor: jb.cardAlt,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: jb.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: jb.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5),
+          borderSide: BorderSide(color: jb.blue, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       );
@@ -223,12 +223,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: context.jb.bg,
         body: BlocConsumer<AuthBloc, AuthState>(
           listenWhen: (prev, curr) =>
               prev.updateEmployerStatus != curr.updateEmployerStatus ||
@@ -236,9 +233,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
           listener: (context, state) {
             if (state.updateEmployerStatus.isSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text('Kompaniya ma\'lumotlari saqlandi'),
-                  backgroundColor: GREEN_COLOR,
+                  backgroundColor: context.jb.green,
                 ),
               );
               Navigator.pop(context);
@@ -251,9 +248,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
               );
             } else if (state.uploadLogoStatus.isSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text('Logo yangilandi'),
-                  backgroundColor: GREEN_COLOR,
+                  backgroundColor: context.jb.green,
                 ),
               );
             } else if (state.uploadLogoStatus.isFailure) {
@@ -281,9 +278,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
               slivers: [
                 _buildAppBar(context, isSaving),
                 if (isLoading)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     child: Center(
-                      child: CircularProgressIndicator(color: PRIMARY_BLUE),
+                      child: CircularProgressIndicator(color: context.jb.blue),
                     ),
                   )
                 else
@@ -394,7 +391,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                               height: 52,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: PRIMARY_BLUE,
+                                  backgroundColor: context.jb.blue,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
@@ -436,9 +433,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   Widget _buildAppBar(BuildContext context, bool isSaving) {
     return SliverAppBar(
       pinned: true,
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
-      foregroundColor: JB_INK,
+      backgroundColor: context.jb.card,
+      surfaceTintColor: context.jb.card,
+      foregroundColor: context.jb.ink,
       elevation: 0,
       scrolledUnderElevation: 0.5,
       title: const Text(
@@ -457,7 +454,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -472,10 +469,10 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: GRAY_TEXT,
+              color: jb.gray,
               letterSpacing: 0.5,
             ),
           ),
@@ -491,7 +488,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -504,12 +501,12 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Kompaniya logosi',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: GRAY_TEXT,
+              color: jb.gray,
               letterSpacing: 0.5,
             ),
           ),
@@ -522,9 +519,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
+                    color: jb.cardAlt,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    border: Border.all(color: jb.border),
                     image: logoUrl != null
                         ? DecorationImage(
                             image: NetworkImage(logoUrl),
@@ -533,10 +530,10 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                         : null,
                   ),
                   child: logoUrl == null
-                      ? const Icon(
+                      ? Icon(
                           Icons.business_outlined,
                           size: 40,
-                          color: GRAY_TEXT,
+                          color: jb.gray,
                         )
                       : null,
                 ),
@@ -561,8 +558,8 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                     child: Container(
                       width: 30,
                       height: 30,
-                      decoration: const BoxDecoration(
-                        color: PRIMARY_BLUE,
+                      decoration: BoxDecoration(
+                        color: jb.blue,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -576,10 +573,10 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Center(
+          Center(
             child: Text(
               'Logo yuklash uchun bosing',
-              style: TextStyle(fontSize: 12, color: GRAY_TEXT),
+              style: TextStyle(fontSize: 12, color: jb.gray),
             ),
           ),
         ],
@@ -599,7 +596,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -612,19 +609,19 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Qamrov hududlari',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: GRAY_TEXT,
+              color: jb.gray,
               letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Nomzod qidiriladigan hududlar',
-            style: TextStyle(fontSize: 12, color: GRAY_TEXT),
+            style: TextStyle(fontSize: 12, color: jb.gray),
           ),
           const SizedBox(height: 12),
           // "Butun O'zbekiston" toggle
@@ -634,13 +631,13 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: _isAllRegions
-                    ? PRIMARY_BLUE.withValues(alpha: 0.08)
-                    : const Color(0xFFF9FAFB),
+                    ? jb.blue.withValues(alpha: 0.08)
+                    : jb.cardAlt,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _isAllRegions
-                      ? PRIMARY_BLUE.withValues(alpha: 0.4)
-                      : const Color(0xFFE5E7EB),
+                      ? jb.blue.withValues(alpha: 0.4)
+                      : jb.border,
                 ),
               ),
               child: Row(
@@ -649,16 +646,16 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                     _isAllRegions
                         ? Icons.check_circle
                         : Icons.circle_outlined,
-                    color: _isAllRegions ? PRIMARY_BLUE : GRAY_TEXT,
+                    color: _isAllRegions ? jb.blue : jb.gray,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'Butun O\'zbekiston bo\'yicha',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: DARK_NAVY,
+                      color: jb.ink,
                     ),
                   ),
                 ],
@@ -674,28 +671,28 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0F4FF),
+                        color: jb.blueTint,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: PRIMARY_BLUE.withValues(alpha: 0.2)),
+                            color: jb.blue.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.location_on_outlined,
-                              color: PRIMARY_BLUE, size: 16),
+                          Icon(Icons.location_on_outlined,
+                              color: jb.blue, size: 16),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               entry.value.displayName,
-                              style: const TextStyle(
-                                  fontSize: 13, color: DARK_NAVY),
+                              style: TextStyle(
+                                  fontSize: 13, color: jb.ink),
                             ),
                           ),
                           GestureDetector(
                             onTap: () => setState(() =>
                                 _coverageRegions.removeAt(entry.key)),
-                            child: const Icon(Icons.close,
-                                color: GRAY_TEXT, size: 18),
+                            child: Icon(Icons.close,
+                                color: jb.gray, size: 18),
                           ),
                         ],
                       ),
@@ -705,10 +702,10 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
             ],
             TextButton.icon(
               onPressed: _showCoverageRegionPicker,
-              icon: const Icon(Icons.add, color: PRIMARY_BLUE, size: 18),
-              label: const Text(
+              icon: Icon(Icons.add, color: jb.blue, size: 18),
+              label: Text(
                 'Hudud qo\'shish',
-                style: TextStyle(color: PRIMARY_BLUE, fontSize: 14),
+                style: TextStyle(color: jb.blue, fontSize: 14),
               ),
             ),
           ],

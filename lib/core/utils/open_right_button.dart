@@ -1,7 +1,6 @@
 import 'package:jobUp24/core/extensions/extensions.dart';
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
 
 class OpenRightButton extends StatelessWidget {
   final String text;

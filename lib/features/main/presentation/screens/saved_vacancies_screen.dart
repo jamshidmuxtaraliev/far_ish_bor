@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../data/models/saved_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class SavedVacanciesScreen extends StatefulWidget {
   const SavedVacanciesScreen({super.key});
@@ -39,19 +39,14 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: Column(
           children: [
             Container(
               width: double.infinity,
-              color: Colors.white,
+              color: context.jb.card,
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 18,
                 left: 20,
@@ -61,9 +56,9 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Saqlangan', style: TextStyle(color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
+                  Text('Saqlangan', style: TextStyle(color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
-                  const Text("Saqlab qo'yilgan vakansiyalar", style: TextStyle(color: JB_GRAY, fontSize: 14)),
+                  Text("Saqlab qo'yilgan vakansiyalar", style: TextStyle(color: context.jb.gray, fontSize: 14)),
                 ],
               ),
             ),
@@ -72,7 +67,7 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
                 buildWhen: (p, c) => p.savedVacancies != c.savedVacancies || p.savedStatus != c.savedStatus,
                 builder: (context, state) {
                   if (state.savedStatus.isInProgress) {
-                    return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2));
+                    return Center(child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2));
                   }
                   if (state.savedVacancies.isEmpty) {
                     return Center(
@@ -84,15 +79,15 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
                             Container(
                               width: 72,
                               height: 72,
-                              decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(20)),
-                              child: const Icon(Icons.bookmark_border_outlined, color: GRAY_TEXT, size: 36),
+                              decoration: BoxDecoration(color: context.jb.cardAlt, borderRadius: BorderRadius.circular(20)),
+                              child: Icon(Icons.bookmark_border_outlined, color: context.jb.gray, size: 36),
                             ),
                             const SizedBox(height: 16),
-                            const Text('Saqlangan vakansiya yo\'q', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: DARK_NAVY)),
+                            Text('Saqlangan vakansiya yo\'q', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.jb.ink)),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               'Vakansiyalar ro\'yxatida ★ tugmasini bosib saqlang',
-                              style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                              style: TextStyle(fontSize: 13, color: context.jb.gray),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -101,7 +96,7 @@ class _SavedVacanciesScreenState extends State<SavedVacanciesScreen> {
                     );
                   }
                   return RefreshIndicator(
-                    color: PRIMARY_BLUE,
+                    color: context.jb.blue,
                     onRefresh: () async => _load(),
                     child: ListView.separated(
                       padding: const EdgeInsets.all(16),
@@ -146,11 +141,11 @@ class _SavedCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: JB_CHIP_BG,
+                  color: context.jb.chipBg,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Center(
-                  child: Icon(Icons.work_outline_rounded, size: 26, color: JB_BLUE),
+                child: Center(
+                  child: Icon(Icons.work_outline_rounded, size: 26, color: context.jb.blue),
                 ),
               ),
               const SizedBox(width: 12),
@@ -160,14 +155,14 @@ class _SavedCard extends StatelessWidget {
                   children: [
                     Text(
                       'Vakansiya #${item.vacancyId}',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.jb.ink),
                     ),
                     const SizedBox(height: 3),
                     if (item.status != null)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFF3F4F6),
+                          color: isActive ? context.jb.greenBg : context.jb.cardAlt,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -175,7 +170,7 @@ class _SavedCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isActive ? const Color(0xFF16A34A) : GRAY_TEXT,
+                            color: isActive ? context.jb.green : context.jb.gray,
                           ),
                         ),
                       ),
@@ -189,10 +184,10 @@ class _SavedCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF1F2),
+                    color: context.jb.redBg,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.bookmark_remove_rounded, color: Color(0xFFF43F5E), size: 20),
+                  child: Icon(Icons.bookmark_remove_rounded, color: context.jb.red, size: 20),
                 ),
               ),
             ],
@@ -201,27 +196,27 @@ class _SavedCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               item.comment!,
-              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.4),
+              style: TextStyle(fontSize: 13, color: context.jb.gray, height: 1.4),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Divider(height: 1, color: context.jb.cardAlt),
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.attach_money_rounded, size: 16, color: Color(0xFF10B981)),
+              Icon(Icons.attach_money_rounded, size: 16, color: context.jb.green),
               const SizedBox(width: 3),
               Text(
                 item.salaryDisplay,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.green),
               ),
               if (item.ageDisplay.isNotEmpty) ...[
                 const SizedBox(width: 14),
-                const Icon(Icons.person_outline_rounded, size: 15, color: GRAY_TEXT),
+                Icon(Icons.person_outline_rounded, size: 15, color: context.jb.gray),
                 const SizedBox(width: 3),
-                Text(item.ageDisplay, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+                Text(item.ageDisplay, style: TextStyle(fontSize: 13, color: context.jb.gray)),
               ],
             ],
           ),
@@ -230,20 +225,20 @@ class _SavedCard extends StatelessWidget {
             Row(
               children: [
                 if (item.deadline != null) ...[
-                  const Icon(Icons.schedule_outlined, size: 15, color: Color(0xFFF59E0B)),
+                  Icon(Icons.schedule_outlined, size: 15, color: context.jb.amber),
                   const SizedBox(width: 3),
                   Text(
                     'Muddat: ${item.deadline}',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFFF59E0B)),
+                    style: TextStyle(fontSize: 12, color: context.jb.amber),
                   ),
                 ],
                 if (item.deadline != null && item.savedAt != null) const Spacer(),
                 if (item.savedAt != null) ...[
-                  const Icon(Icons.bookmark_added_outlined, size: 15, color: GRAY_TEXT),
+                  Icon(Icons.bookmark_added_outlined, size: 15, color: context.jb.gray),
                   const SizedBox(width: 3),
                   Text(
                     item.savedAtDisplay,
-                    style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+                    style: TextStyle(fontSize: 12, color: context.jb.gray),
                   ),
                 ],
               ],

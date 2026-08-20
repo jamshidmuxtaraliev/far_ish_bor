@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../generated/assets.dart';
+import '../theme/jb_palette.dart';
 
 class CustomCachedNetworkImage extends StatelessWidget {
   final String? url;
@@ -27,7 +28,7 @@ class CustomCachedNetworkImage extends StatelessWidget {
         memCacheWidth: cacheWidth,
         fadeInDuration: Duration.zero,
         fadeOutDuration: Duration.zero,
-        placeholder: (context, url) => Container(color: Colors.grey.shade200),
+        placeholder: (context, url) => Container(color: context.jb.border),
         errorWidget:
             (context, url, error) => ClipRRect(
               borderRadius: BorderRadius.circular(8),

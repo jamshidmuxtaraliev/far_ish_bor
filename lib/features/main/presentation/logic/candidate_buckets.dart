@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// PROMPT_NOMZODLAR_3TAB_MOBILE.md §3 — "Nomzodlar" ekranining yuragi.
 ///
@@ -104,26 +104,26 @@ IconData applicationActionIcon(String s) => switch (s) {
 
 /// Status badge ranglari (JB tokenlari bilan).
 ({Color bg, Color fg}) statusTone(String status) => switch (status) {
-      'hired' || 'accepted' || 'probation' => (bg: JB_GREEN_BG, fg: JB_GREEN_FG),
-      'rejected' => (bg: JB_RED_BG, fg: JB_RED_FG),
-      'missed' => (bg: JB_AMBER_BG, fg: JB_AMBER_FG),
+      'hired' || 'accepted' || 'probation' => (bg: jb.greenBg, fg: jb.green),
+      'rejected' => (bg: jb.redBg, fg: jb.red),
+      'missed' => (bg: jb.amberBg, fg: jb.amber),
       'invited' ||
       'scheduled' ||
       'confirmed' ||
       'on_way' ||
       'arrived' =>
-        (bg: JB_AMBER_BG, fg: JB_AMBER_FG),
-      'viewed' => (bg: JB_INDIGO_TINT, fg: JB_BLUE),
-      _ => (bg: JB_CHIP_BG, fg: JB_GRAY),
+        (bg: jb.amberBg, fg: jb.amber),
+      'viewed' => (bg: jb.blueTint, fg: jb.blue),
+      _ => (bg: jb.chipBg, fg: jb.gray),
     };
 
 /// Biriktirish statusi badge ranglari.
 ({Color bg, Color fg}) assignmentTone(String? status) => switch (status) {
-      'suhbatga_yozildi' || 'suhbatga_bordi' => (bg: JB_AMBER_BG, fg: JB_AMBER_FG),
-      'bormadi' => (bg: JB_RED_BG, fg: JB_RED_FG),
-      'qabul_qilindi' => (bg: JB_GREEN_BG, fg: JB_GREEN_FG),
-      'mos_kelmadi' => (bg: JB_CHIP_BG, fg: JB_GRAY),
-      _ => (bg: JB_INDIGO_TINT, fg: JB_BLUE),
+      'suhbatga_yozildi' || 'suhbatga_bordi' => (bg: jb.amberBg, fg: jb.amber),
+      'bormadi' => (bg: jb.redBg, fg: jb.red),
+      'qabul_qilindi' => (bg: jb.greenBg, fg: jb.green),
+      'mos_kelmadi' => (bg: jb.chipBg, fg: jb.gray),
+      _ => (bg: jb.blueTint, fg: jb.blue),
     };
 
 /// Biriktirish statusi matni (§14).

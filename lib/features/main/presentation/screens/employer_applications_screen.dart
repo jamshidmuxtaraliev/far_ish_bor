@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/application_access.dart';
 import '../../data/models/employer_application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'applicant_profile_screen.dart';
 import 'messages_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class EmployerApplicationsScreen extends StatefulWidget {
   const EmployerApplicationsScreen({super.key});
@@ -49,19 +49,14 @@ class _EmployerApplicationsScreenState
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: Column(
           children: [
             Container(
               width: double.infinity,
-              color: Colors.white,
+              color: context.jb.card,
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 18,
                 left: 20,
@@ -71,10 +66,10 @@ class _EmployerApplicationsScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Nomzodlar',
                     style: TextStyle(
-                      color: JB_INK,
+                      color: context.jb.ink,
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                     ),
@@ -85,7 +80,7 @@ class _EmployerApplicationsScreenState
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: JB_CHIP_BG,
+                            color: context.jb.chipBg,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: TextField(
@@ -93,16 +88,16 @@ class _EmployerApplicationsScreenState
                                 (v) => setState(
                                   () => _searchQuery = v.trim().toLowerCase(),
                                 ),
-                            style: const TextStyle(
-                              color: DARK_NAVY,
+                            style: TextStyle(
+                              color: context.jb.ink,
                               fontSize: 14,
                             ),
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Qidirish...',
-                              hintStyle: TextStyle(color: GRAY_TEXT),
+                              hintStyle: TextStyle(color: context.jb.gray),
                               prefixIcon: Icon(
                                 Icons.search,
-                                color: GRAY_TEXT,
+                                color: context.jb.gray,
                                 size: 20,
                               ),
                               border: InputBorder.none,
@@ -121,7 +116,7 @@ class _EmployerApplicationsScreenState
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: PRIMARY_BLUE,
+                            color: context.jb.blue,
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(
@@ -144,9 +139,9 @@ class _EmployerApplicationsScreenState
                         p.employerAppsStatus != c.employerAppsStatus,
                 builder: (context, state) {
                   if (state.employerAppsStatus.isInProgress) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator(
-                        color: PRIMARY_BLUE,
+                        color: context.jb.blue,
                         strokeWidth: 2,
                       ),
                     );
@@ -160,28 +155,28 @@ class _EmployerApplicationsScreenState
                             width: 72,
                             height: 72,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: context.jb.cardAlt,
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.inbox_outlined,
-                              color: GRAY_TEXT,
+                              color: context.jb.gray,
                               size: 36,
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Hali ariza kelmagan',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: DARK_NAVY,
+                              color: context.jb.ink,
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Text(
+                          Text(
                             'Vakansiyalaringizga nomzodlar ariza yuborishini kuting',
-                            style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                            style: TextStyle(fontSize: 13, color: context.jb.gray),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -203,7 +198,7 @@ class _EmployerApplicationsScreenState
                           }).toList();
 
                   return RefreshIndicator(
-                    color: PRIMARY_BLUE,
+                    color: context.jb.blue,
                     onRefresh:
                         () async => context.read<VacancyBloc>().add(
                           LoadEmployerApplicationsEvent(),
@@ -216,20 +211,20 @@ class _EmployerApplicationsScreenState
                             children: [
                               Text(
                                 '${apps.length} ta nomzod',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: GRAY_TEXT,
+                                  color: context.jb.gray,
                                 ),
                               ),
                               const Spacer(),
                               GestureDetector(
                                 onTap: () => _comingSoon(context),
-                                child: const Text(
+                                child: Text(
                                   'Saralash',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: PRIMARY_BLUE,
+                                    color: context.jb.blue,
                                   ),
                                 ),
                               ),
@@ -239,12 +234,12 @@ class _EmployerApplicationsScreenState
                         Expanded(
                           child:
                               apps.isEmpty
-                                  ? const Center(
+                                  ? Center(
                                     child: Padding(
                                       padding: EdgeInsets.all(24),
                                       child: Text(
                                         'Qidiruv natijasi topilmadi',
-                                        style: TextStyle(color: GRAY_TEXT),
+                                        style: TextStyle(color: context.jb.gray),
                                       ),
                                     ),
                                   )
@@ -304,21 +299,21 @@ String _initialsOf(String? name) {
     case 'hired':
     case 'accepted':
     case 'probation':
-      return (color: const Color(0xFF15803D), bg: GREEN_COLOR.withValues(alpha: 0.12));
+      return (color: jb.green, bg: jb.green.withValues(alpha: 0.12));
     case 'rejected':
-      return (color: RED_COLOR, bg: RED_COLOR.withValues(alpha: 0.1));
+      return (color: jb.red, bg: jb.red.withValues(alpha: 0.1));
     case 'missed':
-      return (color: AMBER_COLOR, bg: AMBER_COLOR.withValues(alpha: 0.14));
+      return (color: jb.amber, bg: jb.amber.withValues(alpha: 0.14));
     case 'invited':
     case 'scheduled':
     case 'confirmed':
     case 'on_way':
     case 'arrived':
-      return (color: const Color(0xFFB45309), bg: AMBER_COLOR.withValues(alpha: 0.14));
+      return (color: jb.amber, bg: jb.amber.withValues(alpha: 0.14));
     case 'viewed':
-      return (color: PRIMARY_BLUE, bg: PRIMARY_BLUE.withValues(alpha: 0.1));
+      return (color: jb.blue, bg: jb.blue.withValues(alpha: 0.1));
     default: // pending
-      return (color: GRAY_TEXT, bg: LIGHT_GRAY_BG);
+      return (color: jb.gray, bg: jb.bg);
   }
 }
 
@@ -337,13 +332,13 @@ Widget _statusBadge(String label, ({Color color, Color bg}) tone) {
   );
 }
 
-Widget _metaChip(IconData icon, String text, {Color iconColor = GRAY_TEXT}) {
+Widget _metaChip(IconData icon, String text, {Color? iconColor}) {
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, size: 15, color: iconColor),
+      Icon(icon, size: 15, color: iconColor ?? jb.gray),
       const SizedBox(width: 4),
-      Text(text, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+      Text(text, style: TextStyle(fontSize: 13, color: jb.gray)),
     ],
   );
 }
@@ -366,9 +361,9 @@ class _AppCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: CARD_BORDER),
+        border: Border.all(color: context.jb.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -386,9 +381,9 @@ class _AppCard extends StatelessWidget {
               Container(
                 width: 52,
                 height: 52,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFFD1D5DB), Color(0xFF9CA3AF)],
+                    colors: [context.jb.borderStrong, context.jb.grayLight],
                   ),
                   shape: BoxShape.circle,
                 ),
@@ -414,10 +409,10 @@ class _AppCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             app.anketaFullname ?? 'Nomzod',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: DARK_NAVY,
+                              color: context.jb.ink,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -430,7 +425,7 @@ class _AppCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       app.anketaJobType ?? app.requirementJobTypeName ?? 'Kasb',
-                      style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
+                      style: TextStyle(fontSize: 14, color: context.jb.gray),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -446,7 +441,7 @@ class _AppCard extends StatelessWidget {
                             '${_placeholderExperience(app.id)} yil tajriba'),
                         _metaChip(Icons.star_rounded,
                             _placeholderRating(app.id).toStringAsFixed(1),
-                            iconColor: PRIMARY_BLUE),
+                            iconColor: context.jb.blue),
                       ],
                     ),
                   ],
@@ -463,7 +458,7 @@ class _AppCard extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onViewProfile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: PRIMARY_BLUE,
+                      backgroundColor: context.jb.blue,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -488,9 +483,9 @@ class _AppCard extends StatelessWidget {
                     // Chat faqat ariza qabul qilingandan keyin ochiladi.
                     onPressed: chatUnlocked ? onMessage : null,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: DARK_NAVY,
-                      disabledForegroundColor: GRAY_TEXT,
-                      side: const BorderSide(color: Color(0xFFD1D5DB)),
+                      foregroundColor: context.jb.ink,
+                      disabledForegroundColor: context.jb.gray,
+                      side: BorderSide(color: context.jb.borderStrong),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

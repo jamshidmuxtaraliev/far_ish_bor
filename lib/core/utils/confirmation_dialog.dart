@@ -1,10 +1,9 @@
 import 'dart:ui';
 
 import 'package:jobUp24/core/extensions/extensions.dart';
-import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
+import '../theme/jb_palette.dart';
 
 class ConfirmationDialog extends StatelessWidget {
   final String title;
@@ -58,7 +57,7 @@ class ConfirmationDialog extends StatelessWidget {
                       TextButton(onPressed: () => onTapCancel(), child: Text(cancelText, style: context.textTheme.labelLarge)),
                       TextButton(
                         onPressed: () => onTapConfirm(),
-                        child: Text(okText, style: context.textTheme.labelLarge?.copyWith(color: oktextColor ?? BUTTON_COLOR)),
+                        child: Text(okText, style: context.textTheme.labelLarge?.copyWith(color: oktextColor ?? context.jb.green)),
                       ),
                     ],
                   ),

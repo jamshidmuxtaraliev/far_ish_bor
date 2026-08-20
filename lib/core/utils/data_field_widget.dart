@@ -2,6 +2,7 @@ import 'package:jobUp24/core/extensions/extensions.dart';
 import 'package:jobUp24/core/utils/utils.dart';
 
 import 'package:flutter/material.dart';
+import '../theme/jb_palette.dart';
 
 class DataFieldWidget extends StatelessWidget {
   final String title;
@@ -22,13 +23,13 @@ class DataFieldWidget extends StatelessWidget {
           width: getScreenWidth(context),
           padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF161616),
+            color: context.jb.ink,
             border: Border.all(color: const Color(0xFF8A6C3A)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: title != '' ? Colors.white : Colors.grey),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: title != '' ? Colors.white : context.jb.gray),
           ),
         ),
       ],

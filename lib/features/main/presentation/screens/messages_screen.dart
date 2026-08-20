@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/custom_cached_network_image.dart';
 import '../../../chat/data/models/chat_session_model.dart';
 import '../../../chat/presentation/logic/chat_bloc.dart';
 import '../../../chat/presentation/screens/direct_chat_screen.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// "Xabarlar" — umumiy muloqot bo'limi (PROMPT_OTKLIK_MOBILE.md §7.1):
 /// operator suhbati doim birinchi, so'ng otklik bilan ochilgan nomzodlar.
@@ -44,14 +44,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.jb.card,
         body: Column(
           children: [
             _header(),
@@ -64,15 +59,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     if (chatState.chatsStatus ==
                             FormzSubmissionStatus.inProgress &&
                         chatState.chats.isEmpty) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: PRIMARY_BLUE),
+                      return Center(
+                        child: CircularProgressIndicator(color: context.jb.blue),
                       );
                     }
                     if (_query.isNotEmpty) {
                       return const _EmptyNote(text: 'Suhbat topilmadi');
                     }
                     return RefreshIndicator(
-                      color: PRIMARY_BLUE,
+                      color: context.jb.blue,
                       onRefresh: _reload,
                       child: ListView(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -81,7 +76,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     );
                   }
                   return RefreshIndicator(
-                    color: PRIMARY_BLUE,
+                    color: context.jb.blue,
                     onRefresh: _reload,
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -143,7 +138,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget _header() {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: jb.card,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 18,
         left: 20,
@@ -153,25 +148,25 @@ class _MessagesScreenState extends State<MessagesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Xabarlar',
             style: TextStyle(
-                color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800),
+                color: jb.ink, fontSize: 22, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 14),
           Container(
             decoration: BoxDecoration(
-              color: JB_CHIP_BG,
+              color: jb.chipBg,
               borderRadius: BorderRadius.circular(14),
             ),
             child: TextField(
               controller: _searchCtrl,
               onChanged: (v) => setState(() => _query = v.trim()),
-              style: const TextStyle(color: DARK_NAVY, fontSize: 14),
-              decoration: const InputDecoration(
+              style: TextStyle(color: jb.ink, fontSize: 14),
+              decoration: InputDecoration(
                 hintText: 'Qidirish...',
-                hintStyle: TextStyle(color: GRAY_TEXT),
-                prefixIcon: Icon(Icons.search, color: GRAY_TEXT),
+                hintStyle: TextStyle(color: jb.gray),
+                prefixIcon: Icon(Icons.search, color: jb.gray),
                 border: InputBorder.none,
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -254,16 +249,16 @@ class _Tile extends StatelessWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: DARK_NAVY,
+                            color: context.jb.ink,
                           ),
                         ),
                       ),
                       Text(time,
                           style:
-                              const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+                              TextStyle(fontSize: 12, color: context.jb.gray)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -276,7 +271,7 @@ class _Tile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
-                            color: unread > 0 ? DARK_NAVY : GRAY_TEXT,
+                            color: unread > 0 ? context.jb.ink : context.jb.gray,
                             fontWeight: unread > 0
                                 ? FontWeight.w500
                                 : FontWeight.normal,
@@ -287,8 +282,8 @@ class _Tile extends StatelessWidget {
                         Container(
                           width: 22,
                           height: 22,
-                          decoration: const BoxDecoration(
-                            color: PRIMARY_BLUE,
+                          decoration: BoxDecoration(
+                            color: context.jb.blue,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -321,11 +316,11 @@ class _SupportAvatar extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 56,
         height: 56,
-        decoration: const BoxDecoration(
-          color: JB_INDIGO_TINT,
+        decoration: BoxDecoration(
+          color: context.jb.blueTint,
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.support_agent, color: JB_BLUE, size: 28),
+        child: Icon(Icons.support_agent, color: context.jb.blue, size: 28),
       );
 }
 
@@ -357,15 +352,15 @@ class _PeerAvatar extends StatelessWidget {
     return Container(
       width: 56,
       height: 56,
-      decoration: const BoxDecoration(
-        color: JB_CHIP_BG,
+      decoration: BoxDecoration(
+        color: context.jb.chipBg,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
         _initials,
-        style: const TextStyle(
-            fontSize: 18, fontWeight: FontWeight.w800, color: JB_GRAY),
+        style: TextStyle(
+            fontSize: 18, fontWeight: FontWeight.w800, color: context.jb.gray),
       ),
     );
   }
@@ -381,7 +376,7 @@ class _EmptyNote extends StatelessWidget {
           padding: const EdgeInsets.all(32),
           child: Text(text,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: GRAY_TEXT)),
+              style: TextStyle(fontSize: 14, color: context.jb.gray)),
         ),
       );
 }

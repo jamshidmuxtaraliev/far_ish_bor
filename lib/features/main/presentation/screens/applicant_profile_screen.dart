@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/application_access.dart';
 import '../../data/models/employer_application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'messages_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 // Deterministic placeholders until the backend exposes rating / experience.
 // TODO: reyting va tajriba backenddan kelganda haqiqiy qiymatga almashtirilsin.
@@ -31,28 +31,28 @@ class ApplicantProfileScreen extends StatelessWidget {
   Color _statusColor(String status) {
     switch (status) {
       case 'pending':
-        return Colors.grey;
+        return jb.gray;
       case 'viewed':
-        return const Color(0xFF0EA5E9);
+        return jb.cyan;
       case 'invited':
-        return PRIMARY_BLUE;
+        return jb.blue;
       case 'scheduled':
-        return const Color(0xFFF59E0B);
+        return jb.amber;
       case 'confirmed':
-        return const Color(0xFF6366F1);
+        return jb.violet;
       case 'on_way':
-        return const Color(0xFFF59E0B);
+        return jb.amber;
       case 'arrived':
-        return const Color(0xFF0EA5E9);
+        return jb.cyan;
       case 'accepted':
       case 'probation':
       case 'hired':
-        return const Color(0xFF10B981);
+        return jb.green;
       case 'missed':
       case 'rejected':
-        return const Color(0xFFF43F5E);
+        return jb.red;
       default:
-        return Colors.grey;
+        return jb.gray;
     }
   }
 
@@ -98,11 +98,11 @@ class ApplicantProfileScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  title: const Text(
+                  title: Text(
                     'Status o\'zgartirish',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: DARK_NAVY,
+                      color: jb.ink,
                       fontSize: 16,
                     ),
                   ),
@@ -111,9 +111,9 @@ class ApplicantProfileScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Yangi status:',
-                          style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                          style: TextStyle(fontSize: 13, color: jb.gray),
                         ),
                         const SizedBox(height: 8),
                         ...statuses.map(
@@ -126,15 +126,15 @@ class ApplicantProfileScreen extends StatelessWidget {
                             ),
                             value: s,
                             groupValue: selectedStatus,
-                            activeColor: PRIMARY_BLUE,
+                            activeColor: jb.blue,
                             onChanged: (v) => setS(() => selectedStatus = v),
                           ),
                         ),
                         if (selectedStatus == 'scheduled') ...[
                           const Divider(),
-                          const Text(
+                          Text(
                             'Suhbat vaqti (YYYY-MM-DD HH:MM):',
-                            style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                            style: TextStyle(fontSize: 13, color: jb.gray),
                           ),
                           const SizedBox(height: 8),
                           TextField(
@@ -158,14 +158,14 @@ class ApplicantProfileScreen extends StatelessWidget {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dCtx),
-                      child: const Text(
+                      child: Text(
                         'Bekor',
-                        style: TextStyle(color: GRAY_TEXT),
+                        style: TextStyle(color: jb.gray),
                       ),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: PRIMARY_BLUE,
+                        backgroundColor: jb.blue,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -210,9 +210,9 @@ class ApplicantProfileScreen extends StatelessWidget {
       listener: (context, state) {
         if (state.updateEmpAppStatus == FormzSubmissionStatus.success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Status yangilandi'),
-              backgroundColor: Color(0xFF10B981),
+              backgroundColor: context.jb.green,
             ),
           );
           Navigator.pop(context);
@@ -227,35 +227,30 @@ class ApplicantProfileScreen extends StatelessWidget {
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: Colors.white,
-          systemNavigationBarIconBrightness: Brightness.dark,
-        ),
+        value: context.jb.overlay,
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: context.jb.card,
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
                 pinned: true,
-                backgroundColor: Colors.white,
-                surfaceTintColor: Colors.white,
-                foregroundColor: JB_INK,
+                backgroundColor: context.jb.card,
+                surfaceTintColor: context.jb.card,
+                foregroundColor: context.jb.ink,
                 elevation: 0,
                 scrolledUnderElevation: 0.5,
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_back_ios_new,
-                    color: JB_INK,
+                    color: context.jb.ink,
                     size: 20,
                   ),
                 ),
-                title: const Text(
+                title: Text(
                   'Nomzod profili',
                   style: TextStyle(
-                    color: JB_INK,
+                    color: context.jb.ink,
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
@@ -271,9 +266,9 @@ class ApplicantProfileScreen extends StatelessWidget {
                         Container(
                           width: 72,
                           height: 72,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Color(0xFFD1D5DB), Color(0xFF9CA3AF)],
+                              colors: [context.jb.borderStrong, context.jb.grayLight],
                             ),
                             shape: BoxShape.circle,
                           ),
@@ -295,10 +290,10 @@ class ApplicantProfileScreen extends StatelessWidget {
                             children: [
                               Text(
                                 app.anketaFullname ?? 'Nomzod',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: DARK_NAVY,
+                                  color: context.jb.ink,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -306,9 +301,9 @@ class ApplicantProfileScreen extends StatelessWidget {
                                 app.anketaJobType ??
                                     app.requirementJobTypeName ??
                                     'Kasb',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: GRAY_TEXT,
+                                  color: context.jb.gray,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -400,7 +395,7 @@ class ApplicantProfileScreen extends StatelessWidget {
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: PRIMARY_BLUE,
+                                backgroundColor: context.jb.blue,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
@@ -420,9 +415,9 @@ class ApplicantProfileScreen extends StatelessWidget {
                                 ? () => _openChat(context)
                                 : null,
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: DARK_NAVY,
-                              disabledForegroundColor: GRAY_TEXT,
-                              side: const BorderSide(color: Color(0xFFD1D5DB)),
+                              foregroundColor: context.jb.ink,
+                              disabledForegroundColor: context.jb.gray,
+                              side: BorderSide(color: context.jb.borderStrong),
                               padding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -466,7 +461,7 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: PRIMARY_BLUE),
+          Icon(icon, size: 18, color: context.jb.blue),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -474,14 +469,14 @@ class _DetailRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+                  style: TextStyle(fontSize: 12, color: context.jb.gray),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
-                    color: DARK_NAVY,
+                    color: context.jb.ink,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/constants/colors.dart';
+import '../../../../../core/theme/jb_palette.dart';
 
 class Step5Additional extends StatelessWidget {
   final TextEditingController motivationController;
@@ -24,19 +24,19 @@ class Step5Additional extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: PRIMARY_BLUE.withValues(alpha: 0.06),
+              color: context.jb.blue.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: PRIMARY_BLUE.withValues(alpha: 0.2)),
+              border: Border.all(color: context.jb.blue.withValues(alpha: 0.2)),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.lightbulb_outline, color: PRIMARY_BLUE, size: 18),
+                Icon(Icons.lightbulb_outline, color: context.jb.blue, size: 18),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     "Bu bo'limdagi ma'lumotlar ixtiyoriy. To'ldirish anketangizni kuchaytiradi va ish topish imkoniyatingizni oshiradi.",
-                    style: TextStyle(color: PRIMARY_BLUE, fontSize: 12, height: 1.5),
+                    style: TextStyle(color: context.jb.blue, fontSize: 12, height: 1.5),
                   ),
                 ),
               ],
@@ -47,9 +47,9 @@ class Step5Additional extends StatelessWidget {
             children: [
               const _FieldLabel('Motivatsiya'),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Nima uchun bu kasbni tanlagansiz? Maqsadlaringiz nima?',
-                style: TextStyle(color: GRAY_TEXT, fontSize: 12),
+                style: TextStyle(color: context.jb.gray, fontSize: 12),
               ),
               const SizedBox(height: 10),
               _MultilineField(
@@ -64,9 +64,9 @@ class Step5Additional extends StatelessWidget {
             children: [
               const _FieldLabel('Oldingi ish joyini tark etish sababi'),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 "Oldingi ish joyingizdan ketish sababini ko'rsating",
-                style: TextStyle(color: GRAY_TEXT, fontSize: 12),
+                style: TextStyle(color: context.jb.gray, fontSize: 12),
               ),
               const SizedBox(height: 10),
               _MultilineField(
@@ -81,24 +81,24 @@ class Step5Additional extends StatelessWidget {
             children: [
               const _FieldLabel("Qo'shimcha aloqa"),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 "Telegram, email yoki boshqa aloqa ma'lumotlari",
-                style: TextStyle(color: GRAY_TEXT, fontSize: 12),
+                style: TextStyle(color: context.jb.gray, fontSize: 12),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: additionalContactController,
-                style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+                style: TextStyle(fontSize: 15, color: context.jb.ink),
                 decoration: InputDecoration(
                   hintText: '@telegram yoki email@example.com',
-                  hintStyle: const TextStyle(color: GRAY_TEXT, fontSize: 14),
-                  prefixIcon: const Icon(Icons.alternate_email_outlined, color: GRAY_TEXT, size: 18),
+                  hintStyle: TextStyle(color: context.jb.gray, fontSize: 14),
+                  prefixIcon: Icon(Icons.alternate_email_outlined, color: context.jb.gray, size: 18),
                   filled: true,
-                  fillColor: LIGHT_GRAY_BG,
+                  fillColor: context.jb.bg,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
                 ),
               ),
             ],
@@ -107,19 +107,19 @@ class Step5Additional extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: GREEN_COLOR.withValues(alpha: 0.06),
+              color: context.jb.green.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: GREEN_COLOR.withValues(alpha: 0.25)),
+              border: Border.all(color: context.jb.green.withValues(alpha: 0.25)),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.check_circle_outline, color: GREEN_COLOR, size: 18),
+                Icon(Icons.check_circle_outline, color: context.jb.green, size: 18),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     "Hammasi tayyor! \"Saqlash\" tugmasini bosib anketangizni yuborishingiz mumkin.",
-                    style: TextStyle(color: GREEN_COLOR, fontSize: 12, fontWeight: FontWeight.w500, height: 1.5),
+                    style: TextStyle(color: context.jb.green, fontSize: 12, fontWeight: FontWeight.w500, height: 1.5),
                   ),
                 ),
               ],
@@ -145,16 +145,16 @@ class _MultilineField extends StatelessWidget {
       maxLines: maxLines,
       minLines: maxLines,
       textCapitalization: TextCapitalization.sentences,
-      style: const TextStyle(fontSize: 14, color: DARK_NAVY, height: 1.5),
+      style: TextStyle(fontSize: 14, color: context.jb.ink, height: 1.5),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: GRAY_TEXT, fontSize: 13),
+        hintStyle: TextStyle(color: context.jb.gray, fontSize: 13),
         filled: true,
-        fillColor: LIGHT_GRAY_BG,
+        fillColor: context.jb.bg,
         contentPadding: const EdgeInsets.all(14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
       ),
     );
   }
@@ -171,7 +171,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
@@ -187,6 +187,6 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY));
+    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink));
   }
 }

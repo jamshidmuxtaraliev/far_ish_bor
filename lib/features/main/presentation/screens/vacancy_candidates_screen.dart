@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
 import '../widgets/candidate_card.dart';
 import '../widgets/state_views.dart';
 import 'edit_employer_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// EKRAN 2 — Vakansiya ichi: operator tavsiyalari + mos nomzodlar (scored).
 class VacancyCandidatesScreen extends StatefulWidget {
@@ -39,11 +39,11 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
   Widget build(BuildContext context) {
     return CandidateUnlockListener(
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          foregroundColor: JB_INK,
+          backgroundColor: context.jb.card,
+          surfaceTintColor: context.jb.card,
+          foregroundColor: context.jb.ink,
           elevation: 0,
           scrolledUnderElevation: 0.5,
           systemOverlayStyle: SystemUiOverlayStyle.dark,
@@ -62,8 +62,8 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
 
             if (state.vacancyCandidatesStatus.isInProgress &&
                 (data == null || !isThisVacancy)) {
-              return const Center(
-                  child: CircularProgressIndicator(color: PRIMARY_BLUE));
+              return Center(
+                  child: CircularProgressIndicator(color: context.jb.blue));
             }
             if (state.vacancyCandidatesStatus == FormzSubmissionStatus.failure &&
                 (data == null || !isThisVacancy)) {
@@ -80,7 +80,7 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
             final mos = data.mos;
 
             return RefreshIndicator(
-              color: PRIMARY_BLUE,
+              color: context.jb.blue,
               onRefresh: () async => _load(),
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -92,7 +92,7 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
                   else ...[
                     if (recommended.isNotEmpty) ...[
                       _SectionTitle(
-                          'Operator tavsiyasi', recommended.length, GREEN_COLOR),
+                          'Operator tavsiyasi', recommended.length, context.jb.green),
                       const SizedBox(height: 10),
                       ...recommended.map((c) => Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -105,7 +105,7 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
                       const SizedBox(height: 8),
                     ],
                     if (mos.isNotEmpty) ...[
-                      _SectionTitle('Mos nomzodlar', mos.length, PRIMARY_BLUE),
+                      _SectionTitle('Mos nomzodlar', mos.length, context.jb.blue),
                       const SizedBox(height: 10),
                       ...mos.map((c) => Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -137,8 +137,8 @@ class _VacancyCandidatesScreenState extends State<VacancyCandidatesScreen> {
         ),
         icon: const Icon(Icons.tune, size: 18),
         style: OutlinedButton.styleFrom(
-          foregroundColor: PRIMARY_BLUE,
-          side: BorderSide(color: PRIMARY_BLUE.withValues(alpha: 0.5)),
+          foregroundColor: context.jb.blue,
+          side: BorderSide(color: context.jb.blue.withValues(alpha: 0.5)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
@@ -173,18 +173,18 @@ class _VacancyHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.jb.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(vacancy.jobTypeName ?? 'Vakansiya',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
-                  color: DARK_NAVY)),
+                  color: context.jb.ink)),
           const SizedBox(height: 10),
           Wrap(spacing: 14, runSpacing: 6, children: chips),
         ],
@@ -195,9 +195,9 @@ class _VacancyHeader extends StatelessWidget {
   Widget _meta(IconData icon, String label) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: GRAY_TEXT),
+          Icon(icon, size: 14, color: jb.gray),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+          Text(label, style: TextStyle(fontSize: 13, color: jb.gray)),
         ],
       );
 }
@@ -213,8 +213,8 @@ class _SectionTitle extends StatelessWidget {
     return Row(
       children: [
         Text(title,
-            style: const TextStyle(
-                fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+            style: TextStyle(
+                fontSize: 15, fontWeight: FontWeight.bold, color: context.jb.ink)),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

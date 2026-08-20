@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
-import '../theme/app_theme.dart';
+import '../theme/jb_palette.dart';
 
 class CustomSwitch extends StatefulWidget {
   final String title;
@@ -45,7 +44,7 @@ class _CustomSwitchState extends State<CustomSwitch> with SingleTickerProviderSt
             height: 32,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: BLACK_RIGHT_ICON,
+              color: context.jb.ink,
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: const Color(0xFF8C6A2E), width: 2),
             ),
@@ -55,7 +54,7 @@ class _CustomSwitchState extends State<CustomSwitch> with SingleTickerProviderSt
               child: Container(
                 width: 24,
                 height: 24,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: isOn ? Color(0xFFFCC562) : Color(0xFF444444)),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: isOn ? Color(0xFFFCC562) : context.jb.gray),
               ),
             ),
           ),
@@ -90,14 +89,14 @@ class CustomCheckbox extends StatelessWidget {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: isChecked ? BUTTON_COLOR : Colors.white,
+              color: isChecked ? context.jb.green : context.jb.card,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: isChecked ? BUTTON_COLOR : Colors.grey.shade400, width: 2),
+              border: Border.all(color: isChecked ? context.jb.green : context.jb.grayLight, width: 2),
             ),
             child: isChecked ? const Icon(Icons.check, color: Colors.white, size: 18) : null,
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: lightTheme().textTheme.bodyLarge?.copyWith(fontSize: 12))),
+          Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 12))),
         ],
       ),
     );

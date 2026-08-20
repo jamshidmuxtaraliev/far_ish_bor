@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/vacancy_model.dart';
 import 'job_map_markers.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Ish izlovchi "Ishlar" oynasining xarita ko'rinishi.
 ///
@@ -31,15 +31,20 @@ class _JobMapViewState extends State<JobMapView> {
   double _dpr = 3;
   List<VacancyModel> _located = const [];
   VacancyModel? _selected;
-  bool _ready = false;
+
+  /// Marker'lar palitra rangida chizilgani uchun mavzu almashsa qaytadan
+  /// chiziladi — shuning uchun oxirgi ishlatilgan palitra saqlanadi.
+  JbPalette? _palette;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _dpr = MediaQuery.of(context).devicePixelRatio;
     _located = widget.vacancies.where((v) => v.hasCoords).toList();
-    if (!_ready) {
-      _ready = true;
+    final palette = context.jb;
+    if (_palette?.brightness != palette.brightness) {
+      _palette = palette;
+      _jobIcon = null;
       _prepareIcon();
     }
   }
@@ -53,8 +58,12 @@ class _JobMapViewState extends State<JobMapView> {
   }
 
   Future<void> _prepareIcon() async {
-    final icon = await JobMapMarkers.jobPin(_dpr);
-    if (mounted) setState(() => _jobIcon = icon);
+    final palette = _palette!;
+    final icon = await JobMapMarkers.jobPin(_dpr, palette);
+    // Ikona tayyorlanguncha mavzu yana o'zgargan bo'lishi mumkin.
+    if (mounted && identical(_palette, palette)) {
+      setState(() => _jobIcon = icon);
+    }
   }
 
   Point _initialTarget() {
@@ -99,7 +108,7 @@ class _JobMapViewState extends State<JobMapView> {
   }
 
   Future<Cluster> _onClusterAdded(ClusterizedPlacemarkCollection self, Cluster cluster) async {
-    final icon = await JobMapMarkers.cluster(cluster.size, _dpr);
+    final icon = await JobMapMarkers.cluster(cluster.size, _dpr, _palette ?? context.jb);
     return cluster.copyWith(
       appearance: cluster.appearance.copyWith(
         opacity: 1,
@@ -128,8 +137,11 @@ class _JobMapViewState extends State<JobMapView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.jb.isDark;
+    // mapId mavzuni ham o'z ichiga oladi: rejim almashganda kolleksiya yangi
+    // obyekt sifatida qayta quriladi va klaster ikonalari qaytadan chiziladi.
     final collection = ClusterizedPlacemarkCollection(
-      mapId: const MapObjectId('jobs_cluster'),
+      mapId: MapObjectId('jobs_cluster_${isDark ? 'dark' : 'light'}'),
       placemarks: _placemarks(),
       radius: 60,
       minZoom: 15,
@@ -141,7 +153,9 @@ class _JobMapViewState extends State<JobMapView> {
     return Stack(
       children: [
         YandexMap(
-          nightModeEnabled: true, // dizayn — to'q xarita (screenshot)
+          // Xarita ilova mavzusiga ergashadi: tungi rejimda Yandex'ning o'z
+          // "night mode" uslubi yoqiladi.
+          nightModeEnabled: isDark,
           mapObjects: [collection],
           onMapCreated: (c) {
             _controller = c;
@@ -158,8 +172,8 @@ class _JobMapViewState extends State<JobMapView> {
 
         // Yuklanish holati (marker ikonasi tayyorlanmagan bo'lsa)
         if (_jobIcon == null)
-          const Positioned.fill(
-            child: IgnorePointer(child: Center(child: CircularProgressIndicator(color: PRIMARY_BLUE))),
+          Positioned.fill(
+            child: IgnorePointer(child: Center(child: CircularProgressIndicator(color: context.jb.blue))),
           ),
 
         // Zoom tugmalari
@@ -199,14 +213,16 @@ class _ZoomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.jb;
     return Material(
-      color: const Color(0xFF1F2937),
+      color: p.card,
       borderRadius: BorderRadius.circular(12),
       elevation: 3,
+      shadowColor: p.shadow,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: SizedBox(width: 46, height: 46, child: Icon(icon, color: Colors.white, size: 24)),
+        child: SizedBox(width: 46, height: 46, child: Icon(icon, color: p.ink, size: 24)),
       ),
     );
   }
@@ -231,7 +247,7 @@ class _JobInfoCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.jb.card,
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 18, offset: const Offset(0, 6)),
@@ -245,7 +261,7 @@ class _JobInfoCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: RED_COLOR.withValues(alpha: 0.1),
+                  color: context.jb.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -253,9 +269,9 @@ class _JobInfoCard extends StatelessWidget {
                     ? Image.network(
                         logo,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.work_rounded, color: RED_COLOR, size: 26),
+                        errorBuilder: (_, __, ___) => Icon(Icons.work_rounded, color: context.jb.red, size: 26),
                       )
-                    : const Icon(Icons.work_rounded, color: RED_COLOR, size: 26),
+                    : Icon(Icons.work_rounded, color: context.jb.red, size: 26),
               ),
               const SizedBox(width: 12),
               // Matn
@@ -265,26 +281,26 @@ class _JobInfoCard extends StatelessWidget {
                   children: [
                     Text(
                       vacancy.jobTypeName ?? "Kasb ko'rsatilmagan",
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.jb.ink),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
                     Text(
                       vacancy.companyName ?? '',
-                      style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
+                      style: TextStyle(fontSize: 13, color: context.jb.gray),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.payments_outlined, size: 15, color: PRIMARY_BLUE),
+                        Icon(Icons.payments_outlined, size: 15, color: context.jb.blue),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             vacancy.salaryDisplay,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: PRIMARY_BLUE),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.blue),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -298,7 +314,7 @@ class _JobInfoCard extends StatelessWidget {
               IconButton(
                 onPressed: onClose,
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close, size: 20, color: GRAY_TEXT),
+                icon: Icon(Icons.close, size: 20, color: context.jb.gray),
               ),
             ],
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
+import 'jb_palette.dart';
 
 /// ============================================================================
 /// Jobup24 design kit
@@ -10,21 +10,19 @@ import '../constants/colors.dart';
 /// segmented toggles. Screens compose these instead of re-deriving the styling.
 /// ============================================================================
 
-/// Soft elevation used on nearly every card (0 6px 20px rgba(20,30,60,0.05)).
-const List<BoxShadow> kJbSoftShadow = [
-  BoxShadow(color: JB_SHADOW, blurRadius: 20, offset: Offset(0, 6)),
-];
+/// Soft elevation used on nearly every card. Rejimga qarab o'zgaradi.
+List<BoxShadow> get kJbSoftShadow => jb.softShadow;
 
 /// Standard rounded-white card decoration.
 BoxDecoration jbCardDecoration({
   double radius = 20,
-  Color color = JB_CARD,
+  Color? color,
   Color? border,
   double borderWidth = 1.5,
   bool shadow = true,
 }) {
   return BoxDecoration(
-    color: color,
+    color: color ?? jb.card,
     borderRadius: BorderRadius.circular(radius),
     border: border != null ? Border.all(color: border, width: borderWidth) : null,
     boxShadow: shadow ? kJbSoftShadow : null,
@@ -37,7 +35,7 @@ class JBCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry? margin;
   final double radius;
-  final Color color;
+  final Color? color;
   final Color? border;
   final bool shadow;
   final VoidCallback? onTap;
@@ -48,7 +46,7 @@ class JBCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(18),
     this.margin,
     this.radius = 20,
-    this.color = JB_CARD,
+    this.color,
     this.border,
     this.shadow = true,
     this.onTap,
@@ -58,7 +56,12 @@ class JBCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final card = Container(
       padding: padding,
-      decoration: jbCardDecoration(radius: radius, color: color, border: border, shadow: shadow),
+      decoration: jbCardDecoration(
+        radius: radius,
+        color: color ?? context.jb.card,
+        border: border,
+        shadow: shadow,
+      ),
       child: child,
     );
     final content = onTap == null
@@ -78,8 +81,8 @@ class JBCard extends StatelessWidget {
 /// Rounded-square tinted icon container (the small 36–40px tiles in the design).
 class JBIconTile extends StatelessWidget {
   final IconData icon;
-  final Color bg;
-  final Color fg;
+  final Color? bg;
+  final Color? fg;
   final double size;
   final double radius;
   final double iconSize;
@@ -87,8 +90,8 @@ class JBIconTile extends StatelessWidget {
   const JBIconTile({
     super.key,
     required this.icon,
-    this.bg = JB_INDIGO_TINT,
-    this.fg = JB_BLUE,
+    this.bg,
+    this.fg,
     this.size = 38,
     this.radius = 12,
     this.iconSize = 18,
@@ -99,9 +102,12 @@ class JBIconTile extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(radius)),
+      decoration: BoxDecoration(
+        color: bg ?? context.jb.blueTint,
+        borderRadius: BorderRadius.circular(radius),
+      ),
       alignment: Alignment.center,
-      child: Icon(icon, color: fg, size: iconSize),
+      child: Icon(icon, color: fg ?? context.jb.blue, size: iconSize),
     );
   }
 }
@@ -109,8 +115,8 @@ class JBIconTile extends StatelessWidget {
 /// Pill status/label chip.
 class JBChip extends StatelessWidget {
   final String text;
-  final Color bg;
-  final Color fg;
+  final Color? bg;
+  final Color? fg;
   final double fontSize;
   final FontWeight fontWeight;
   final EdgeInsetsGeometry padding;
@@ -118,8 +124,8 @@ class JBChip extends StatelessWidget {
   const JBChip({
     super.key,
     required this.text,
-    this.bg = JB_CHIP_BG,
-    this.fg = JB_INK,
+    this.bg,
+    this.fg,
     this.fontSize = 13,
     this.fontWeight = FontWeight.w700,
     this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
@@ -129,10 +135,18 @@ class JBChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(100)),
+      decoration: BoxDecoration(
+        color: bg ?? context.jb.chipBg,
+        borderRadius: BorderRadius.circular(100),
+      ),
       child: Text(
         text,
-        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: fg, height: 1.1),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: fg ?? context.jb.ink,
+          height: 1.1,
+        ),
       ),
     );
   }
@@ -145,7 +159,7 @@ class JBMatchBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return JBChip(text: '✦ ${percent.round()}% mos', bg: JB_GREEN_BG, fg: JB_GREEN_FG);
+    return JBChip(text: '✦ ${percent.round()}% mos', bg: context.jb.greenBg, fg: context.jb.green);
   }
 }
 
@@ -178,26 +192,27 @@ class JBPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.jb;
     late final Color bg;
     late final Color fg;
     Border? border;
     switch (variant) {
       case JBBtnVariant.primary:
-        bg = JB_BLUE;
-        fg = Colors.white;
+        bg = p.blue;
+        fg = p.onBrand;
         break;
       case JBBtnVariant.outline:
-        bg = Colors.white;
-        fg = JB_INK;
-        border = Border.all(color: JB_BORDER, width: 1.5);
+        bg = p.card;
+        fg = p.ink;
+        border = Border.all(color: p.border, width: 1.5);
         break;
       case JBBtnVariant.ghost:
         bg = Colors.transparent;
-        fg = JB_GRAY;
+        fg = p.gray;
         break;
       case JBBtnVariant.disabled:
-        bg = const Color(0xFFE2E5EC);
-        fg = JB_GRAY_LIGHT;
+        bg = p.chipBg;
+        fg = p.grayLight;
         break;
     }
 
@@ -223,7 +238,7 @@ class JBPillButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(100),
             border: border,
             boxShadow: elevated && variant == JBBtnVariant.primary
-                ? [BoxShadow(color: JB_BLUE.withValues(alpha: 0.30), blurRadius: 24, offset: const Offset(0, 10))]
+                ? [BoxShadow(color: p.blue.withValues(alpha: 0.30), blurRadius: 24, offset: const Offset(0, 10))]
                 : null,
           ),
           alignment: Alignment.center,
@@ -258,12 +273,18 @@ class JBSectionHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: JB_INK)),
+            child: Text(
+              title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: context.jb.ink),
+            ),
           ),
           if (actionLabel != null)
             GestureDetector(
               onTap: onAction,
-              child: Text(actionLabel!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: JB_BLUE)),
+              child: Text(
+                actionLabel!,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.blue),
+              ),
             ),
         ],
       ),
@@ -290,7 +311,10 @@ class JBSegmented extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration: BoxDecoration(color: JB_CHIP_BG, borderRadius: BorderRadius.circular(100)),
+      decoration: BoxDecoration(
+        color: context.jb.chipBg,
+        borderRadius: BorderRadius.circular(100),
+      ),
       child: Row(
         children: List.generate(tabs.length, (i) {
           final active = i == index;
@@ -302,7 +326,7 @@ class JBSegmented extends StatelessWidget {
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: active ? JB_BLUE : Colors.transparent,
+                  color: active ? context.jb.blue : Colors.transparent,
                   borderRadius: BorderRadius.circular(100),
                 ),
                 alignment: Alignment.center,
@@ -311,7 +335,7 @@ class JBSegmented extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : JB_GRAY,
+                    color: active ? context.jb.onBrand : context.jb.gray,
                   ),
                 ),
               ),
@@ -338,16 +362,16 @@ class JBWordmark extends StatelessWidget {
 class JBCircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
-  final Color bg;
-  final Color fg;
+  final Color? bg;
+  final Color? fg;
   final double size;
 
   const JBCircleButton({
     super.key,
     this.icon = Icons.arrow_back_ios_new_rounded,
     this.onTap,
-    this.bg = JB_CHIP_BG,
-    this.fg = JB_INK,
+    this.bg,
+    this.fg,
     this.size = 36,
   });
 
@@ -358,9 +382,9 @@ class JBCircleButton extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: bg ?? context.jb.chipBg, shape: BoxShape.circle),
         alignment: Alignment.center,
-        child: Icon(icon, size: 16, color: fg),
+        child: Icon(icon, size: 16, color: fg ?? context.jb.ink),
       ),
     );
   }

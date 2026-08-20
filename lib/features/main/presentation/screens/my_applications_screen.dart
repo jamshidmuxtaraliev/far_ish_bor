@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'application_detail_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class MyApplicationsScreen extends StatefulWidget {
   const MyApplicationsScreen({super.key});
@@ -26,14 +26,9 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocConsumer<VacancyBloc, VacancyState>(
           listenWhen: (prev, curr) => prev.updateAppStatus != curr.updateAppStatus,
           listener: (context, state) {
@@ -54,14 +49,14 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
   Widget _buildHeader(BuildContext context, VacancyState state) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: context.jb.card,
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 18, left: 20, right: 20, bottom: 22),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Mening arizalarim', style: TextStyle(color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
+          Text('Mening arizalarim', style: TextStyle(color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
           SizedBox(height: 6),
-          Text('Vakansiyalarga ariza topshirgansiz', style: TextStyle(color: JB_GRAY, fontSize: 14)),
+          Text('Vakansiyalarga ariza topshirgansiz', style: TextStyle(color: context.jb.gray, fontSize: 14)),
         ],
       ),
     );
@@ -69,7 +64,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
 
   Widget _buildBody(BuildContext context, VacancyState state) {
     if (state.applicationsStatus.isInProgress && state.myApplications.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE));
+      return Center(child: CircularProgressIndicator(color: context.jb.blue));
     }
     if (state.applicationsStatus == FormzSubmissionStatus.failure && state.myApplications.isEmpty) {
       return Center(
@@ -78,17 +73,17 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.cloud_off_outlined, size: 64, color: GRAY_TEXT),
+              Icon(Icons.cloud_off_outlined, size: 64, color: context.jb.gray),
               const SizedBox(height: 16),
               Text(
                 state.error?.errorMessage ?? 'Xato yuz berdi',
-                style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
+                style: TextStyle(fontSize: 15, color: context.jb.gray),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => context.read<VacancyBloc>().add(LoadMyApplicationsEvent()),
-                style: ElevatedButton.styleFrom(backgroundColor: PRIMARY_BLUE, foregroundColor: Colors.white, elevation: 0),
+                style: ElevatedButton.styleFrom(backgroundColor: context.jb.blue, foregroundColor: Colors.white, elevation: 0),
                 child: const Text('Qayta urinish'),
               ),
             ],
@@ -106,15 +101,15 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
               Container(
                 width: 72,
                 height: 72,
-                decoration: BoxDecoration(color: LIGHT_GRAY_BG, borderRadius: BorderRadius.circular(20)),
-                child: const Icon(Icons.folder_open_outlined, size: 36, color: GRAY_TEXT),
+                decoration: BoxDecoration(color: context.jb.bg, borderRadius: BorderRadius.circular(20)),
+                child: Icon(Icons.folder_open_outlined, size: 36, color: context.jb.gray),
               ),
               const SizedBox(height: 16),
-              const Text("Hozircha ariza yo'q", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+              Text("Hozircha ariza yo'q", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.jb.ink)),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 "Vakansiyalarga ariza yuboring\nva natijani shu yerda kuzating",
-                style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                style: TextStyle(fontSize: 13, color: context.jb.gray),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -127,7 +122,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
     final rejected = state.myApplications.where((a) => !a.isActive).toList();
 
     return RefreshIndicator(
-      color: PRIMARY_BLUE,
+      color: context.jb.blue,
       onRefresh: () async => context.read<VacancyBloc>().add(LoadMyApplicationsEvent()),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -194,7 +189,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: JB_INK));
+    return Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.jb.ink));
   }
 }
 
@@ -230,10 +225,10 @@ class _ApplicationCard extends StatelessWidget {
                   children: [
                     Text(
                       application.jobTypeName ?? "Kasb noma'lum",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: JB_INK),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.jb.ink),
                     ),
                     const SizedBox(height: 4),
-                    Text(application.companyName ?? 'Kompaniya', style: const TextStyle(fontSize: 13.5, color: JB_GRAY)),
+                    Text(application.companyName ?? 'Kompaniya', style: TextStyle(fontSize: 13.5, color: context.jb.gray)),
                   ],
                 ),
               ),
@@ -266,20 +261,20 @@ class _ApplicationCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF0FDF4),
+                color: context.jb.greenBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFBBF7D0)),
+                border: Border.all(color: context.jb.greenBg),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_month_rounded, size: 20, color: Color(0xFF16A34A)),
+                  Icon(Icons.calendar_month_rounded, size: 20, color: context.jb.green),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Suhbat belgilandi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF16A34A))),
+                      Text('Suhbat belgilandi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.green)),
                       const SizedBox(height: 2),
-                      Text(application.interviewDisplay, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF166534))),
+                      Text(application.interviewDisplay, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: context.jb.green)),
                     ],
                   ),
                 ],
@@ -298,7 +293,7 @@ class _ApplicationCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: isUpdating ? null : () => onUpdateStatus!('confirmed'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF16A34A),
+                          backgroundColor: context.jb.green,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -318,8 +313,8 @@ class _ApplicationCard extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: isUpdating ? null : () => onUpdateStatus!('on_way'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF0891B2),
-                          side: const BorderSide(color: Color(0xFF0891B2)),
+                          foregroundColor: context.jb.cyan,
+                          side: BorderSide(color: context.jb.cyan),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         child: const Text("Yo'ldaman", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
@@ -345,9 +340,9 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 15, color: GRAY_TEXT),
+        Icon(icon, size: 15, color: context.jb.gray),
         const SizedBox(width: 6),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: GRAY_TEXT))),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 13, color: context.jb.gray))),
       ],
     );
   }

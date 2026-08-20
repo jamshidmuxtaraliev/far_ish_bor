@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../../core/constants/colors.dart';
 import '../../../data/models/anketa_models.dart';
 import '../../logic/auth_bloc.dart';
+import '../../../../../core/theme/jb_palette.dart';
 
 const _workStatusOptions = [
   ('searching', 'Faol ish izlayapman'),
@@ -179,35 +179,35 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
       minChildSize: 0.4,
       maxChildSize: 0.92,
       builder: (_, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: context.jb.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           children: [
             const SizedBox(height: 8),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE5E7EB), borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: context.jb.border, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  const Text('Kasb tanlang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+                  Text('Kasb tanlang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.jb.ink)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+                    style: TextStyle(fontSize: 15, color: context.jb.ink),
                     decoration: InputDecoration(
                       hintText: 'Kasb nomini kiriting...',
-                      hintStyle: const TextStyle(color: GRAY_TEXT),
-                      prefixIcon: const Icon(Icons.search, color: GRAY_TEXT, size: 20),
+                      hintStyle: TextStyle(color: context.jb.gray),
+                      prefixIcon: Icon(Icons.search, color: context.jb.gray, size: 20),
                       filled: true,
-                      fillColor: LIGHT_GRAY_BG,
+                      fillColor: context.jb.bg,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
                     ),
                   ),
                 ],
@@ -219,13 +219,13 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
                 buildWhen: (p, c) => p.jobTypes != c.jobTypes || p.jobTypesStatus != c.jobTypesStatus,
                 builder: (context, state) {
                   if (state.jobTypesStatus.isInProgress) {
-                    return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2));
+                    return Center(child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2));
                   }
                   return ListView.separated(
                     controller: scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: state.jobTypes.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                    separatorBuilder: (_, __) => Divider(height: 1, color: context.jb.cardAlt),
                     itemBuilder: (_, i) {
                       final item = state.jobTypes[i];
                       final isSelected = item.id == widget.selectedId;
@@ -244,12 +244,12 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
                                   item.name,
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: isSelected ? PRIMARY_BLUE : DARK_NAVY,
+                                    color: isSelected ? context.jb.blue : context.jb.ink,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                   ),
                                 ),
                               ),
-                              if (isSelected) const Icon(Icons.check_rounded, color: PRIMARY_BLUE, size: 18),
+                              if (isSelected) Icon(Icons.check_rounded, color: context.jb.blue, size: 18),
                             ],
                           ),
                         ),
@@ -281,14 +281,14 @@ class _OptionChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: isSelected ? PRIMARY_BLUE : LIGHT_GRAY_BG,
+          color: isSelected ? context.jb.blue : context.jb.bg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? PRIMARY_BLUE : const Color(0xFFE5E7EB)),
+          border: Border.all(color: isSelected ? context.jb.blue : context.jb.border),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : DARK_NAVY,
+            color: isSelected ? Colors.white : context.jb.ink,
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -309,7 +309,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
@@ -325,7 +325,7 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY));
+    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink));
   }
 }
 
@@ -345,22 +345,22 @@ class _SelectField extends StatelessWidget {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: LIGHT_GRAY_BG,
+          color: context.jb.bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: value != null ? PRIMARY_BLUE.withValues(alpha: 0.4) : const Color(0xFFE5E7EB)),
+          border: Border.all(color: value != null ? context.jb.blue.withValues(alpha: 0.4) : context.jb.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: value != null ? PRIMARY_BLUE : GRAY_TEXT, size: 18),
+            Icon(icon, color: value != null ? context.jb.blue : context.jb.gray, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 value ?? hint,
-                style: TextStyle(color: value != null ? DARK_NAVY : GRAY_TEXT, fontSize: 15),
+                style: TextStyle(color: value != null ? context.jb.ink : context.jb.gray, fontSize: 15),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down_rounded, color: GRAY_TEXT, size: 20),
+            Icon(Icons.keyboard_arrow_down_rounded, color: context.jb.gray, size: 20),
           ],
         ),
       ),
@@ -381,17 +381,17 @@ class _NumericField extends StatelessWidget {
       controller: controller,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+      style: TextStyle(fontSize: 15, color: context.jb.ink),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: GRAY_TEXT, fontSize: 15),
-        prefixIcon: Icon(icon, color: GRAY_TEXT, size: 18),
+        hintStyle: TextStyle(color: context.jb.gray, fontSize: 15),
+        prefixIcon: Icon(icon, color: context.jb.gray, size: 18),
         filled: true,
-        fillColor: LIGHT_GRAY_BG,
+        fillColor: context.jb.bg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
       ),
     );
   }

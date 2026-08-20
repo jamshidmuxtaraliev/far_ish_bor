@@ -6,12 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/balance_model.dart';
 import '../../data/models/online_payment_model.dart';
 import '../../data/models/payment_system_model.dart';
 import '../logic/billing_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class TopUpScreen extends StatefulWidget {
   /// Employer vs job-seeker balance (different endpoints).
@@ -156,7 +156,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
       return;
     }
     await Clipboard.setData(ClipboardData(text: url));
-    _snack('Havola nusxalandi', color: const Color(0xFF10B981));
+    _snack('Havola nusxalandi', color: jb.green);
   }
 
   void _confirmTestPayment() {
@@ -216,24 +216,24 @@ class _TopUpScreenState extends State<TopUpScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.check_circle,
-                  color: Color(0xFF10B981),
+                  color: jb.green,
                   size: 56,
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Hisob to\'ldirildi',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: DARK_NAVY,
+                    color: jb.ink,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Balansingiz yangilandi',
-                  style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                  style: TextStyle(fontSize: 13, color: jb.gray),
                 ),
               ],
             ),
@@ -250,7 +250,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                     Navigator.pop(context, true);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: PRIMARY_BLUE,
+                    backgroundColor: jb.blue,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -277,14 +277,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocListener<BillingBloc, BillingState>(
           listenWhen:
               (p, c) =>
@@ -314,7 +309,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
             if (state.blacklistPayStatus == FormzSubmissionStatus.success) {
               _snack(
                 'Siz qora ro\'yxatdan chiqdingiz',
-                color: const Color(0xFF10B981),
+                color: context.jb.green,
               );
             }
             if (state.blacklistPayStatus == FormzSubmissionStatus.failure) {
@@ -383,7 +378,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
           right: 20,
           bottom: 8,
         ),
-        color: Colors.white,
+        color: jb.card,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -391,11 +386,11 @@ class _TopUpScreenState extends State<TopUpScreen> {
               children: [
                 JBCircleButton(onTap: () => Navigator.pop(context, _paid)),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Balansni to\'ldirish',
                     style: TextStyle(
-                      color: JB_INK,
+                      color: jb.ink,
                       fontSize: 19,
                       fontWeight: FontWeight.w800,
                     ),
@@ -407,13 +402,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.lock_open_rounded,
-                      size: 16, color: JB_GRAY_LIGHT),
+                  Icon(Icons.lock_open_rounded,
+                      size: 16, color: jb.grayLight),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       widget.purpose!,
-                      style: const TextStyle(fontSize: 13, color: JB_GRAY),
+                      style: TextStyle(fontSize: 13, color: jb.gray),
                     ),
                   ),
                 ],
@@ -433,15 +428,15 @@ class _TopUpScreenState extends State<TopUpScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [JB_BLUE_DARK, JB_BLUE],
+                        colors: [jb.blueDark, jb.blue],
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: JB_BLUE_DARK.withValues(alpha: 0.25),
+                          color: jb.blueDark.withValues(alpha: 0.25),
                           blurRadius: 26,
                           offset: const Offset(0, 10),
                         ),
@@ -489,10 +484,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
   Widget _sectionTitle(String text) => Text(
     text,
-    style: const TextStyle(
+    style: TextStyle(
       fontSize: 15.5,
       fontWeight: FontWeight.w800,
-      color: JB_INK,
+      color: jb.ink,
     ),
   );
 
@@ -515,24 +510,24 @@ class _TopUpScreenState extends State<TopUpScreen> {
           margin: const EdgeInsets.only(bottom: 20),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFFEF2F2),
+            color: jb.redBg,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFFECACA)),
+            border: Border.all(color: jb.redBg),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.block, color: Color(0xFFDC2626), size: 20),
+                  Icon(Icons.block, color: jb.red, size: 20),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Siz qora ro\'yxatdasiz',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF991B1B),
+                        color: jb.red,
                       ),
                     ),
                   ),
@@ -543,9 +538,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
                 balance.blacklistReason?.isNotEmpty == true
                     ? balance.blacklistReason!
                     : 'Vakansiyalar ko\'rinmaydi va ariza yubora olmaysiz.',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF7F1D1D),
+                  color: jb.red,
                   height: 1.4,
                 ),
               ),
@@ -561,9 +556,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
                             const PayBlacklistEvent(),
                           ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDC2626),
+                    backgroundColor: jb.red,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFFCA5A5),
+                    disabledBackgroundColor: jb.red,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -606,8 +601,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
           margin: const EdgeInsets.only(bottom: 20),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF1E3A5F), Color(0xFF1D4ED8)],
+            gradient: LinearGradient(
+              colors: [Color(0xFF1E3A5F), jb.blueDark],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -673,14 +668,14 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: jb.card,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'Summani avtomatik kiritish',
                       style: TextStyle(
-                          color: PRIMARY_BLUE,
+                          color: jb.blue,
                           fontSize: 13,
                           fontWeight: FontWeight.w600),
                     ),
@@ -725,10 +720,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: selected ? PRIMARY_BLUE : Colors.white,
+                  color: selected ? jb.blue : jb.card,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: selected ? PRIMARY_BLUE : const Color(0xFFE5E7EB),
+                    color: selected ? jb.blue : jb.border,
                   ),
                 ),
                 child: Text(
@@ -736,7 +731,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: selected ? Colors.white : DARK_NAVY,
+                    color: selected ? Colors.white : jb.ink,
                   ),
                 ),
               ),
@@ -751,32 +746,32 @@ class _TopUpScreenState extends State<TopUpScreen> {
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onChanged: (_) => setState(() => _selectedAmount = null),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
-        color: DARK_NAVY,
+        color: jb.ink,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         hintText: 'Boshqa summa',
-        hintStyle: const TextStyle(color: GRAY_TEXT),
+        hintStyle: TextStyle(color: jb.gray),
         suffixText: "so'm",
         filled: true,
-        fillColor: Colors.white,
+        fillColor: jb.card,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: jb.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: jb.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5),
+          borderSide: BorderSide(color: jb.blue, width: 1.5),
         ),
       ),
     );
@@ -791,11 +786,11 @@ class _TopUpScreenState extends State<TopUpScreen> {
       builder: (context, state) {
         if (state.systemsStatus == FormzSubmissionStatus.inProgress &&
             state.paymentSystems.isEmpty) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
             child: Center(
               child: CircularProgressIndicator(
-                color: PRIMARY_BLUE,
+                color: jb.blue,
                 strokeWidth: 2,
               ),
             ),
@@ -806,13 +801,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: jb.card,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: jb.border),
             ),
-            child: const Text(
+            child: Text(
               'Aktiv to\'lov tizimi topilmadi',
-              style: TextStyle(color: GRAY_TEXT, fontSize: 13),
+              style: TextStyle(color: jb.gray, fontSize: 13),
             ),
           );
         }
@@ -833,10 +828,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: jb.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? PRIMARY_BLUE : const Color(0xFFE5E7EB),
+            color: selected ? jb.blue : jb.border,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -867,23 +862,23 @@ class _TopUpScreenState extends State<TopUpScreen> {
                 children: [
                   Text(
                     system.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: DARK_NAVY,
+                      color: jb.ink,
                     ),
                   ),
                   if (system.isTest)
-                    const Text(
+                    Text(
                       'Sinov rejimi',
-                      style: TextStyle(fontSize: 11, color: Color(0xFFF59E0B)),
+                      style: TextStyle(fontSize: 11, color: jb.amber),
                     ),
                 ],
               ),
             ),
             Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? PRIMARY_BLUE : const Color(0xFFCBD5E1),
+              color: selected ? jb.blue : jb.borderStrong,
               size: 22,
             ),
           ],
@@ -895,13 +890,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
   Color _systemColor(String code) {
     switch (code) {
       case 'payme':
-        return const Color(0xFF0EA5E9);
+        return jb.cyan;
       case 'click':
-        return const Color(0xFF22C55E);
+        return jb.green;
       case 'paynet':
-        return const Color(0xFFEF4444);
+        return jb.red;
       default:
-        return PRIMARY_BLUE;
+        return jb.blue;
     }
   }
 
@@ -918,7 +913,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
           MediaQuery.of(context).padding.bottom + 12,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: jb.card,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -947,9 +942,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   child: ElevatedButton(
                     onPressed: (_canPay && !loading) ? _onPayPressed : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: PRIMARY_BLUE,
+                      backgroundColor: jb.blue,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: const Color(0xFFCBD5E1),
+                      disabledBackgroundColor: jb.borderStrong,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -997,11 +992,11 @@ class _TopUpScreenState extends State<TopUpScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+        color: jb.amberBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFDE68A)),
+        border: Border.all(color: jb.amberBg),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Text('🧪', style: TextStyle(fontSize: 16)),
           SizedBox(width: 8),
@@ -1011,7 +1006,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF92400E),
+                color: jb.amber,
               ),
             ),
           ),
@@ -1029,7 +1024,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 40),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: jb.card,
             borderRadius: BorderRadius.circular(20),
           ),
           child: _testMode ? _buildTestWaiting() : _buildRealWaiting(),
@@ -1042,21 +1037,21 @@ class _TopUpScreenState extends State<TopUpScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const CircularProgressIndicator(color: PRIMARY_BLUE),
+        CircularProgressIndicator(color: jb.blue),
         const SizedBox(height: 18),
-        const Text(
+        Text(
           'To\'lov kutilmoqda',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: DARK_NAVY,
+            color: jb.ink,
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'To\'lovni yakunlagach bu yerga qayting. Holat avtomatik tekshiriladi.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+          style: TextStyle(fontSize: 13, color: jb.gray),
         ),
         const SizedBox(height: 12),
         // §5 — havolani nusxalash: to'lovni boshqa qurilmada / buxgalter
@@ -1065,7 +1060,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
           onPressed: _copyCheckoutUrl,
           icon: const Icon(Icons.copy_rounded, size: 16),
           label: const Text("To'lov havolasini nusxalash"),
-          style: TextButton.styleFrom(foregroundColor: PRIMARY_BLUE),
+          style: TextButton.styleFrom(foregroundColor: jb.blue),
         ),
         const SizedBox(height: 6),
         Row(
@@ -1074,8 +1069,8 @@ class _TopUpScreenState extends State<TopUpScreen> {
               child: OutlinedButton(
                 onPressed: _stopWaiting,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: GRAY_TEXT,
-                  side: const BorderSide(color: Color(0xFFD1D5DB)),
+                  foregroundColor: jb.gray,
+                  side: BorderSide(color: jb.borderStrong),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1095,7 +1090,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: PRIMARY_BLUE,
+                  backgroundColor: jb.blue,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -1122,19 +1117,19 @@ class _TopUpScreenState extends State<TopUpScreen> {
           children: [
             const Text('🧪', style: TextStyle(fontSize: 40)),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Test to\'lov',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: DARK_NAVY,
+                color: jb.ink,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'TEST REJIMI — haqiqiy pul yechilmaydi. Tasdiqlash uchun tugmani bosing.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+              style: TextStyle(fontSize: 13, color: jb.gray),
             ),
             const SizedBox(height: 18),
             SizedBox(
@@ -1143,9 +1138,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
               child: ElevatedButton(
                 onPressed: confirming ? null : _confirmTestPayment,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF59E0B),
+                  backgroundColor: jb.amber,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFFCD34D),
+                  disabledBackgroundColor: jb.amber,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1173,9 +1168,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
             const SizedBox(height: 6),
             TextButton(
               onPressed: confirming ? null : _stopWaiting,
-              child: const Text(
+              child: Text(
                 'Bekor qilish',
-                style: TextStyle(color: GRAY_TEXT),
+                style: TextStyle(color: jb.gray),
               ),
             ),
           ],

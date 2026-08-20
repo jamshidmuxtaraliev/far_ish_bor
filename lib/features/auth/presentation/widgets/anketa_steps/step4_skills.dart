@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../../core/constants/colors.dart';
 import '../../logic/auth_bloc.dart';
+import '../../../../../core/theme/jb_palette.dart';
 
 class Step4Skills extends StatelessWidget {
   final List<String> selectedLanguages;
@@ -55,12 +55,12 @@ class Step4Skills extends StatelessWidget {
                 children: [
                   const _FieldLabel('Til bilimi'),
                   const SizedBox(height: 4),
-                  const Text('Biladigan tillaringizni tanlang', style: TextStyle(color: GRAY_TEXT, fontSize: 12)),
+                  Text('Biladigan tillaringizni tanlang', style: TextStyle(color: context.jb.gray, fontSize: 12)),
                   const SizedBox(height: 12),
                   if (state.languagesStatus.isInProgress)
-                    const Center(child: Padding(
+                    Center(child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2),
+                      child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2),
                     ))
                   else
                     Wrap(
@@ -74,9 +74,9 @@ class Step4Skills extends StatelessWidget {
                             duration: const Duration(milliseconds: 180),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                             decoration: BoxDecoration(
-                              color: isSelected ? PRIMARY_BLUE : LIGHT_GRAY_BG,
+                              color: isSelected ? context.jb.blue : context.jb.bg,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: isSelected ? PRIMARY_BLUE : const Color(0xFFE5E7EB)),
+                              border: Border.all(color: isSelected ? context.jb.blue : context.jb.border),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -88,7 +88,7 @@ class Step4Skills extends StatelessWidget {
                                 Text(
                                   lang.name,
                                   style: TextStyle(
-                                    color: isSelected ? Colors.white : DARK_NAVY,
+                                    color: isSelected ? Colors.white : context.jb.ink,
                                     fontSize: 13,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                   ),
@@ -108,34 +108,34 @@ class Step4Skills extends StatelessWidget {
                   const SizedBox(height: 4),
                   _ToggleRow(
                     icon: Icons.drive_eta_outlined,
-                    iconColor: const Color(0xFF7C3AED),
+                    iconColor: context.jb.violet,
                     label: "Haydovchilik guvohnomasi",
                     subtitle: "Haydovchilik guvohnomangiz bormi?",
                     value: hasLicense,
                     onChanged: onLicenseChanged,
                   ),
-                  const Divider(height: 20, color: Color(0xFFF3F4F6)),
+                  Divider(height: 20, color: context.jb.cardAlt),
                   _ToggleRow(
                     icon: Icons.directions_car_outlined,
-                    iconColor: const Color(0xFFEA580C),
+                    iconColor: context.jb.amber,
                     label: "Shaxsiy avtomobil",
                     subtitle: "O'z mashinangiz bormi?",
                     value: hasCar,
                     onChanged: onCarChanged,
                   ),
-                  const Divider(height: 20, color: Color(0xFFF3F4F6)),
+                  Divider(height: 20, color: context.jb.cardAlt),
                   _ToggleRow(
                     icon: Icons.fitness_center_outlined,
-                    iconColor: const Color(0xFF16A34A),
+                    iconColor: context.jb.green,
                     label: "Jismoniy ish",
                     subtitle: "Jismoniy mehnatga tayyormisiz?",
                     value: physicalWorkOk,
                     onChanged: onPhysicalChanged,
                   ),
-                  const Divider(height: 20, color: Color(0xFFF3F4F6)),
+                  Divider(height: 20, color: context.jb.cardAlt),
                   _ToggleRow(
                     icon: Icons.computer_outlined,
-                    iconColor: PRIMARY_BLUE,
+                    iconColor: context.jb.blue,
                     label: "Kompyuter savodi",
                     subtitle: "Kompyuter bilan ishlashni bilasizmi?",
                     value: computerLiteracy,
@@ -186,8 +186,8 @@ class _ToggleRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: DARK_NAVY)),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+              Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.jb.ink)),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: context.jb.gray)),
             ],
           ),
         ),
@@ -195,7 +195,7 @@ class _ToggleRow extends StatelessWidget {
           value: value,
           onChanged: onChanged,
           activeThumbColor: Colors.white,
-          activeTrackColor: PRIMARY_BLUE,
+          activeTrackColor: context.jb.blue,
         ),
       ],
     );
@@ -213,7 +213,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
@@ -229,6 +229,6 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY));
+    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink));
   }
 }

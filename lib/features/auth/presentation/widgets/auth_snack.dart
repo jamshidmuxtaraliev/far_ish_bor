@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/auth_flow_models.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Auth oqimidagi xabarlar uchun yagona snackbar.
 ///
@@ -20,7 +20,7 @@ void showAuthSnack(
     ..showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red.shade600 : DARK_NAVY,
+        backgroundColor: isError ? Colors.red.shade600 : context.jb.ink,
         duration: const Duration(seconds: 5),
         action: (actionLabel != null && onAction != null)
             ? SnackBarAction(label: actionLabel, textColor: Colors.white, onPressed: onAction)

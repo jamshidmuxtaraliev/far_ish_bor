@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/application_access.dart';
 import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'job_detail_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Seeker-facing company ("Korxona") profile, opened from a job's company header.
 /// Company details come from the source [vacancy]; the vacancy list is derived
@@ -74,14 +74,9 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlayOnBrand,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocBuilder<VacancyBloc, VacancyState>(
           buildWhen: (p, c) => p.seekerVacancies != c.seekerVacancies || p.myApplications != c.myApplications,
           builder: (context, state) {
@@ -111,11 +106,11 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
           children: [
             Container(
               height: 150,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [JB_BLUE, JB_BLUE_LIGHT],
+                  colors: [jb.blue, jb.blueLight],
                 ),
               ),
             ),
@@ -131,7 +126,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                 width: 84,
                 height: 84,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: jb.card,
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: Colors.white, width: 4),
                   boxShadow: kJbSoftShadow,
@@ -139,7 +134,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   v.companyInitial,
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: JB_BLUE),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: jb.blue),
                 ),
               ),
             ),
@@ -161,7 +156,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                           v.companyName ?? 'Kompaniya',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: JB_INK),
+                          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: jb.ink),
                         ),
                         if (v.companyCategory != null) ...[
                           const SizedBox(height: 4),
@@ -169,7 +164,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                             v.companyCategory!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13.5, color: JB_GRAY),
+                            style: TextStyle(fontSize: 13.5, color: jb.gray),
                           ),
                         ],
                       ],
@@ -180,8 +175,8 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                     onTap: () => setState(() => _subscribed = !_subscribed),
                     child: JBChip(
                       text: _subscribed ? "Obuna bo'lindi" : "Obuna bo'lish",
-                      bg: _subscribed ? JB_INDIGO_TINT : JB_CHIP_BG,
-                      fg: _subscribed ? JB_BLUE : JB_INK,
+                      bg: _subscribed ? jb.blueTint : jb.chipBg,
+                      fg: _subscribed ? jb.blue : jb.ink,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
                   ),
@@ -224,7 +219,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
         if (v.companyAbout != null)
           JBCard(
             padding: const EdgeInsets.all(20),
-            child: Text(v.companyAbout!, style: const TextStyle(fontSize: 14, color: JB_GRAY, height: 1.6)),
+            child: Text(v.companyAbout!, style: TextStyle(fontSize: 14, color: jb.gray, height: 1.6)),
           ),
         if (v.companyAbout != null && rows.isNotEmpty) const SizedBox(height: 14),
         if (rows.isNotEmpty)
@@ -235,7 +230,7 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                 for (int i = 0; i < rows.length; i++)
                   Container(
                     decoration: BoxDecoration(
-                      border: i == rows.length - 1 ? null : const Border(bottom: BorderSide(color: JB_DIVIDER)),
+                      border: i == rows.length - 1 ? null : Border(bottom: BorderSide(color: jb.divider)),
                     ),
                     child: rows[i],
                   ),
@@ -243,9 +238,9 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
             ),
           ),
         if (!hasContent)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 40),
-            child: Center(child: Text("Korxona haqida ma'lumot yo'q", style: TextStyle(color: JB_GRAY, fontSize: 14))),
+            child: Center(child: Text("Korxona haqida ma'lumot yo'q", style: TextStyle(color: jb.gray, fontSize: 14))),
           ),
       ]),
     );
@@ -253,10 +248,10 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
 
   Widget _buildVacancies(List<VacancyModel> vacancies) {
     if (vacancies.isEmpty) {
-      return const SliverToBoxAdapter(
+      return SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.only(top: 40),
-          child: Center(child: Text("Vakansiyalar yo'q", style: TextStyle(color: JB_GRAY, fontSize: 14))),
+          child: Center(child: Text("Vakansiyalar yo'q", style: TextStyle(color: jb.gray, fontSize: 14))),
         ),
       );
     }
@@ -287,20 +282,20 @@ class _InfoTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: muted ? JB_GRAY_LIGHT : JB_BLUE),
+          Icon(icon, size: 18, color: muted ? context.jb.grayLight : context.jb.blue),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12.5, color: JB_GRAY_LIGHT)),
+                Text(label, style: TextStyle(fontSize: 12.5, color: context.jb.grayLight)),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   style: TextStyle(
                     fontSize: muted ? 13 : 14.5,
                     fontWeight: muted ? FontWeight.w500 : FontWeight.w700,
-                    color: muted ? JB_GRAY : JB_INK,
+                    color: muted ? context.jb.gray : context.jb.ink,
                   ),
                 ),
               ],
@@ -325,15 +320,15 @@ class _CompanyVacancyCard extends StatelessWidget {
         children: [
           Text(
             vacancy.jobTypeName ?? "Kasb ko'rsatilmagan",
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: JB_INK),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.jb.ink),
           ),
           const SizedBox(height: 6),
-          Text(vacancy.salaryDisplay, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: JB_BLUE)),
+          Text(vacancy.salaryDisplay, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: context.jb.blue)),
           const SizedBox(height: 10),
           JBChip(
             text: vacancy.status == 'active' ? 'Faol' : (vacancy.status ?? 'Vakansiya'),
-            bg: JB_CHIP_BG,
-            fg: JB_GRAY,
+            bg: context.jb.chipBg,
+            fg: context.jb.gray,
             fontSize: 12.5,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           ),

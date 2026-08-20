@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/custom_cached_network_image.dart';
 import '../../data/models/candidate_model.dart';
 import '../logic/vacancy_bloc.dart';
 import '../widgets/candidate_card.dart' show showUnlockSuccessSheet;
 import '../widgets/otklik_actions.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// "Batafsil" — nomzod to'liq rezyumesi (struktura: web reference 2-rasm; light).
 /// B varianti: `detail.locked == true` bo'lsa rezyume yopiq panel ko'rsatiladi.
@@ -47,14 +47,11 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: context.jb.bg,
         appBar: AppBar(
-          backgroundColor: DARK_NAVY,
+          backgroundColor: context.jb.ink,
           foregroundColor: Colors.white,
           systemOverlayStyle: SystemUiOverlayStyle.light,
           title: const Text('Rezyume',
@@ -72,9 +69,9 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
                   p.assignmentActionStatus != c.assignmentActionStatus,
               listener: (context, state) {
                 if (state.assignmentActionStatus.isSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text('Nomzod suhbatga chaqirildi'),
-                    backgroundColor: GREEN_COLOR,
+                    backgroundColor: context.jb.green,
                   ));
                 } else if (state.assignmentActionStatus.isFailure) {
                   final is402 = state.error?.errorCode == 402;
@@ -83,7 +80,7 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
                         ? 'Avval nomzod kontaktini oching'
                         : (state.error?.errorMessage ??
                             'Amalni bajarib bo\'lmadi')),
-                    backgroundColor: is402 ? const Color(0xFFD97706) : Colors.red,
+                    backgroundColor: is402 ? context.jb.amber : Colors.red,
                   ));
                 }
               },
@@ -129,8 +126,8 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
       builder: (context, state) {
         if (state.candidateDetailStatus.isInProgress &&
             state.candidateDetail == null) {
-          return const Center(
-              child: CircularProgressIndicator(color: PRIMARY_BLUE));
+          return Center(
+              child: CircularProgressIndicator(color: jb.blue));
         }
         if (state.candidateDetailStatus == FormzSubmissionStatus.failure &&
             state.candidateDetail == null) {
@@ -141,8 +138,8 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
         }
         final detail = state.candidateDetail;
         if (detail == null) {
-          return const Center(
-              child: CircularProgressIndicator(color: PRIMARY_BLUE));
+          return Center(
+              child: CircularProgressIndicator(color: jb.blue));
         }
 
         final phone = state.phoneOf(detail);
@@ -211,8 +208,8 @@ class _ProfileHeader extends StatelessWidget {
     final matchPct = card?.matchPercent ?? detail.matchPercent;
     final isRecommended = card?.recommended ?? detail.recommended;
     final matchColor = matchPct >= 80
-        ? const Color(0xFF16A34A)
-        : (matchPct >= 60 ? PRIMARY_BLUE : GRAY_TEXT);
+        ? context.jb.green
+        : (matchPct >= 60 ? context.jb.blue : context.jb.gray);
     final photoUrl = detail.photoUrl ?? card?.photoUrl;
     final category = detail.candidateCategoryLabel ?? card?.candidateCategoryLabel;
 
@@ -223,7 +220,7 @@ class _ProfileHeader extends StatelessWidget {
           height: 60,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-                colors: [PRIMARY_BLUE.withValues(alpha: 0.85), SECONDARY_BLUE]),
+                colors: [context.jb.blue.withValues(alpha: 0.85), context.jb.blueLight]),
             shape: BoxShape.circle,
           ),
           clipBehavior: Clip.antiAlias,
@@ -250,25 +247,25 @@ class _ProfileHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(detail.fullname ?? "Ism noma'lum",
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: DARK_NAVY)),
+                      color: context.jb.ink)),
               const SizedBox(height: 4),
               Text(detail.jobTypeName ?? '—',
-                  style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+                  style: TextStyle(fontSize: 13, color: context.jb.gray)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: [
                   if (isRecommended)
-                    const _Pill('Operator tavsiyasi', VIOLET)
+                    _Pill('Operator tavsiyasi', context.jb.violet)
                   else if (matchPct > 0)
                     _Pill('$matchPct% mos', matchColor),
-                  if (category != null) _Pill(category, const Color(0xFFD97706)),
+                  if (category != null) _Pill(category, context.jb.amber),
                   if (detail.isBlacklisted)
-                    const _Pill("Qora ro'yxatda", Color(0xFFDC2626)),
+                    _Pill("Qora ro'yxatda", context.jb.red),
                 ],
               ),
             ],
@@ -308,22 +305,22 @@ class _ContactBlock extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
+              color: context.jb.greenBg,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: GREEN_COLOR.withValues(alpha: 0.35)),
+              border: Border.all(color: context.jb.green.withValues(alpha: 0.35)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.phone, color: GREEN_COLOR, size: 20),
+                    Icon(Icons.phone, color: context.jb.green, size: 20),
                     const SizedBox(width: 10),
                     Text(phone!,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
-                            color: DARK_NAVY,
+                            color: context.jb.ink,
                             letterSpacing: 0.5)),
                   ],
                 ),
@@ -331,12 +328,12 @@ class _ContactBlock extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.phone_in_talk_outlined,
-                          color: GREEN_COLOR, size: 18),
+                      Icon(Icons.phone_in_talk_outlined,
+                          color: context.jb.green, size: 18),
                       const SizedBox(width: 10),
                       Text(detail.additionalContact!,
                           style:
-                              const TextStyle(fontSize: 14, color: DARK_NAVY)),
+                              TextStyle(fontSize: 14, color: context.jb.ink)),
                     ],
                   ),
                 ],
@@ -365,27 +362,27 @@ class _ContactBlock extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: context.jb.cardAlt,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child:
-                    const Icon(Icons.lock_outline, color: GRAY_TEXT, size: 20),
+                    Icon(Icons.lock_outline, color: context.jb.gray, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Telefon, chat va suhbat yopiq',
+                    Text('Telefon, chat va suhbat yopiq',
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: DARK_NAVY)),
+                            color: context.jb.ink)),
                     Text(
                         isFree
                             ? 'Bepul ochish mumkin'
                             : '${_money(fee)} evaziga',
-                        style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+                        style: TextStyle(fontSize: 12, color: context.jb.gray)),
                   ],
                 ),
               ),
@@ -440,43 +437,43 @@ class _LockedResumePanel extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: context.jb.cardAlt,
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Icon(Icons.lock_outline, color: GRAY_TEXT, size: 30),
+            child: Icon(Icons.lock_outline, color: context.jb.gray, size: 30),
           ),
           const SizedBox(height: 16),
-          const Text("Telefon, chat va suhbat yopiq",
+          Text("Telefon, chat va suhbat yopiq",
               style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: context.jb.ink)),
           const SizedBox(height: 6),
           Text(
             isFree
                 ? 'Bu nomzodni bepul ochishingiz mumkin.'
                 : 'Ochish uchun ${_money(fee)} bir marta yechiladi.',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.4),
+            style: TextStyle(fontSize: 13, color: context.jb.gray, height: 1.4),
           ),
           const SizedBox(height: 18),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text('Ochilgach nima beriladi',
                 style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    color: DARK_NAVY)),
+                    color: context.jb.ink)),
           ),
           const SizedBox(height: 10),
           ..._perks.map((p) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Icon(p.$1, size: 17, color: PRIMARY_BLUE),
+                    Icon(p.$1, size: 17, color: context.jb.blue),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(p.$2,
-                          style: const TextStyle(
-                              fontSize: 13, color: DARK_NAVY, height: 1.3)),
+                          style: TextStyle(
+                              fontSize: 13, color: context.jb.ink, height: 1.3)),
                     ),
                   ],
                 ),
@@ -491,7 +488,7 @@ class _LockedResumePanel extends StatelessWidget {
           if (!isFree && balance != null) ...[
             const SizedBox(height: 10),
             Text('Joriy balans: ${_money(balance)}',
-                style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+                style: TextStyle(fontSize: 12, color: context.jb.gray)),
           ],
         ],
       ),
@@ -534,7 +531,7 @@ class _UnlockWideButton extends StatelessWidget {
             ? 'Ochilmoqda…'
             : (isFree ? 'Bepul ochish' : 'Ochish · ${_money(fee)}')),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isFree ? GREEN_COLOR : PRIMARY_BLUE,
+          backgroundColor: isFree ? context.jb.green : context.jb.blue,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -627,17 +624,17 @@ class _InfoGrid extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(p.$1,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 10.5,
                   letterSpacing: 0.4,
                   fontWeight: FontWeight.w600,
-                  color: GRAY_TEXT)),
+                  color: jb.gray)),
           const SizedBox(height: 3),
           Text(p.$2,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: DARK_NAVY)),
+                  color: jb.ink)),
         ],
       );
 }
@@ -664,16 +661,16 @@ class _ProfessionsSection extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 7),
                       decoration: BoxDecoration(
-                        color: VIOLET.withValues(alpha: 0.10),
+                        color: context.jb.violet.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
                         border:
-                            Border.all(color: VIOLET.withValues(alpha: 0.35)),
+                            Border.all(color: context.jb.violet.withValues(alpha: 0.35)),
                       ),
                       child: Text('${p.name} · ${p.experienceYear} yil',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w500,
-                              color: VIOLET)),
+                              color: context.jb.violet)),
                     ))
                 .toList(),
           ),
@@ -708,13 +705,13 @@ class _WorkHistorySection extends StatelessWidget {
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: h.isCurrent ? GREEN_COLOR : PRIMARY_BLUE,
+                            color: h.isCurrent ? context.jb.green : context.jb.blue,
                             shape: BoxShape.circle,
                           ),
                         ),
                         if (h != history.last)
                           Container(
-                              width: 2, height: 30, color: CARD_BORDER),
+                              width: 2, height: 30, color: context.jb.border),
                       ],
                     ),
                     const SizedBox(width: 12),
@@ -723,20 +720,20 @@ class _WorkHistorySection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(h.position ?? '',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: DARK_NAVY)),
+                                  color: context.jb.ink)),
                           if (h.companyName != null)
                             Text(h.companyName!,
-                                style: const TextStyle(
-                                    fontSize: 12, color: GRAY_TEXT)),
+                                style: TextStyle(
+                                    fontSize: 12, color: context.jb.gray)),
                           Text(
                             h.isCurrent
                                 ? '${h.startYear} — hozir'
                                 : '${h.startYear} — ${h.endYear}',
-                            style: const TextStyle(
-                                fontSize: 11, color: GRAY_TEXT),
+                            style: TextStyle(
+                                fontSize: 11, color: context.jb.gray),
                           ),
                         ],
                       ),
@@ -764,14 +761,14 @@ class _ExtraSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: GRAY_TEXT)),
+                      color: context.jb.gray)),
               const SizedBox(height: 4),
               Text(value,
-                  style: const TextStyle(
-                      fontSize: 13, color: DARK_NAVY, height: 1.4)),
+                  style: TextStyle(
+                      fontSize: 13, color: context.jb.ink, height: 1.4)),
             ],
           ),
         );
@@ -806,9 +803,9 @@ class _Card extends StatelessWidget {
         width: double.infinity,
         padding: padding,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.jb.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: CARD_BORDER),
+          border: Border.all(color: context.jb.border),
           boxShadow: [
             BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -827,8 +824,8 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: const TextStyle(
-            fontSize: 15, fontWeight: FontWeight.bold, color: DARK_NAVY),
+        style: TextStyle(
+            fontSize: 15, fontWeight: FontWeight.bold, color: context.jb.ink),
       );
 }
 
@@ -862,16 +859,16 @@ class _ErrorView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.cloud_off_outlined, size: 64, color: GRAY_TEXT),
+              Icon(Icons.cloud_off_outlined, size: 64, color: context.jb.gray),
               const SizedBox(height: 16),
               Text(message,
-                  style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
+                  style: TextStyle(fontSize: 15, color: context.jb.gray),
                   textAlign: TextAlign.center),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: PRIMARY_BLUE,
+                    backgroundColor: context.jb.blue,
                     foregroundColor: Colors.white),
                 child: const Text('Qayta urinish'),
               ),

@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/enums/media_type_enum.dart';
 import '../../../../core/services/file_picker_service.dart';
 import '../../../../core/services/get_it.dart';
@@ -16,6 +15,7 @@ import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../../auth/presentation/screens/language_screen.dart';
 import '../../data/models/chat_message_model.dart';
 import '../logic/chat_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Suhbat ekranining umumiy tanasi — operator chati (`support:*`) va
 /// ish beruvchi ↔ nomzod chati (`direct:*`) bir xil mexanizmdan foydalanadi
@@ -114,7 +114,7 @@ class _ChatViewState extends State<ChatView> {
   Future<void> _pickAttachment() async {
     final choice = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: jb.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -125,14 +125,14 @@ class _ChatViewState extends State<ChatView> {
               children: [
                 const SizedBox(height: 8),
                 ListTile(
-                  leading: const Icon(Icons.image_outlined, color: PRIMARY_BLUE),
+                  leading: Icon(Icons.image_outlined, color: jb.blue),
                   title: const Text('Rasm'),
                   onTap: () => Navigator.pop(ctx, 'image'),
                 ),
                 ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.insert_drive_file_outlined,
-                    color: PRIMARY_BLUE,
+                    color: jb.blue,
                   ),
                   title: const Text('Fayl'),
                   onTap: () => Navigator.pop(ctx, 'file'),
@@ -169,7 +169,7 @@ class _ChatViewState extends State<ChatView> {
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: jb.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -186,12 +186,12 @@ class _ChatViewState extends State<ChatView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Yuborish',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: DARK_NAVY,
+                        color: jb.ink,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -210,14 +210,14 @@ class _ChatViewState extends State<ChatView> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: jb.cardAlt,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.insert_drive_file_outlined,
-                              color: PRIMARY_BLUE,
+                              color: jb.blue,
                               size: 28,
                             ),
                             const SizedBox(width: 10),
@@ -225,9 +225,9 @@ class _ChatViewState extends State<ChatView> {
                               child: Text(
                                 path.split('/').last,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: DARK_NAVY,
+                                  color: jb.ink,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -238,7 +238,7 @@ class _ChatViewState extends State<ChatView> {
                     const SizedBox(height: 12),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: jb.cardAlt,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: TextField(
@@ -247,10 +247,10 @@ class _ChatViewState extends State<ChatView> {
                         minLines: 1,
                         maxLines: 3,
                         textCapitalization: TextCapitalization.sentences,
-                        style: const TextStyle(fontSize: 15, color: DARK_NAVY),
-                        decoration: const InputDecoration(
+                        style: TextStyle(fontSize: 15, color: jb.ink),
+                        decoration: InputDecoration(
                           hintText: 'Izoh (ixtiyoriy)...',
-                          hintStyle: TextStyle(color: GRAY_TEXT),
+                          hintStyle: TextStyle(color: jb.gray),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 14,
@@ -265,16 +265,16 @@ class _ChatViewState extends State<ChatView> {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text(
+                          child: Text(
                             'Bekor qilish',
-                            style: TextStyle(color: GRAY_TEXT),
+                            style: TextStyle(color: jb.gray),
                           ),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
                           onPressed: () => Navigator.pop(ctx, captionCtrl.text),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: PRIMARY_BLUE,
+                            backgroundColor: jb.blue,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
@@ -337,7 +337,7 @@ class _ChatViewState extends State<ChatView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error ?? 'Fayl yuklanmadi'),
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: context.jb.red,
               ),
             );
           },
@@ -357,7 +357,7 @@ class _ChatViewState extends State<ChatView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error!),
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: context.jb.red,
               ),
             );
           },
@@ -380,7 +380,7 @@ class _ChatViewState extends State<ChatView> {
         ),
       ],
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         appBar: _buildAppBar(),
         body: Column(
           children: [
@@ -401,17 +401,17 @@ class _ChatViewState extends State<ChatView> {
         return Column(
           children: [
             if (!state.connected)
-              const _InfoBanner(
+              _InfoBanner(
                 text: 'Internet yo\'q — xabarlar ulanish tiklangach yuboriladi',
-                color: Color(0xFFFEF3C7),
-                fg: Color(0xFF92400E),
+                color: jb.amberBg,
+                fg: jb.amber,
                 icon: Icons.wifi_off_rounded,
               ),
             if (state.sessionClosed)
-              const _InfoBanner(
+              _InfoBanner(
                 text: 'Suhbat yopildi — yangi xabar yozsangiz qayta ochiladi',
-                color: Color(0xFFF1F5F9),
-                fg: GRAY_TEXT,
+                color: jb.cardAlt,
+                fg: jb.gray,
                 icon: Icons.lock_outline_rounded,
               ),
           ],
@@ -425,8 +425,8 @@ class _ChatViewState extends State<ChatView> {
       builder: (context, state) {
         if (state.historyStatus == FormzSubmissionStatus.inProgress &&
             state.messages.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(color: PRIMARY_BLUE),
+          return Center(
+            child: CircularProgressIndicator(color: jb.blue),
           );
         }
         if (state.messages.isEmpty) {
@@ -468,7 +468,7 @@ class _ChatViewState extends State<ChatView> {
             final index = i - typingOffset;
             // Eng tepa element — eski sahifa yuklanayotgani.
             if (index >= display.length) {
-              return const Padding(
+              return Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Center(
                   child: SizedBox(
@@ -476,7 +476,7 @@ class _ChatViewState extends State<ChatView> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: PRIMARY_BLUE,
+                      color: jb.blue,
                     ),
                   ),
                 ),
@@ -512,9 +512,9 @@ class _ChatViewState extends State<ChatView> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
-      foregroundColor: JB_INK,
+      backgroundColor: jb.card,
+      surfaceTintColor: jb.card,
+      foregroundColor: jb.ink,
       elevation: 0,
       scrolledUnderElevation: 0.5,
       titleSpacing: 0,
@@ -562,7 +562,7 @@ class _ChatViewState extends State<ChatView> {
                       status,
                       style: TextStyle(
                         fontSize: 12,
-                        color: state.connected ? JB_GREEN_FG : JB_GRAY_LIGHT,
+                        color: state.connected ? jb.green : jb.grayLight,
                       ),
                     ),
                   ],
@@ -584,7 +584,7 @@ class _ChatViewState extends State<ChatView> {
         MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: jb.card,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -608,21 +608,21 @@ class _ChatViewState extends State<ChatView> {
                 height: 46,
                 child:
                     uploading
-                        ? const Center(
+                        ? Center(
                           child: SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: PRIMARY_BLUE,
+                              color: jb.blue,
                             ),
                           ),
                         )
                         : IconButton(
                           onPressed: _pickAttachment,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.attach_file_rounded,
-                            color: GRAY_TEXT,
+                            color: jb.gray,
                           ),
                         ),
               ),
@@ -630,7 +630,7 @@ class _ChatViewState extends State<ChatView> {
                 child: Container(
                   constraints: const BoxConstraints(maxHeight: 120),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: jb.cardAlt,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: TextField(
@@ -639,10 +639,10 @@ class _ChatViewState extends State<ChatView> {
                     minLines: 1,
                     maxLines: 5,
                     textCapitalization: TextCapitalization.sentences,
-                    style: const TextStyle(fontSize: 15, color: DARK_NAVY),
-                    decoration: const InputDecoration(
+                    style: TextStyle(fontSize: 15, color: jb.ink),
+                    decoration: InputDecoration(
                       hintText: 'Xabar yozing...',
-                      hintStyle: TextStyle(color: GRAY_TEXT),
+                      hintStyle: TextStyle(color: jb.gray),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
@@ -659,7 +659,7 @@ class _ChatViewState extends State<ChatView> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: state.connected ? PRIMARY_BLUE : JB_GRAY_LIGHT,
+                    color: state.connected ? jb.blue : jb.grayLight,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -689,8 +689,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubbleColor = mine ? PRIMARY_BLUE : Colors.white;
-    final textColor = mine ? Colors.white : DARK_NAVY;
+    final bubbleColor = mine ? context.jb.blue : context.jb.card;
+    final textColor = mine ? Colors.white : context.jb.ink;
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(18),
       topRight: const Radius.circular(18),
@@ -710,10 +710,10 @@ class _MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.only(left: 6, bottom: 3),
               child: Text(
                 message.authorName!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: PRIMARY_BLUE,
+                  color: context.jb.blue,
                 ),
               ),
             ),
@@ -733,7 +733,7 @@ class _MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 color: bubbleColor,
                 borderRadius: radius,
-                border: mine ? null : Border.all(color: const Color(0xFFE5E7EB)),
+                border: mine ? null : Border.all(color: context.jb.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -768,25 +768,25 @@ class _MessageBubble extends StatelessWidget {
                 if (message.timeDisplay.isNotEmpty)
                   Text(
                     message.timeDisplay,
-                    style: const TextStyle(fontSize: 11, color: GRAY_TEXT),
+                    style: TextStyle(fontSize: 11, color: context.jb.gray),
                   ),
                 if (mine) ...[
                   const SizedBox(width: 4),
                   switch (message.sendStatus) {
-                    ChatSendStatus.sending => const Icon(
+                    ChatSendStatus.sending => Icon(
                       Icons.access_time_rounded,
                       size: 13,
-                      color: GRAY_TEXT,
+                      color: context.jb.gray,
                     ),
-                    ChatSendStatus.sent => const Icon(
+                    ChatSendStatus.sent => Icon(
                       Icons.done_rounded,
                       size: 14,
-                      color: PRIMARY_BLUE,
+                      color: context.jb.blue,
                     ),
-                    ChatSendStatus.failed => const Icon(
+                    ChatSendStatus.failed => Icon(
                       Icons.error_outline_rounded,
                       size: 14,
-                      color: Color(0xFFDC2626),
+                      color: context.jb.red,
                     ),
                   },
                 ],
@@ -794,11 +794,11 @@ class _MessageBubble extends StatelessWidget {
             ),
           ),
           if (message.sendStatus == ChatSendStatus.failed)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(top: 2, right: 4),
               child: Text(
                 'Yuborilmadi — qayta yuborish uchun bosing',
-                style: TextStyle(fontSize: 10, color: Color(0xFFDC2626)),
+                style: TextStyle(fontSize: 10, color: context.jb.red),
               ),
             ),
         ],
@@ -836,14 +836,14 @@ class _Attachment extends StatelessWidget {
                 (_, __) => Container(
                   width: MediaQuery.sizeOf(context).width * 0.6,
                   height: 160,
-                  color: const Color(0xFFF1F5F9),
-                  child: const Center(
+                  color: context.jb.cardAlt,
+                  child: Center(
                     child: SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: PRIMARY_BLUE,
+                        color: context.jb.blue,
                       ),
                     ),
                   ),
@@ -852,9 +852,9 @@ class _Attachment extends StatelessWidget {
                 (_, __, ___) => Container(
                   width: MediaQuery.sizeOf(context).width * 0.6,
                   height: 120,
-                  color: const Color(0xFFF1F5F9),
-                  child: const Icon(Icons.broken_image_outlined,
-                      color: GRAY_TEXT),
+                  color: context.jb.cardAlt,
+                  child: Icon(Icons.broken_image_outlined,
+                      color: context.jb.gray),
                 ),
           ),
         ),
@@ -903,13 +903,13 @@ class _SystemNote extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: context.jb.cardAlt,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             message.text ?? '',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: GRAY_TEXT),
+            style: TextStyle(fontSize: 12, color: context.jb.gray),
           ),
         ),
       ),
@@ -929,15 +929,15 @@ class _DateSeparator extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.jb.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: context.jb.border),
           ),
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: GRAY_TEXT,
+              color: context.jb.gray,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -988,20 +988,20 @@ class _TypingBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.jb.card,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
             bottomRight: Radius.circular(18),
             bottomLeft: Radius.circular(4),
           ),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: context.jb.border),
         ),
         child: Text(
           '$label yozmoqda...',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: GRAY_TEXT,
+            color: context.jb.gray,
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -1025,13 +1025,13 @@ class ChatCenterNote extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 56, color: const Color(0xFFCBD5E1)),
+              Icon(icon, size: 56, color: context.jb.borderStrong),
               const SizedBox(height: 16),
             ],
             Text(
               text,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
+              style: TextStyle(fontSize: 14, color: context.jb.gray),
             ),
           ],
         ),

@@ -2,15 +2,13 @@ import 'package:jobUp24/core/utils/utils.dart';
 
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
-import '../constants/constants.dart';
-import '../theme/app_theme.dart';
+import '../theme/jb_palette.dart';
 
 class CustomButton extends StatelessWidget {
   final String title;
   final Widget? child;
   final VoidCallback onPressed;
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final Color textColor;
   final double borderRadius;
   final double height;
@@ -26,7 +24,7 @@ class CustomButton extends StatelessWidget {
     required this.title,
     this.child,
     required this.onPressed,
-    this.backgroundColor = BUTTON_COLOR,
+    this.backgroundColor,
     this.textColor = Colors.white,
     this.borderRadius = 14.0,
     this.height = 52.0,
@@ -53,12 +51,12 @@ class CustomButton extends StatelessWidget {
               },
         style: ElevatedButton.styleFrom(
           padding: padding,
-          backgroundColor: isDisabled ? Colors.grey.shade300 : backgroundColor,
+          backgroundColor: isDisabled ? context.jb.border : (backgroundColor ?? context.jb.green),
           foregroundColor: textColor,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
-          textStyle: lightTheme().textTheme.headlineMedium?.copyWith(
-            color: isDisabled ? Colors.grey.shade500 : textColor,
+          textStyle: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: isDisabled ? context.jb.grayLight : textColor,
             fontSize: fontSize,
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class EmptyView extends StatelessWidget {
   final String message;
@@ -29,24 +29,24 @@ class EmptyView extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: JB_INDIGO_TINT,
+                color: context.jb.blueTint,
                 borderRadius: BorderRadius.circular(24),
               ),
               alignment: Alignment.center,
-              child: Icon(icon, size: 34, color: JB_BLUE),
+              child: Icon(icon, size: 34, color: context.jb.blue),
             ),
             const SizedBox(height: 18),
             Text(message,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w700,
-                    color: JB_INK),
+                    color: context.jb.ink),
                 textAlign: TextAlign.center),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!,
-                  style: const TextStyle(
-                      fontSize: 13, color: JB_GRAY, height: 1.4),
+                  style: TextStyle(
+                      fontSize: 13, color: context.jb.gray, height: 1.4),
                   textAlign: TextAlign.center),
             ],
             if (action != null) ...[
@@ -77,17 +77,17 @@ class ErrorView extends StatelessWidget {
               width: 76,
               height: 76,
               decoration: BoxDecoration(
-                color: JB_RED_BG,
+                color: context.jb.redBg,
                 borderRadius: BorderRadius.circular(24),
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.cloud_off_rounded,
-                  size: 34, color: JB_RED_FG),
+              child: Icon(Icons.cloud_off_rounded,
+                  size: 34, color: context.jb.red),
             ),
             const SizedBox(height: 18),
             Text(message,
-                style: const TextStyle(
-                    fontSize: 14, color: JB_GRAY, height: 1.4),
+                style: TextStyle(
+                    fontSize: 14, color: context.jb.gray, height: 1.4),
                 textAlign: TextAlign.center),
             const SizedBox(height: 18),
             JBPillButton(

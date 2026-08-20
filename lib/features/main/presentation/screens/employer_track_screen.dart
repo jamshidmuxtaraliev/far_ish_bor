@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../../core/utils/geo_utils.dart';
 import '../../data/models/interview_model.dart';
 import '../logic/interview_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Employer — Track / jonli kuzatish (PROMPT_SUHBATLAR_MOBILE.md §3.4).
 class EmployerTrackScreen extends StatefulWidget {
@@ -53,15 +53,15 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: JB_BG,
+      backgroundColor: context.jb.bg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: JB_INK,
+        backgroundColor: context.jb.card,
+        foregroundColor: context.jb.ink,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text('Kuzatish',
+        title: Text('Kuzatish',
             style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w800, color: JB_INK)),
+                fontSize: 18, fontWeight: FontWeight.w800, color: context.jb.ink)),
       ),
       body: BlocBuilder<InterviewBloc, InterviewState>(
         buildWhen: (p, c) =>
@@ -90,13 +90,13 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
 
   Widget _topBar(String travel) {
     final (bg, fg) = switch (travel) {
-      'on_way' => (JB_AMBER_BG, JB_AMBER_FG),
-      'arrived' => (JB_GREEN_BG, JB_GREEN_FG),
-      _ => (JB_CHIP_BG, JB_GRAY),
+      'on_way' => (jb.amberBg, jb.amber),
+      'arrived' => (jb.greenBg, jb.green),
+      _ => (jb.chipBg, jb.gray),
     };
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: jb.card,
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
       child: Row(
         children: [
@@ -105,19 +105,19 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_i.anketa?.fullname ?? 'Nomzod',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: JB_INK)),
+                        color: jb.ink)),
                 if ((_i.anketa?.phoneNumber ?? '').isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.phone_rounded,
-                          size: 14, color: JB_GRAY_LIGHT),
+                      Icon(Icons.phone_rounded,
+                          size: 14, color: jb.grayLight),
                       const SizedBox(width: 6),
                       Text(_i.anketa!.phoneNumber!,
-                          style: const TextStyle(fontSize: 13, color: JB_GRAY)),
+                          style: TextStyle(fontSize: 13, color: jb.gray)),
                     ],
                   ),
                 ],
@@ -144,17 +144,17 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   Widget _warning(String text) {
     return Container(
       width: double.infinity,
-      color: JB_AMBER_BG,
+      color: jb.amberBg,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, size: 18, color: JB_AMBER_FG),
+          Icon(Icons.warning_amber_rounded, size: 18, color: jb.amber),
           const SizedBox(width: 8),
           Expanded(
             child: Text(text,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12.5,
-                    color: JB_AMBER_FG,
+                    color: jb.amber,
                     fontWeight: FontWeight.w600)),
           ),
         ],
@@ -188,7 +188,7 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
         Polyline(
           polylineId: const PolylineId('route'),
           points: [candidatePos, _usPos!],
-          color: JB_AMBER_FG,
+          color: jb.amber,
           width: 4,
           patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         ),
@@ -208,8 +208,8 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
   Widget _bottomInfo(LiveLocation? loc) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: jb.card,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -221,18 +221,18 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
       child: Column(
         children: [
           if (loc == null)
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: JB_AMBER_FG),
+                      strokeWidth: 2, color: jb.amber),
                 ),
                 SizedBox(width: 10),
                 Text('Nomzod lokatsiyani ulashishini kutilmoqda…',
-                    style: TextStyle(fontSize: 13, color: JB_GRAY)),
+                    style: TextStyle(fontSize: 13, color: jb.gray)),
               ],
             )
           else ...[
@@ -241,19 +241,19 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
                 children: [
                   Expanded(
                       child: _statCard(Icons.timer_outlined, 'Yetib borish',
-                          _eta(loc), JB_BLUE, JB_INDIGO_TINT)),
+                          _eta(loc), jb.blue, jb.blueTint)),
                   const SizedBox(width: 12),
                   Expanded(
                       child: _statCard(Icons.straighten_rounded, 'Masofa',
-                          _distance(loc), JB_AMBER_FG, JB_AMBER_BG)),
+                          _distance(loc), jb.amber, jb.amberBg)),
                 ],
               )
             else
-              const Text('Faqat nomzod nuqtasi ko\'rsatilmoqda',
-                  style: TextStyle(fontSize: 13, color: JB_GRAY)),
+              Text('Faqat nomzod nuqtasi ko\'rsatilmoqda',
+                  style: TextStyle(fontSize: 13, color: jb.gray)),
             const SizedBox(height: 12),
             Text('Oxirgi yangilanish: ${_time(loc.at)}',
-                style: const TextStyle(fontSize: 11.5, color: JB_GRAY_LIGHT)),
+                style: TextStyle(fontSize: 11.5, color: jb.grayLight)),
           ],
         ],
       ),
@@ -277,7 +277,7 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: JB_CHIP_BG,
+        color: jb.chipBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -289,15 +289,15 @@ class _EmployerTrackScreenState extends State<EmployerTrackScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: const TextStyle(fontSize: 11, color: JB_GRAY)),
+                    style: TextStyle(fontSize: 11, color: jb.gray)),
                 const SizedBox(height: 3),
                 Text(value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
-                        color: JB_INK)),
+                        color: jb.ink)),
               ],
             ),
           ),

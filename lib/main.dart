@@ -11,6 +11,7 @@ import 'core/locale/locale_cubit.dart';
 import 'core/services/connection_service.dart';
 import 'core/services/get_it.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/jb_palette.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/logic/auth_bloc.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
@@ -77,6 +78,10 @@ class MyApp extends StatelessWidget {
                     navigatorKey: MyApp.alice.getNavigatorKey(),
                     home: const SplashScreen(),
                     builder: (context, child) {
+                      // MaterialApp qaysi mavzuni tanlagan bo'lsa (light/dark/
+                      // system), global palitrani o'shanga moslaymiz — pastdagi
+                      // widget'lar qurilishidan oldin ishlaydi.
+                      syncJbPalette(Theme.of(context).brightness);
                       return MediaQuery(
                         data: MediaQuery.of(
                           context,

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../billing/data/models/balance_model.dart' show formatSom;
 import '../../../billing/presentation/logic/billing_bloc.dart';
@@ -17,6 +16,7 @@ import '../widgets/candidate_card.dart' show CandidateUnlockListener;
 import '../widgets/nomzod_cards.dart';
 import '../widgets/state_views.dart';
 import 'unlock_history_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Ish beruvchi "Nomzodlar" ekrani — PROMPT_NOMZODLAR_3TAB_MOBILE.md.
 ///
@@ -204,12 +204,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: CandidateUnlockListener(
         child: MultiBlocListener(
           listeners: [
@@ -235,7 +230,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
             ),
           ],
           child: Scaffold(
-            backgroundColor: JB_BG,
+            backgroundColor: context.jb.bg,
             body: BlocBuilder<VacancyBloc, VacancyState>(
               builder: (context, state) {
                 final counts = _counts(state);
@@ -264,21 +259,21 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
         content: Text(is402
             ? 'Avval nomzod kontaktini oching'
             : (state.error?.errorMessage ?? 'Amalni bajarib bo\'lmadi')),
-        backgroundColor: is402 ? JB_AMBER_FG : JB_RED_FG,
+        backgroundColor: is402 ? context.jb.amber : context.jb.red,
       ),
     );
   }
 
   void _onApplicationStatusChanged(BuildContext context, VacancyState state) {
     if (state.updateEmpAppStatus.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Holat yangilandi'),
-        backgroundColor: JB_GREEN_FG,
+        backgroundColor: context.jb.green,
       ));
     } else if (state.updateEmpAppStatus.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(state.error?.errorMessage ?? 'Holatni o\'zgartirib bo\'lmadi'),
-        backgroundColor: JB_RED_FG,
+        backgroundColor: context.jb.red,
       ));
     }
   }
@@ -288,7 +283,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   Widget _header(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: context.jb.card,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
         left: 20,
@@ -297,10 +292,10 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text('Nomzodlar',
                 style: TextStyle(
-                    color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
+                    color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
           ),
           _balanceChip(context),
           const SizedBox(width: 8),
@@ -310,10 +305,10 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
             child: Container(
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
-                color: JB_CHIP_BG,
+                color: context.jb.chipBg,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.history_rounded, color: JB_GRAY, size: 20),
+              child: Icon(Icons.history_rounded, color: context.jb.gray, size: 20),
             ),
           ),
         ],
@@ -327,10 +322,10 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       buildWhen: (p, c) => p.contactAccess != c.contactAccess,
       builder: (context, vacState) {
         if (!vacState.isOtklikMode) {
-          return const JBChip(
+          return JBChip(
             text: '✦ Premium',
-            bg: JB_GREEN_BG,
-            fg: JB_GREEN_FG,
+            bg: context.jb.greenBg,
+            fg: context.jb.green,
             fontSize: 12,
             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           );
@@ -344,7 +339,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: JB_INDIGO_TINT,
+              color: context.jb.blueTint,
               borderRadius: BorderRadius.circular(100),
             ),
             child: BlocBuilder<BillingBloc, BillingState>(
@@ -367,14 +362,14 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                               (fallback != null
                                   ? formatSom(fallback)
                                   : "0 so'm")),
-                      style: const TextStyle(
-                          color: JB_BLUE,
+                      style: TextStyle(
+                          color: context.jb.blue,
                           fontSize: 12,
                           fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(width: 5),
-                    const Icon(Icons.add_circle_outline,
-                        color: JB_BLUE, size: 16),
+                    Icon(Icons.add_circle_outline,
+                        color: context.jb.blue, size: 16),
                   ],
                 );
               },
@@ -394,12 +389,12 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       _MainTab.matched: 'Mos nomzodlar',
     };
     return Container(
-      color: Colors.white,
+      color: jb.card,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: JB_CHIP_BG,
+          color: jb.chipBg,
           borderRadius: BorderRadius.circular(100),
         ),
         child: Row(
@@ -418,7 +413,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: active ? JB_BLUE : Colors.transparent,
+                    color: active ? jb.blue : Colors.transparent,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -428,7 +423,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: active ? Colors.white : JB_GRAY,
+                      color: active ? Colors.white : jb.gray,
                     ),
                   ),
                 ),
@@ -461,10 +456,10 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                   height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: jb.card,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: _selectedReqId == null ? JB_BORDER : JB_BLUE,
+                        color: _selectedReqId == null ? jb.border : jb.blue,
                         width: 1.5),
                   ),
                   child: Row(
@@ -472,7 +467,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                       Icon(Icons.business_center_rounded,
                           size: 17,
                           color:
-                              _selectedReqId == null ? JB_GRAY_LIGHT : JB_BLUE),
+                              _selectedReqId == null ? jb.grayLight : jb.blue),
                       const SizedBox(width: 9),
                       Expanded(
                         child: Text(
@@ -482,12 +477,12 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: _selectedReqId == null ? JB_INK : JB_BLUE,
+                            color: _selectedReqId == null ? jb.ink : jb.blue,
                           ),
                         ),
                       ),
-                      const Icon(Icons.keyboard_arrow_down_rounded,
-                          color: JB_GRAY, size: 20),
+                      Icon(Icons.keyboard_arrow_down_rounded,
+                          color: jb.gray, size: 20),
                     ],
                   ),
                 ),
@@ -501,22 +496,22 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
               height: 46,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: _archive ? JB_INK : Colors.white,
+                color: _archive ? jb.ink : jb.card,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                    color: _archive ? JB_INK : JB_BORDER, width: 1.5),
+                    color: _archive ? jb.ink : jb.border, width: 1.5),
               ),
               child: Row(
                 children: [
                   Icon(Icons.inventory_2_outlined,
-                      size: 17, color: _archive ? Colors.white : JB_INK),
+                      size: 17, color: _archive ? Colors.white : jb.ink),
                   const SizedBox(width: 7),
                   Text(
                     'Arxiv ($archiveCount)',
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: _archive ? Colors.white : JB_INK),
+                        color: _archive ? Colors.white : jb.ink),
                   ),
                 ],
               ),
@@ -538,7 +533,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
 
     final picked = await showModalBottomSheet<int>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: jb.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
@@ -560,9 +555,9 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: jb.card,
           borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: JB_BORDER, width: 1.5),
+          border: Border.all(color: jb.border, width: 1.5),
         ),
         child: Row(
           children: kSegmentBuckets.map((b) {
@@ -576,7 +571,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                   duration: const Duration(milliseconds: 160),
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
-                    color: active ? JB_INDIGO_TINT : Colors.transparent,
+                    color: active ? jb.blueTint : Colors.transparent,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Row(
@@ -590,7 +585,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: active ? JB_BLUE : JB_GRAY,
+                            color: active ? jb.blue : jb.gray,
                           ),
                         ),
                       ),
@@ -599,7 +594,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 7, vertical: 1),
                         decoration: BoxDecoration(
-                          color: active ? JB_BLUE : JB_CHIP_BG,
+                          color: active ? jb.blue : jb.chipBg,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
@@ -607,7 +602,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: active ? Colors.white : JB_GRAY,
+                            color: active ? Colors.white : jb.gray,
                           ),
                         ),
                       ),
@@ -635,7 +630,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       );
     }
     if (_loadingCurrentTab(state)) {
-      return const Center(child: CircularProgressIndicator(color: JB_BLUE));
+      return Center(child: CircularProgressIndicator(color: jb.blue));
     }
     if (_failedCurrentTab(state)) {
       return ErrorView(
@@ -667,7 +662,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     if (children.isEmpty) return _empty();
 
     return RefreshIndicator(
-      color: JB_BLUE,
+      color: jb.blue,
       onRefresh: () async => _loadAll(),
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
@@ -677,7 +672,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
             ? Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text('${children.length} ta nomzod',
-                    style: const TextStyle(fontSize: 13, color: JB_GRAY)),
+                    style: TextStyle(fontSize: 13, color: jb.gray)),
               )
             : children[i - 1],
       ),
@@ -687,7 +682,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   Widget _empty() {
     return LayoutBuilder(
       builder: (context, constraints) => RefreshIndicator(
-        color: JB_BLUE,
+        color: jb.blue,
         onRefresh: () async => _loadAll(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -722,7 +717,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   Future<void> _openStatusSheet(EmployerApplicationModel app) async {
     final picked = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: jb.card,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
@@ -773,7 +768,7 @@ class _VacancySheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const _SheetHandle(),
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
@@ -781,7 +776,7 @@ class _VacancySheet extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: JB_INK)),
+                        color: context.jb.ink)),
               ),
             ),
             Flexible(
@@ -835,10 +830,10 @@ class _VacancySheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           decoration: BoxDecoration(
-            color: active ? JB_INDIGO_TINT : Colors.white,
+            color: active ? context.jb.blueTint : context.jb.card,
             borderRadius: BorderRadius.circular(16),
             border:
-                Border.all(color: active ? JB_BLUE : JB_BORDER, width: 1.5),
+                Border.all(color: active ? context.jb.blue : context.jb.border, width: 1.5),
           ),
           child: Row(
             children: [
@@ -847,7 +842,7 @@ class _VacancySheet extends StatelessWidget {
                     ? Icons.radio_button_checked_rounded
                     : Icons.radio_button_unchecked_rounded,
                 size: 20,
-                color: active ? JB_BLUE : JB_GRAY_LIGHT,
+                color: active ? context.jb.blue : context.jb.grayLight,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -860,20 +855,20 @@ class _VacancySheet extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
-                            color: active ? JB_BLUE : JB_INK)),
+                            color: active ? context.jb.blue : context.jb.ink)),
                     const SizedBox(height: 2),
                     Text(subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: JB_GRAY)),
+                        style: TextStyle(fontSize: 12, color: context.jb.gray)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               JBChip(
                 text: '$count',
-                bg: active ? Colors.white : JB_CHIP_BG,
-                fg: active ? JB_BLUE : JB_GRAY,
+                bg: active ? context.jb.card : context.jb.chipBg,
+                fg: active ? context.jb.blue : context.jb.gray,
                 fontSize: 12,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -907,14 +902,14 @@ class _StatusSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Holatni o\'zgartirish',
+                  Text('Holatni o\'zgartirish',
                       style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
-                          color: JB_INK)),
+                          color: context.jb.ink)),
                   const SizedBox(height: 4),
                   Text('Joriy holat: ${applicationStatusLabel(current)}',
-                      style: const TextStyle(fontSize: 13, color: JB_GRAY)),
+                      style: TextStyle(fontSize: 13, color: context.jb.gray)),
                 ],
               ),
             ),
@@ -940,10 +935,10 @@ class _StatusSheet extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.jb.card,
                             borderRadius: BorderRadius.circular(16),
                             border:
-                                Border.all(color: JB_BORDER, width: 1.5),
+                                Border.all(color: context.jb.border, width: 1.5),
                           ),
                           child: Row(
                             children: [
@@ -959,24 +954,24 @@ class _StatusSheet extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   applicationActionLabel(s),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: JB_INK),
+                                      color: context.jb.ink),
                                 ),
                               ),
                               if (isCurrent)
-                                const JBChip(
+                                JBChip(
                                   text: 'Joriy',
-                                  bg: JB_CHIP_BG,
-                                  fg: JB_GRAY,
+                                  bg: context.jb.chipBg,
+                                  fg: context.jb.gray,
                                   fontSize: 11,
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 9, vertical: 4),
                                 )
                               else
-                                const Icon(Icons.chevron_right_rounded,
-                                    color: JB_GRAY_LIGHT, size: 20),
+                                Icon(Icons.chevron_right_rounded,
+                                    color: context.jb.grayLight, size: 20),
                             ],
                           ),
                         ),
@@ -1002,7 +997,7 @@ class _SheetHandle extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: JB_BORDER,
+          color: context.jb.border,
           borderRadius: BorderRadius.circular(100),
         ),
       );

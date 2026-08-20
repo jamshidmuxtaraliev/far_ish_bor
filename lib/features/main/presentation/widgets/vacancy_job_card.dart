@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/vacancy_model.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Job card used across Home (Tavsiya etilgan), Jobs list and Saved.
 /// Matches the Jobup24 design: white soft-shadow card, green match badge and a
@@ -31,12 +31,12 @@ class VacancyJobCard extends StatelessWidget {
                   children: [
                     Text(
                       vacancy.jobTypeName ?? "Kasb ko'rsatilmagan",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: JB_INK),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.jb.ink),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       vacancy.companyName ?? '',
-                      style: const TextStyle(fontSize: 13.5, color: JB_GRAY),
+                      style: TextStyle(fontSize: 13.5, color: context.jb.gray),
                     ),
                   ],
                 ),
@@ -45,21 +45,21 @@ class VacancyJobCard extends StatelessWidget {
               Container(
                 width: 38,
                 height: 38,
-                decoration: BoxDecoration(color: JB_CHIP_BG, borderRadius: BorderRadius.circular(11)),
+                decoration: BoxDecoration(color: context.jb.chipBg, borderRadius: BorderRadius.circular(11)),
                 alignment: Alignment.center,
-                child: const Icon(Icons.grid_view_rounded, color: JB_GRAY, size: 18),
+                child: Icon(Icons.grid_view_rounded, color: context.jb.gray, size: 18),
               ),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              const Icon(Icons.payments_outlined, size: 15, color: JB_GRAY_LIGHT),
+              Icon(Icons.payments_outlined, size: 15, color: context.jb.grayLight),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   vacancy.salaryDisplay,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: JB_INK),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.jb.ink),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -69,12 +69,12 @@ class VacancyJobCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 15, color: JB_GRAY_LIGHT),
+                Icon(Icons.location_on_outlined, size: 15, color: context.jb.grayLight),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     vacancy.companyAddress!,
-                    style: const TextStyle(fontSize: 13, color: JB_GRAY),
+                    style: TextStyle(fontSize: 13, color: context.jb.gray),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

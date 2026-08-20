@@ -1,6 +1,7 @@
 import 'package:jobUp24/core/extensions/extensions.dart';
 import 'package:jobUp24/generated/assets.dart';
 import 'package:flutter/material.dart';
+import '../theme/jb_palette.dart';
 
 class SearchField extends StatelessWidget {
   final String? hintText;
@@ -17,7 +18,7 @@ class SearchField extends StatelessWidget {
       decoration: BoxDecoration(color: context.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          Image.asset(Assets.icons.search.path, color: Colors.grey, scale: 4),
+          Image.asset(Assets.icons.search.path, color: context.jb.gray, scale: 4),
           SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -26,7 +27,7 @@ class SearchField extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: hintText ?? context.l10n.searchShort,
                 border: InputBorder.none,
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                hintStyle: TextStyle(color: context.jb.gray, fontSize: 16),
               ),
             ),
           ),

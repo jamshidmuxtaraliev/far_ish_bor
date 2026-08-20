@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../auth/data/models/resume_model.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Profil ekranidagi "Rezyume (PDF)" bloki.
 ///
@@ -54,28 +54,28 @@ class ResumeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const JBIconTile(
+              JBIconTile(
                 icon: Icons.picture_as_pdf_outlined,
-                bg: JB_RED_BG,
-                fg: JB_RED_FG,
+                bg: context.jb.redBg,
+                fg: context.jb.red,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Rezyume (PDF)',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: JB_INK,
+                        color: context.jb.ink,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _subtitle(),
-                      style: const TextStyle(fontSize: 12.5, color: JB_GRAY, height: 1.3),
+                      style: TextStyle(fontSize: 12.5, color: context.jb.gray, height: 1.3),
                     ),
                   ],
                 ),
@@ -124,8 +124,8 @@ class ResumeCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress > 0 ? progress : null,
               minHeight: 6,
-              backgroundColor: JB_CHIP_BG,
-              valueColor: const AlwaysStoppedAnimation(JB_BLUE),
+              backgroundColor: jb.chipBg,
+              valueColor: AlwaysStoppedAnimation(jb.blue),
             ),
           ),
           const SizedBox(height: 12),
@@ -183,8 +183,8 @@ class ResumeCard extends StatelessWidget {
           _buildNote(
             icon: Icons.add_a_photo_outlined,
             text: info.message ?? 'Rezyume uchun avval suratingizni yuklang',
-            bg: JB_AMBER_BG,
-            fg: JB_AMBER_FG,
+            bg: jb.amberBg,
+            fg: jb.amber,
           ),
           const SizedBox(height: 12),
           JBPillButton(
@@ -205,8 +205,8 @@ class ResumeCard extends StatelessWidget {
           icon: Icons.lock_outline,
           text: info.message ??
               'Rezyume anketa tasdiqlangandan keyin yuklab olinadi',
-          bg: JB_CHIP_BG,
-          fg: JB_GRAY,
+          bg: jb.chipBg,
+          fg: jb.gray,
         ),
         const SizedBox(height: 12),
         const JBPillButton(
@@ -247,12 +247,12 @@ class ResumeCard extends StatelessWidget {
   Widget _buildSavedRow() {
     return Row(
       children: [
-        const Icon(Icons.check_circle_outline, size: 15, color: JB_GREEN_FG),
+        Icon(Icons.check_circle_outline, size: 15, color: jb.green),
         const SizedBox(width: 6),
-        const Expanded(
+        Expanded(
           child: Text(
             'Oxirgi yuklangan rezyume',
-            style: TextStyle(fontSize: 12, color: JB_GRAY),
+            style: TextStyle(fontSize: 12, color: jb.gray),
           ),
         ),
         _SavedAction(icon: Icons.open_in_new, label: 'Ochish', onTap: onOpenSaved),
@@ -286,14 +286,14 @@ class _SavedAction extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: JB_BLUE),
+            Icon(icon, size: 14, color: context.jb.blue),
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
-                color: JB_BLUE,
+                color: context.jb.blue,
               ),
             ),
           ],

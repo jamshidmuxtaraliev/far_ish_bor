@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../billing/presentation/logic/billing_bloc.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../../chat/presentation/screens/direct_chat_screen.dart';
@@ -11,6 +10,7 @@ import '../../data/models/contact_unlock_model.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'nomzod_cards.dart' show pickSchedule;
+import '../../../../core/theme/jb_palette.dart';
 
 /// PROMPT_OTKLIK_MOBILE.md — otklik oqimining umumiy amallari:
 /// ochish (§4) · to'lov (§5) · uchta imkoniyat: telefon · chat · suhbat (§6, §8).
@@ -64,22 +64,22 @@ Future<void> startUnlock(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Nomzodni ochish',
-          style: TextStyle(fontWeight: FontWeight.w800, color: JB_INK)),
+      title: Text('Nomzodni ochish',
+          style: TextStyle(fontWeight: FontWeight.w800, color: context.jb.ink)),
       content: Text(
         "${formatAmount(fee)} so'm hisobingizdan yechiladi.\n"
         'Nomzodning telefoni, chati va suhbat imkoniyati ochiladi.',
-        style: const TextStyle(color: JB_GRAY, height: 1.4),
+        style: TextStyle(color: context.jb.gray, height: 1.4),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Bekor', style: TextStyle(color: JB_GRAY)),
+          child: Text('Bekor', style: TextStyle(color: context.jb.gray)),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: JB_BLUE,
+            backgroundColor: context.jb.blue,
             foregroundColor: Colors.white,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -133,19 +133,19 @@ void showInsufficientBalanceDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Balans yetarli emas',
-          style: TextStyle(fontWeight: FontWeight.w800, color: JB_INK)),
+      title: Text('Balans yetarli emas',
+          style: TextStyle(fontWeight: FontWeight.w800, color: context.jb.ink)),
       content: Text(
         price > 0
             ? "Nomzodni ochish uchun ${formatAmount(price)} so'm kerak. "
                 "Hisobni to'ldiring."
             : "Nomzodni ochish uchun hisobni to'ldiring.",
-        style: const TextStyle(color: JB_GRAY, height: 1.4),
+        style: TextStyle(color: context.jb.gray, height: 1.4),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Bekor', style: TextStyle(color: JB_GRAY)),
+          child: Text('Bekor', style: TextStyle(color: context.jb.gray)),
         ),
         ElevatedButton(
           onPressed: () {
@@ -162,7 +162,7 @@ void showInsufficientBalanceDialog(
             }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: JB_BLUE,
+            backgroundColor: context.jb.blue,
             foregroundColor: Colors.white,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -255,7 +255,7 @@ Future<int?> _pickVacancy(
     BuildContext context, List<EmployerVacancyModel> vacancies) {
   return showModalBottomSheet<int>(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: context.jb.card,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (ctx) => SafeArea(
@@ -270,11 +270,11 @@ Future<int?> _pickVacancy(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: JB_BORDER,
+                color: context.jb.border,
                 borderRadius: BorderRadius.circular(100),
               ),
             ),
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
@@ -282,7 +282,7 @@ Future<int?> _pickVacancy(
                     style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: JB_INK)),
+                        color: context.jb.ink)),
               ),
             ),
             Flexible(
@@ -302,14 +302,14 @@ Future<int?> _pickVacancy(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.jb.card,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: JB_BORDER, width: 1.5),
+                          border: Border.all(color: context.jb.border, width: 1.5),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.business_center_rounded,
-                                size: 18, color: JB_BLUE),
+                            Icon(Icons.business_center_rounded,
+                                size: 18, color: context.jb.blue),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -318,19 +318,19 @@ Future<int?> _pickVacancy(
                                   Text(v.jobTypeName ?? 'Vakansiya #${v.id}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 14.5,
                                           fontWeight: FontWeight.w700,
-                                          color: JB_INK)),
+                                          color: context.jb.ink)),
                                   const SizedBox(height: 2),
                                   Text(v.salaryDisplay,
-                                      style: const TextStyle(
-                                          fontSize: 12, color: JB_GRAY)),
+                                      style: TextStyle(
+                                          fontSize: 12, color: context.jb.gray)),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right_rounded,
-                                color: JB_GRAY_LIGHT, size: 20),
+                            Icon(Icons.chevron_right_rounded,
+                                color: context.jb.grayLight, size: 20),
                           ],
                         ),
                       ),
@@ -346,9 +346,9 @@ Future<int?> _pickVacancy(
   );
 }
 
-void _snack(BuildContext context, String message, {Color color = JB_AMBER_FG}) {
+void _snack(BuildContext context, String message, {Color? color}) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), backgroundColor: color),
+    SnackBar(content: Text(message), backgroundColor: color ?? context.jb.amber),
   );
 }
 
@@ -359,15 +359,15 @@ class LockedNoticeRow extends StatelessWidget {
   const LockedNoticeRow({super.key});
 
   @override
-  Widget build(BuildContext context) => const Row(
+  Widget build(BuildContext context) => Row(
         children: [
-          Icon(Icons.lock_outline_rounded, size: 15, color: JB_GRAY_LIGHT),
+          Icon(Icons.lock_outline_rounded, size: 15, color: context.jb.grayLight),
           SizedBox(width: 7),
           Expanded(
             child: Text(
               'Telefon, chat va suhbat yopiq',
               style: TextStyle(
-                  fontSize: 12.5, fontWeight: FontWeight.w600, color: JB_GRAY),
+                  fontSize: 12.5, fontWeight: FontWeight.w600, color: context.jb.gray),
             ),
           ),
         ],
@@ -403,7 +403,7 @@ class UnlockedActionsRow extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.phone_rounded,
             label: 'Telefon',
-            color: JB_GREEN_FG,
+            color: context.jb.green,
             onTap: busy ? null : () => callCandidate(context, number),
           ),
         ),
@@ -412,7 +412,7 @@ class UnlockedActionsRow extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.chat_bubble_outline_rounded,
             label: 'Chat',
-            color: JB_BLUE,
+            color: context.jb.blue,
             onTap: busy || !canChat
                 ? null
                 : () => openCandidateChat(context,
@@ -424,7 +424,7 @@ class UnlockedActionsRow extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.event_available_rounded,
             label: 'Suhbat',
-            color: JB_PURPLE_FG,
+            color: context.jb.violet,
             onTap: busy
                 ? null
                 : () => inviteToInterview(context,
@@ -458,9 +458,9 @@ class _ActionButton extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
-          disabledForegroundColor: JB_GRAY_LIGHT,
+          disabledForegroundColor: context.jb.grayLight,
           side: BorderSide(
-              color: (enabled ? color : JB_GRAY_LIGHT).withValues(alpha: 0.4),
+              color: (enabled ? color : context.jb.grayLight).withValues(alpha: 0.4),
               width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 6),
           shape:

@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../../main/presentation/screens/main_screen.dart';
@@ -13,6 +12,7 @@ import '../logic/auth_bloc.dart';
 import '../widgets/auth_snack.dart';
 import '../widgets/otp_countdown.dart';
 import 'user_type_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class LoginScreen extends StatefulWidget {
   final String language;
@@ -195,14 +195,9 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
         _handleState(context, state);
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          systemNavigationBarColor: Colors.white,
-          systemNavigationBarIconBrightness: Brightness.dark,
-        ),
+        value: context.jb.overlay,
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: context.jb.card,
           body: SafeArea(
             child: Column(
               children: [
@@ -219,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
                             Navigator.pop(context);
                           }
                         },
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: DARK_NAVY),
+                        icon: Icon(Icons.arrow_back_ios_new, size: 20, color: context.jb.ink),
                       ),
                     ],
                   ),
@@ -235,9 +230,9 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
                           width: 68,
                           height: 68,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                            gradient: LinearGradient(colors: [context.jb.blue, context.jb.blueLight]),
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [BoxShadow(color: PRIMARY_BLUE.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
+                            boxShadow: [BoxShadow(color: context.jb.blue.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
                           ),
                           child: const Icon(Icons.lock_open_outlined, color: Colors.white, size: 32),
                         ),
@@ -246,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
                           _step == 0
                               ? (isUz ? 'Kirish' : 'Войти')
                               : (isUz ? 'SMS kodni kiriting' : 'Введите SMS код'),
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: context.jb.ink),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -255,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
                               : (isUz
                                   ? '${_phoneController.text} ga yuborilgan 6 raqamli kodni kiriting'
                                   : 'Введите 6-значный код, отправленный на ${_phoneController.text}'),
-                          style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
+                          style: TextStyle(fontSize: 14, color: context.jb.gray),
                         ),
                         if (_step == 0 && widget.notice != null) ...[
                           const SizedBox(height: 16),
@@ -284,13 +279,13 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isUz ? 'Telefon raqami' : 'Номер телефона', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY)),
+            Text(isUz ? 'Telefon raqami' : 'Номер телефона', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink)),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: LIGHT_GRAY_BG,
+                color: context.jb.bg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+                border: Border.all(color: context.jb.border),
               ),
               child: TextField(
                 controller: _phoneController,
@@ -298,11 +293,11 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
                 keyboardType: TextInputType.phone,
                 autofocus: true,
                 inputFormatters: [_phoneMask],
-                style: const TextStyle(fontSize: 16, color: DARK_NAVY),
+                style: TextStyle(fontSize: 16, color: context.jb.ink),
                 decoration: InputDecoration(
                   hintText: '+998 (90) 123 45 67',
-                  hintStyle: const TextStyle(color: GRAY_TEXT),
-                  prefixIcon: const Icon(Icons.phone_outlined, color: GRAY_TEXT, size: 20),
+                  hintStyle: TextStyle(color: context.jb.gray),
+                  prefixIcon: Icon(Icons.phone_outlined, color: context.jb.gray, size: 20),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
@@ -315,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
               child: ElevatedButton(
                 onPressed: isLoading ? null : () => _onContinuePhone(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: PRIMARY_BLUE,
+                  backgroundColor: context.jb.blue,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -341,13 +336,13 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isUz ? 'Tasdiqlash kodi' : 'Код подтверждения', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY)),
+            Text(isUz ? 'Tasdiqlash kodi' : 'Код подтверждения', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink)),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: LIGHT_GRAY_BG,
+                color: context.jb.bg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+                border: Border.all(color: context.jb.border),
               ),
               child: TextField(
                 controller: _codeController,
@@ -357,11 +352,11 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
                 enabled: !otpExpired,
                 onChanged: (_) => setState(() {}),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: DARK_NAVY, letterSpacing: 8),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: context.jb.ink, letterSpacing: 8),
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '------',
-                  hintStyle: TextStyle(color: GRAY_TEXT, letterSpacing: 8),
+                  hintStyle: TextStyle(color: context.jb.gray, letterSpacing: 8),
                   border: InputBorder.none,
                   counterText: '',
                   contentPadding: EdgeInsets.symmetric(vertical: 16),
@@ -383,9 +378,9 @@ class _LoginScreenState extends State<LoginScreen> with OtpCountdownMixin {
               child: ElevatedButton(
                 onPressed: canSubmit ? () => _onLogin(context) : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: PRIMARY_BLUE,
+                  backgroundColor: context.jb.blue,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFCBD5E1),
+                  disabledBackgroundColor: context.jb.borderStrong,
                   disabledForegroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -413,19 +408,19 @@ class _Notice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF9C3),
+        color: context.jb.amberBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFDE68A)),
+        border: Border.all(color: context.jb.amberBg),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, size: 18, color: Color(0xFFB45309)),
+          Icon(Icons.info_outline, size: 18, color: context.jb.amber),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF92400E), height: 1.35),
+              style: TextStyle(fontSize: 13, color: context.jb.amber, height: 1.35),
             ),
           ),
         ],

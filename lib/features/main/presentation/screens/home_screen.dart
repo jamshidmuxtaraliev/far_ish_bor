@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../logic/vacancy_bloc.dart';
 import '../widgets/vacancy_job_card.dart';
 import 'job_detail_screen.dart';
 import 'seeker_interviews_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isEmployer;
@@ -37,22 +37,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarContrastEnforced: false,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: CustomScrollView(
           slivers: [
             // ---- White branded header ----
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
-                color: Colors.white,
+                color: context.jb.card,
                 padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 18, left: 20, right: 20, bottom: 22),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,15 +57,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Spacer(),
                         JBCircleButton(
                           icon: Icons.notifications_none_rounded,
-                          bg: JB_CHIP_BG,
-                          fg: JB_INK,
+                          bg: context.jb.chipBg,
+                          fg: context.jb.ink,
                           size: 40,
                           onTap: () => _goTab(4),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    const Text('Orzuingizdagi ishni toping', style: TextStyle(fontSize: 15, color: JB_GRAY)),
+                    Text('Orzuingizdagi ishni toping', style: TextStyle(fontSize: 15, color: context.jb.gray)),
                   ],
                 ),
               ),
@@ -95,8 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: _ActionCard.light(
                           icon: Icons.work_outline_rounded,
-                          iconBg: JB_INDIGO_TINT,
-                          iconFg: JB_BLUE,
+                          iconBg: context.jb.blueTint,
+                          iconFg: context.jb.blue,
                           label: 'Arizalarim',
                           onTap: () => _goTab(2),
                         ),
@@ -110,8 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: _StatCard(
                           icon: Icons.work_outline_rounded,
-                          iconBg: JB_INDIGO_TINT,
-                          iconFg: JB_BLUE,
+                          iconBg: context.jb.blueTint,
+                          iconFg: context.jb.blue,
                           value: '12,450',
                           label: "Ish o'rinlari",
                         ),
@@ -120,8 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: _StatCard(
                           icon: Icons.grid_view_rounded,
-                          iconBg: JB_PURPLE_BG,
-                          iconFg: JB_PURPLE_FG,
+                          iconBg: context.jb.violetBg,
+                          iconFg: context.jb.violet,
                           value: '3,200',
                           label: 'Kompaniyalar',
                         ),
@@ -137,17 +131,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const JBIconTile(icon: Icons.event_available_outlined, size: 40),
                         const SizedBox(width: 14),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Suhbatlar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK)),
+                              Text('Suhbatlar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.jb.ink)),
                               SizedBox(height: 1),
-                              Text('Suhbat belgilangan nomzodlar', style: TextStyle(fontSize: 13, color: JB_GRAY)),
+                              Text('Suhbat belgilangan nomzodlar', style: TextStyle(fontSize: 13, color: context.jb.gray)),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded, color: JB_GRAY_LIGHT, size: 22),
+                        Icon(Icons.chevron_right_rounded, color: context.jb.grayLight, size: 22),
                       ],
                     ),
                   ),
@@ -244,15 +238,15 @@ class _ActionCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: isGradient
             ? BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [JB_GRADIENT_START, JB_BLUE_LIGHT],
+                  colors: [context.jb.gradientStart, context.jb.blueLight],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: JB_BLUE.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 10))],
+                boxShadow: [BoxShadow(color: context.jb.blue.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 10))],
               )
-            : jbCardDecoration(border: JB_BORDER, borderWidth: 1),
+            : jbCardDecoration(border: context.jb.border, borderWidth: 1),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -267,7 +261,7 @@ class _ActionCard extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isGradient ? Colors.white : JB_INK,
+                color: isGradient ? Colors.white : context.jb.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
@@ -302,9 +296,9 @@ class _StatCard extends StatelessWidget {
         children: [
           JBIconTile(icon: icon, bg: iconBg, fg: iconFg, size: 36, iconSize: 17),
           const SizedBox(height: 14),
-          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: JB_INK)),
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.jb.ink)),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 13, color: JB_GRAY)),
+          Text(label, style: TextStyle(fontSize: 13, color: context.jb.gray)),
         ],
       ),
     );
@@ -323,7 +317,7 @@ class _VacancyLoadingList extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 14),
           height: 150,
           decoration: jbCardDecoration(),
-          child: const Center(child: CircularProgressIndicator(color: JB_BLUE, strokeWidth: 2)),
+          child: Center(child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2)),
         ),
       ),
     );
@@ -342,19 +336,19 @@ class _EmptyVacancies extends StatelessWidget {
           Container(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(color: JB_CHIP_BG, borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.work_off_outlined, color: JB_GRAY, size: 28),
+            decoration: BoxDecoration(color: context.jb.chipBg, borderRadius: BorderRadius.circular(16)),
+            child: Icon(Icons.work_off_outlined, color: context.jb.gray, size: 28),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Hozircha mos vakansiya topilmadi',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.jb.ink),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             "Anketangizni to'ldirib, ko'proq imkoniyatlarni oching",
-            style: TextStyle(fontSize: 13, color: JB_GRAY),
+            style: TextStyle(fontSize: 13, color: context.jb.gray),
             textAlign: TextAlign.center,
           ),
         ],

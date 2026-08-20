@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 
-import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Ishlar xaritasi uchun custom marker'larni runtime'da chizadi (PNG bytes →
 /// [BitmapDescriptor]). Hech qanday binary asset kerak emas.
@@ -12,7 +12,10 @@ class JobMapMarkers {
 
   /// Bitta vakansiya markeri — qizil "point" pin ichida oq chamadon (ish) ikonasi.
   /// Zoom yaqinlashganda har bir ish shu marker bilan ko'rinadi.
-  static Future<BitmapDescriptor> jobPin(double dpr) async {
+  ///
+  /// [p] — joriy mavzu palitrasi; tungi rejimda aksent ranglar yorqinroq
+  /// bo'lgani uchun marker ham qaytadan chiziladi.
+  static Future<BitmapDescriptor> jobPin(double dpr, JbPalette p) async {
     const double w = 44;
     const double h = 56;
     final size = Size(w * dpr, h * dpr);
@@ -36,7 +39,7 @@ class JobMapMarkers {
       ..quadraticBezierTo(w / 2, h + 1, w / 2, h)
       ..quadraticBezierTo(w / 2, h + 1, w / 2 + r * 0.62, center.dy + r * 0.62)
       ..close();
-    final fill = Paint()..color = RED_COLOR;
+    final fill = Paint()..color = p.red;
     canvas.drawPath(path, fill);
     canvas.drawCircle(center, r, fill);
 
@@ -47,20 +50,20 @@ class JobMapMarkers {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5
-        ..color = Colors.white,
+        ..color = p.onBrand,
     );
 
     // Chamadon (ish) ikonasi — oq
-    _drawIcon(canvas, Icons.work_rounded, center, r * 1.05, Colors.white);
+    _drawIcon(canvas, Icons.work_rounded, center, r * 1.05, p.onBrand);
 
     return _toDescriptor(recorder, size);
   }
 
   /// Klaster markeri — ichида ish soni bo'lgan doira. Kichik klasterlar ko'k,
   /// katta klasterlar qizil (screenshotdagidek), tashqarisida yumshoq halqa.
-  static Future<BitmapDescriptor> cluster(int count, double dpr) async {
+  static Future<BitmapDescriptor> cluster(int count, double dpr, JbPalette p) async {
     final bool big = count >= 10;
-    final Color color = big ? RED_COLOR : PRIMARY_BLUE;
+    final Color color = big ? p.red : p.blue;
     // Diametr son kattaligiga qarab biroz o'sadi.
     final double d = big ? (count >= 50 ? 70 : 62) : 56;
     final double glow = d + 16;
@@ -83,7 +86,7 @@ class JobMapMarkers {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = Colors.white.withValues(alpha: 0.9),
+        ..color = p.onBrand.withValues(alpha: 0.9),
     );
 
     // Son
@@ -92,7 +95,7 @@ class JobMapMarkers {
       text: TextSpan(
         text: label,
         style: TextStyle(
-          color: Colors.white,
+          color: p.onBrand,
           fontSize: count > 99 ? 20 : 22,
           fontWeight: FontWeight.bold,
           height: 1,

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../../main/presentation/screens/main_screen.dart';
 import 'language_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -52,20 +52,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: PRIMARY_BLUE,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
+      value: context.jb.overlayOnBrand,
       child: Scaffold(
         body: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF2563FF), Color(0xFF3B82F6), Color(0xFF2563FF)],
+              colors: [context.jb.blue, context.jb.blueLight, context.jb.blue],
             ),
           ),
           child: Column(

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Kod ekranidagi orqa sanoq holati.
 ///
@@ -85,15 +85,15 @@ class OtpCountdownBar extends StatelessWidget {
     final Color color;
     final String label;
     if (verified) {
-      color = const Color(0xFF16A34A);
+      color = context.jb.green;
       label = isUz ? 'Kod tasdiqlandi' : 'Код подтверждён';
     } else if (expired) {
-      color = const Color(0xFFDC2626);
+      color = context.jb.red;
       label = isUz
           ? 'Kod muddati tugadi — yangi kod oling'
           : 'Срок кода истёк — запросите новый';
     } else {
-      color = urgent ? const Color(0xFFDC2626) : GRAY_TEXT;
+      color = urgent ? context.jb.red : context.jb.gray;
       label = isUz
           ? 'Kod amal qiladi: ${format(secondsLeft)}'
           : 'Код действителен: ${format(secondsLeft)}';
@@ -131,7 +131,7 @@ class OtpCountdownBar extends StatelessWidget {
             child: Text(
               isUz ? 'Kod kelmadimi? Qayta yuborish' : 'Код не пришёл? Отправить снова',
               style: TextStyle(
-                color: resendInProgress ? GRAY_TEXT : PRIMARY_BLUE,
+                color: resendInProgress ? context.jb.gray : context.jb.blue,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),

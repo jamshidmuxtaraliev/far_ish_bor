@@ -2,24 +2,18 @@ import 'dart:ui';
 
 import 'package:jobUp24/core/extensions/extensions.dart';
 import 'package:jobUp24/core/utils/custom_button.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../features/auth/data/datasource/local/user_local_data_source.dart';
-import '../../generated/assets.dart';
-import '../constants/colors.dart';
 import '../constants/constants.dart';
-import '../services/get_it.dart';
-import 'gradient_gold_button.dart';
+import '../theme/jb_palette.dart';
 
 // calculate User years old from birthdate
 int calculateAge(String isoDateString) {
@@ -172,7 +166,7 @@ TextStyle customTextStyle({
   List<Shadow>? shadow,
   TextOverflow? overflow,
 }) {
-  color = color ?? WHITE;
+  color = color ?? jb.card;
   fontWeight = fontWeight ?? FontWeight.normal;
   return TextStyle(
     color: color,
@@ -189,7 +183,7 @@ Future<void> showError(BuildContext context, String message, {Function? pressOk,
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
-    barrierColor: BUTTON_COLOR.withAlpha(10), //this works
+    barrierColor: context.jb.green.withAlpha(10), //this works
     builder: (BuildContext context) {
       return Align(
         alignment: Alignment.center,
@@ -250,7 +244,7 @@ Future<void> showWarning(BuildContext context, String message, {Function? pressO
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
-    barrierColor: BUTTON_COLOR.withAlpha(10), //this works
+    barrierColor: context.jb.green.withAlpha(10), //this works
     builder: (BuildContext context) {
       return Align(
         alignment: Alignment.center,
@@ -335,7 +329,7 @@ Future<void> launchInBrowser(String url) async {
 Future<XFile?> pickImageWithSourceSheet(BuildContext context) async {
   final source = await showModalBottomSheet<ImageSource>(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: context.jb.card,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -345,12 +339,12 @@ Future<XFile?> pickImageWithSourceSheet(BuildContext context) async {
         children: [
           const SizedBox(height: 8),
           ListTile(
-            leading: const Icon(Icons.camera_alt_outlined, color: PRIMARY_BLUE),
+            leading: Icon(Icons.camera_alt_outlined, color: context.jb.blue),
             title: const Text('Kamera'),
             onTap: () => Navigator.pop(ctx, ImageSource.camera),
           ),
           ListTile(
-            leading: const Icon(Icons.photo_library_outlined, color: PRIMARY_BLUE),
+            leading: Icon(Icons.photo_library_outlined, color: context.jb.blue),
             title: const Text('Galereya'),
             onTap: () => Navigator.pop(ctx, ImageSource.gallery),
           ),

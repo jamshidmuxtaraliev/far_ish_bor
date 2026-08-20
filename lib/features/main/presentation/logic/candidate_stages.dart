@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Nomzod jarayoni bosqichlari (PROMPT_MOS_NOMZODLAR_MOBILE.md §2, §5).
 /// '' = matched (biriktirilmagan mos nomzod).
@@ -48,24 +48,24 @@ String stageActionLabel(String toStatus) => switch (toStatus) {
 
 /// Bosqich rangi (§2.1: binafsha/pushti/emerald/qizil/teal/kulrang).
 Color stageColor(String status) => switch (status) {
-      '' => VIOLET,
-      'suhbatga_yozildi' => const Color(0xFFEC4899), // pink
-      'suhbatga_bordi' => const Color(0xFF10B981), // emerald
-      'bormadi' => RED_COLOR,
-      'qabul_qilindi' => const Color(0xFF14B8A6), // teal
-      'mos_kelmadi' => GRAY_TEXT,
-      _ => GRAY_TEXT,
+      '' => jb.violet,
+      'suhbatga_yozildi' => jb.pink, // pink
+      'suhbatga_bordi' => jb.green, // emerald
+      'bormadi' => jb.red,
+      'qabul_qilindi' => jb.cyan, // teal
+      'mos_kelmadi' => jb.gray,
+      _ => jb.gray,
     };
 
 /// Nomzod javobi badge (§2.4): pending | accepted | declined.
 ({String label, Color color, IconData icon})? candidateResponseBadge(
     String response) {
   return switch (response) {
-    'accepted' => (label: 'Boraman', color: GREEN_COLOR, icon: Icons.check),
-    'declined' => (label: 'Bormayman', color: RED_COLOR, icon: Icons.close),
+    'accepted' => (label: 'Boraman', color: jb.green, icon: Icons.check),
+    'declined' => (label: 'Bormayman', color: jb.red, icon: Icons.close),
     'pending' => (
         label: 'Javob kutilmoqda',
-        color: GRAY_TEXT,
+        color: jb.gray,
         icon: Icons.schedule
       ),
     _ => null,

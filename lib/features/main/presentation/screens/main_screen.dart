@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../chat/presentation/logic/chat_bloc.dart';
@@ -14,6 +13,7 @@ import 'jobs_screen.dart';
 import 'my_applications_screen.dart';
 import 'profile_screen.dart';
 import 'saved_vacancies_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class MainScreen extends StatefulWidget {
   /// Pass true for employer flow, false for job seeker.
@@ -127,25 +127,19 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarContrastEnforced: false,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: BlocListener<AuthBloc, AuthState>(
         // Eski o'rnatishlarda user GetMe qaytgachgina keshga tushadi —
         // shunda support-chat socketni kechikib bo'lsa ham ulaymiz.
         listenWhen: (p, c) => p.user?.id != c.user?.id && c.user != null,
         listener: (context, state) => _connectSupportChat(),
         child: Scaffold(
-          backgroundColor: JB_BG,
+          backgroundColor: context.jb.bg,
           body: IndexedStack(index: _selectedIndex, children: _pages),
           bottomNavigationBar: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: JB_BORDER)),
+            decoration: BoxDecoration(
+              color: context.jb.card,
+              border: Border(top: BorderSide(color: context.jb.border)),
             ),
             child: SafeArea(
               top: false,
@@ -164,7 +158,7 @@ class _MainScreenState extends State<MainScreen> {
                           children: [
                             Icon(
                               isActive ? item.activeIcon : item.icon,
-                              color: isActive ? JB_BLUE : JB_GRAY,
+                              color: isActive ? context.jb.blue : context.jb.gray,
                               size: 23,
                             ),
                             const SizedBox(height: 4),
@@ -173,7 +167,7 @@ class _MainScreenState extends State<MainScreen> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isActive ? JB_BLUE : JB_GRAY,
+                                color: isActive ? context.jb.blue : context.jb.gray,
                               ),
                             ),
                           ],

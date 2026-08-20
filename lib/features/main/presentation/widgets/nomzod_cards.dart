@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/candidate_model.dart';
 import '../../data/models/employer_application_model.dart';
@@ -13,6 +12,7 @@ import '../screens/applicant_profile_screen.dart';
 import '../screens/candidate_detail_screen.dart';
 import 'candidate_card.dart' show matchBucketColor;
 import 'otklik_actions.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// PROMPT_NOMZODLAR_3TAB_MOBILE.md §12 — uch tab bitta karta tilini ulashadi:
 /// ism · status/mos badge · kasb · hudud · yosh · telefon (niqob) · [Batafsil]
@@ -28,15 +28,18 @@ String initialsOf(String? name) {
   return (first + second).toUpperCase();
 }
 
-Widget _avatar(String? name, {Color bg = JB_INDIGO_TINT, Color fg = JB_BLUE}) {
+Widget _avatar(String? name, {Color? bg, Color? fg}) {
   return Container(
     width: 46,
     height: 46,
-    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
+    decoration: BoxDecoration(
+      color: bg ?? jb.blueTint,
+      borderRadius: BorderRadius.circular(14),
+    ),
     alignment: Alignment.center,
     child: Text(
       initialsOf(name),
-      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: fg),
+      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: fg ?? jb.blue),
     ),
   );
 }
@@ -45,7 +48,7 @@ Widget _metaLine(String text) => Text(
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 12.5, color: JB_GRAY),
+      style: TextStyle(fontSize: 12.5, color: jb.gray),
     );
 
 Widget _phoneRow({required String? phone, required String masked}) {
@@ -53,7 +56,7 @@ Widget _phoneRow({required String? phone, required String masked}) {
   return Row(
     children: [
       Icon(Icons.phone_rounded,
-          size: 15, color: unlocked ? JB_GREEN_FG : JB_GRAY_LIGHT),
+          size: 15, color: unlocked ? jb.green : jb.grayLight),
       const SizedBox(width: 7),
       Flexible(
         child: Text(
@@ -61,7 +64,7 @@ Widget _phoneRow({required String? phone, required String masked}) {
           style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
-              color: unlocked ? JB_INK : JB_GRAY),
+              color: unlocked ? jb.ink : jb.gray),
         ),
       ),
     ],
@@ -148,7 +151,7 @@ class ApplicationNomzodCard extends StatelessWidget {
 
     return JBCard(
       padding: const EdgeInsets.all(16),
-      border: JB_BORDER,
+      border: context.jb.border,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -164,10 +167,10 @@ class ApplicationNomzodCard extends StatelessWidget {
                       app.anketaFullname ?? 'Nomzod',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w700,
-                          color: JB_INK),
+                          color: context.jb.ink),
                     ),
                     if (meta.isNotEmpty) ...[
                       const SizedBox(height: 3),
@@ -181,22 +184,22 @@ class ApplicationNomzodCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(height: 1, thickness: 1, color: JB_DIVIDER),
+          Divider(height: 1, thickness: 1, color: context.jb.divider),
           const SizedBox(height: 12),
           if ((app.requirementJobTypeName ?? '').isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.business_center_outlined,
-                      size: 15, color: JB_GRAY_LIGHT),
+                  Icon(Icons.business_center_outlined,
+                      size: 15, color: context.jb.grayLight),
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       '${app.requirementJobTypeName} · ${app.salaryDisplay}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12.5, color: JB_GRAY),
+                      style: TextStyle(fontSize: 12.5, color: context.jb.gray),
                     ),
                   ),
                 ],
@@ -207,14 +210,14 @@ class ApplicationNomzodCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.event_rounded,
-                      size: 15, color: JB_AMBER_FG),
+                  Icon(Icons.event_rounded,
+                      size: 15, color: context.jb.amber),
                   const SizedBox(width: 7),
                   Text(app.interviewDisplay,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: JB_INK)),
+                          color: context.jb.ink)),
                 ],
               ),
             ),
@@ -228,7 +231,7 @@ class ApplicationNomzodCard extends StatelessWidget {
               actionButton(
                 label: 'Batafsil',
                 icon: Icons.visibility_outlined,
-                color: JB_INK,
+                color: context.jb.ink,
                 outlined: true,
                 onTap: () => Navigator.push(
                   context,
@@ -240,7 +243,7 @@ class ApplicationNomzodCard extends StatelessWidget {
               actionButton(
                 label: 'Holatni o\'zgartirish',
                 icon: Icons.swap_horiz_rounded,
-                color: JB_BLUE,
+                color: context.jb.blue,
                 onTap: onChangeStatus,
               ),
             ],
@@ -314,7 +317,7 @@ class NomzodCard extends StatelessWidget {
 
     return JBCard(
       padding: const EdgeInsets.all(16),
-      border: JB_BORDER,
+      border: context.jb.border,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -330,10 +333,10 @@ class NomzodCard extends StatelessWidget {
                       c.fullname ?? "Ism noma'lum",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w700,
-                          color: JB_INK),
+                          color: context.jb.ink),
                     ),
                     if (meta.isNotEmpty) ...[
                       const SizedBox(height: 3),
@@ -357,7 +360,7 @@ class NomzodCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(height: 1, thickness: 1, color: JB_DIVIDER),
+          Divider(height: 1, thickness: 1, color: context.jb.divider),
           const SizedBox(height: 12),
           if (showMatch && row.assignmentStatus != null)
             Padding(
@@ -370,25 +373,25 @@ class NomzodCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.event_rounded, size: 15, color: JB_AMBER_FG),
+                  Icon(Icons.event_rounded, size: 15, color: context.jb.amber),
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(row.interviewDisplay!,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: JB_INK)),
+                            color: context.jb.ink)),
                   ),
                   if (row.assignmentId != null)
                     GestureDetector(
                       onTap: busy
                           ? null
                           : () => _reschedule(context, row.assignmentId!),
-                      child: const Text("O'zgartirish",
+                      child: Text("O'zgartirish",
                           style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
-                              color: JB_BLUE)),
+                              color: context.jb.blue)),
                     ),
                 ],
               ),
@@ -409,7 +412,7 @@ class NomzodCard extends StatelessWidget {
     final detail = actionButton(
       label: 'Batafsil',
       icon: Icons.visibility_outlined,
-      color: JB_INK,
+      color: context.jb.ink,
       outlined: true,
       onTap: () => Navigator.push(
         context,
@@ -431,7 +434,7 @@ class NomzodCard extends StatelessWidget {
             actionButton(
               label: free ? 'Bepul ochish' : 'Ochish · ${formatAmount(fee)}',
               icon: free ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-              color: free ? JB_GREEN_FG : JB_BLUE,
+              color: free ? context.jb.green : context.jb.blue,
               onTap: busy
                   ? null
                   : () => startUnlock(context,
@@ -463,7 +466,7 @@ class NomzodCard extends StatelessWidget {
       buttons.add(actionButton(
         label: 'Olib tashlash',
         icon: Icons.delete_outline_rounded,
-        color: JB_GRAY,
+        color: context.jb.gray,
         outlined: true,
         onTap: busy ? null : () => _confirmDelete(context, row.assignmentId!),
       ));
@@ -520,9 +523,9 @@ class NomzodCard extends StatelessWidget {
   Future<void> _invite(BuildContext context, String status) async {
     final reqId = row.requirementId;
     if (reqId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Avval vakansiyani tanlang'),
-        backgroundColor: JB_AMBER_FG,
+        backgroundColor: context.jb.amber,
       ));
       return;
     }
@@ -551,14 +554,14 @@ class NomzodCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Jarayondan olib tashlash',
-            style: TextStyle(fontWeight: FontWeight.w800, color: JB_INK)),
-        content: const Text('Nomzodni jarayondan olib tashlaysizmi?',
-            style: TextStyle(color: JB_GRAY)),
+        title: Text('Jarayondan olib tashlash',
+            style: TextStyle(fontWeight: FontWeight.w800, color: context.jb.ink)),
+        content: Text('Nomzodni jarayondan olib tashlaysizmi?',
+            style: TextStyle(color: context.jb.gray)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Bekor', style: TextStyle(color: JB_GRAY)),
+            child: Text('Bekor', style: TextStyle(color: context.jb.gray)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -568,7 +571,7 @@ class NomzodCard extends StatelessWidget {
                   .add(DeleteAssignmentEvent(assignmentId));
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: JB_RED_FG,
+              backgroundColor: context.jb.red,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(100)),

@@ -1,5 +1,5 @@
-import '../../../../core/constants/colors.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Suhbat (Interview) — seeker va employer ro'yxatlari hamda `live` endpoint
 /// uchun yagona model (PROMPT_SUHBATLAR_MOBILE.md §2.1, §4).
@@ -109,14 +109,14 @@ class InterviewModel {
       };
 
   Color get statusColor => switch (status) {
-        'pending' => GRAY_TEXT,
-        'scheduled' || 'confirmed' => PRIMARY_BLUE,
-        'on_way' || 'arrived' => AMBER_COLOR,
-        'done' => GREEN_COLOR,
-        'cancelled' => RED_COLOR,
-        'no_show' || 'missed' => AMBER_COLOR,
-        'rejected' => RED_COLOR,
-        _ => GRAY_TEXT,
+        'pending' => jb.gray,
+        'scheduled' || 'confirmed' => jb.blue,
+        'on_way' || 'arrived' => jb.amber,
+        'done' => jb.green,
+        'cancelled' => jb.red,
+        'no_show' || 'missed' => jb.amber,
+        'rejected' => jb.red,
+        _ => jb.gray,
       };
 
   String get travelLabel => switch (travelStatus) {
@@ -128,9 +128,9 @@ class InterviewModel {
       };
 
   Color get travelColor => switch (travelStatus) {
-        'on_way' => AMBER_COLOR,
-        'arrived' => GREEN_COLOR,
-        _ => GRAY_TEXT,
+        'on_way' => jb.amber,
+        'arrived' => jb.green,
+        _ => jb.gray,
       };
 }
 

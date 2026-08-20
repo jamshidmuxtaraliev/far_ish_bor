@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
@@ -22,6 +21,7 @@ import '../widgets/resume_card.dart';
 import 'edit_employer_screen.dart';
 import 'my_applications_screen.dart';
 import 'settings_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isEmployer;
@@ -118,20 +118,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text(
+            title: Text(
               'Chiqish',
-              style: TextStyle(fontWeight: FontWeight.bold, color: DARK_NAVY),
+              style: TextStyle(fontWeight: FontWeight.bold, color: jb.ink),
             ),
-            content: const Text(
+            content: Text(
               'Hisobingizdan chiqmoqchimisiz?',
-              style: TextStyle(color: GRAY_TEXT),
+              style: TextStyle(color: jb.gray),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text(
+                child: Text(
                   'Bekor qilish',
-                  style: TextStyle(color: GRAY_TEXT),
+                  style: TextStyle(color: jb.gray),
                 ),
               ),
               TextButton(
@@ -146,10 +146,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   }
                 },
-                child: const Text(
+                child: Text(
                   'Chiqish',
                   style: TextStyle(
-                    color: Color(0xFFDC2626),
+                    color: jb.red,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -162,15 +162,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarContrastEnforced: false,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlayOnBrand,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocConsumer<AuthBloc, AuthState>(
           listenWhen:
               (prev, curr) =>
@@ -261,11 +255,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         right: 20,
         bottom: 30,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [JB_BLUE, JB_BLUE_LIGHT],
+          colors: [context.jb.blue, context.jb.blueLight],
         ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(28),
@@ -360,16 +354,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.jb.card,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Colors.white,
                         width: 2,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.camera_alt,
-                      color: JB_BLUE,
+                      color: context.jb.blue,
                       size: 14,
                     ),
                   ),
@@ -459,31 +453,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFBEB),
+          color: jb.amberBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFFDE68A)),
+          border: Border.all(color: jb.amberBg),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.add_a_photo_outlined,
-              color: Color(0xFFD97706),
+              color: jb.amber,
               size: 20,
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Profilingizga rasm yuklang',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF92400E),
+                  color: jb.amber,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: Color(0xFFD97706),
+              color: jb.amber,
               size: 18,
             ),
           ],
@@ -496,7 +490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -517,7 +511,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           if (user.workStatus != null) ...[
             if (user.jobTypeName != null)
-              const Divider(height: 20, color: Color(0xFFF3F4F6)),
+              Divider(height: 20, color: jb.cardAlt),
             _InfoRow(
               icon: Icons.circle_outlined,
               label: 'Holati',
@@ -546,13 +540,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.person_outline,
         label: "Anketa to'ldirish",
-        color: PRIMARY_BLUE,
+        color: context.jb.blue,
         onTap: _openAnketa,
       ),
       _MenuItem(
         icon: Icons.folder_open_outlined,
         label: 'Mening arizalarim',
-        color: const Color(0xFF7C3AED),
+        color: context.jb.violet,
         onTap:
             () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const MyApplicationsScreen()),
@@ -573,7 +567,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.business_outlined,
         label: 'Kompaniyani tahrirlash',
-        color: PRIMARY_BLUE,
+        color: context.jb.blue,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const EditEmployerScreen()),
         ),
@@ -581,19 +575,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.work_outline,
         label: 'Vakansiyalar',
-        color: const Color(0xFF0891B2),
+        color: context.jb.cyan,
         onTap: () => widget.onSelectTab?.call(0),
       ),
       _MenuItem(
         icon: Icons.people_outline,
         label: 'Nomzodlarni kuzatish',
-        color: const Color(0xFF7C3AED),
+        color: context.jb.violet,
         onTap: () => widget.onSelectTab?.call(1),
       ),
       _MenuItem(
         icon: Icons.workspace_premium_outlined,
         label: 'Premium',
-        color: const Color(0xFFD97706),
+        color: context.jb.amber,
         onTap:
             () => Navigator.of(
               context,
@@ -605,7 +599,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.account_balance_wallet_outlined,
         label: 'Balans va to\'lov',
-        color: const Color(0xFF16A34A),
+        color: context.jb.green,
         onTap:
             () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -616,7 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.notifications_outlined,
         label: 'Bildirishnomalar',
-        color: const Color(0xFFEA580C),
+        color: context.jb.amber,
         onTap:
             () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const NotificationsScreen()),
@@ -625,7 +619,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.support_agent_outlined,
         label: 'Qo\'llab-quvvatlash',
-        color: PRIMARY_BLUE,
+        color: context.jb.blue,
         onTap:
             () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SupportChatScreen()),
@@ -634,7 +628,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _MenuItem(
         icon: Icons.help_outline,
         label: 'Yordam',
-        color: GRAY_TEXT,
+        color: context.jb.gray,
         onTap:
             () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -648,7 +642,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -666,25 +660,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _MenuItemTile(item: roleItems[i]),
                 if (i < roleItems.length - 1)
-                  const Divider(
+                  Divider(
                     height: 1,
                     indent: 56,
-                    color: Color(0xFFF3F4F6),
+                    color: context.jb.cardAlt,
                   ),
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFF3F4F6)),
+          Divider(height: 1, color: context.jb.cardAlt),
           ...List.generate(
             commonItems.length,
             (i) => Column(
               children: [
                 _MenuItemTile(item: commonItems[i]),
                 if (i < commonItems.length - 1)
-                  const Divider(
+                  Divider(
                     height: 1,
                     indent: 56,
-                    color: Color(0xFFF3F4F6),
+                    color: context.jb.cardAlt,
                   ),
               ],
             ),
@@ -701,9 +695,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: jb.card,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFDC2626), width: 1.5),
+          border: Border.all(color: jb.red, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -712,15 +706,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, color: Color(0xFFDC2626), size: 20),
+            Icon(Icons.logout, color: jb.red, size: 20),
             SizedBox(width: 8),
             Text(
               'Chiqish',
               style: TextStyle(
-                color: Color(0xFFDC2626),
+                color: jb.red,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -784,22 +778,22 @@ class _InfoRow extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: PRIMARY_BLUE.withValues(alpha: 0.1),
+            color: context.jb.blue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(9),
           ),
-          child: Icon(icon, color: PRIMARY_BLUE, size: 18),
+          child: Icon(icon, color: context.jb.blue, size: 18),
         ),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: GRAY_TEXT)),
+            Text(label, style: TextStyle(fontSize: 11, color: context.jb.gray)),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: DARK_NAVY,
+                color: context.jb.ink,
               ),
             ),
           ],
@@ -850,14 +844,14 @@ class _MenuItemTile extends StatelessWidget {
             Expanded(
               child: Text(
                 item.label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: DARK_NAVY,
+                  color: context.jb.ink,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: GRAY_TEXT, size: 20),
+            Icon(Icons.chevron_right, color: context.jb.gray, size: 20),
           ],
         ),
       ),

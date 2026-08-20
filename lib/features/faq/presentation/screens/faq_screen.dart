@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/locale/locale_cubit.dart';
 import '../../data/models/faq_model.dart';
 import '../logic/faq_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class FaqScreen extends StatefulWidget {
   final bool isEmployer;
@@ -46,20 +46,15 @@ class _FaqScreenState extends State<FaqScreen> {
         lang == 'ru' ? 'Часто задаваемые вопросы' : "Ko'p beriladigan savollar";
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: JB_INK,
+          backgroundColor: context.jb.card,
+          foregroundColor: context.jb.ink,
           elevation: 0,
           scrolledUnderElevation: 0,
-          title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: JB_INK)),
+          title: Text(title, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: context.jb.ink)),
         ),
         body: Column(
           children: [
@@ -70,22 +65,22 @@ class _FaqScreenState extends State<FaqScreen> {
                 onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                 decoration: InputDecoration(
                   hintText: lang == 'ru' ? 'Поиск...' : 'Qidirish...',
-                  hintStyle: const TextStyle(color: JB_GRAY_LIGHT, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search_rounded, color: JB_GRAY_LIGHT, size: 20),
+                  hintStyle: TextStyle(color: context.jb.grayLight, fontSize: 14),
+                  prefixIcon: Icon(Icons.search_rounded, color: context.jb.grayLight, size: 20),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.jb.card,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: JB_BORDER, width: 1.5),
+                    borderSide: BorderSide(color: context.jb.border, width: 1.5),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: JB_BORDER, width: 1.5),
+                    borderSide: BorderSide(color: context.jb.border, width: 1.5),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: JB_BLUE, width: 1.5),
+                    borderSide: BorderSide(color: context.jb.blue, width: 1.5),
                   ),
                 ),
               ),
@@ -94,18 +89,18 @@ class _FaqScreenState extends State<FaqScreen> {
               child: BlocBuilder<FaqBloc, FaqState>(
                 builder: (context, state) {
                   if (state.status == FormzSubmissionStatus.inProgress && state.faqList.isEmpty) {
-                    return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE));
+                    return Center(child: CircularProgressIndicator(color: context.jb.blue));
                   }
                   if (state.status == FormzSubmissionStatus.failure) {
                     return Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.error_outline, size: 48, color: Color(0xFFCBD5E1)),
+                          Icon(Icons.error_outline, size: 48, color: context.jb.borderStrong),
                           const SizedBox(height: 12),
                           Text(
                             state.error?.errorMessage ?? 'Xatolik yuz berdi',
-                            style: const TextStyle(color: GRAY_TEXT),
+                            style: TextStyle(color: context.jb.gray),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
@@ -118,8 +113,8 @@ class _FaqScreenState extends State<FaqScreen> {
                     );
                   }
                   if (state.faqList.isEmpty) {
-                    return const Center(
-                      child: Text('Hozircha savollar yo\'q', style: TextStyle(color: GRAY_TEXT)),
+                    return Center(
+                      child: Text('Hozircha savollar yo\'q', style: TextStyle(color: context.jb.gray)),
                     );
                   }
 
@@ -133,13 +128,13 @@ class _FaqScreenState extends State<FaqScreen> {
                           }).toList();
 
                   if (filtered.isEmpty) {
-                    return const Center(
-                      child: Text('Hech narsa topilmadi', style: TextStyle(color: GRAY_TEXT)),
+                    return Center(
+                      child: Text('Hech narsa topilmadi', style: TextStyle(color: context.jb.gray)),
                     );
                   }
 
                   return RefreshIndicator(
-                    color: PRIMARY_BLUE,
+                    color: context.jb.blue,
                     onRefresh: () async => context.read<FaqBloc>().add(LoadFaqEvent(audience: _audience)),
                     child: ListView.separated(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -168,9 +163,9 @@ class _FaqTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: JB_BORDER, width: 1.5),
+        border: Border.all(color: context.jb.border, width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: Theme(
@@ -179,11 +174,11 @@ class _FaqTile extends StatelessWidget {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           expandedAlignment: Alignment.centerLeft,
-          iconColor: JB_BLUE,
-          collapsedIconColor: JB_GRAY_LIGHT,
+          iconColor: context.jb.blue,
+          collapsedIconColor: context.jb.grayLight,
           title: Text(
             faq.questionFor(lang),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.jb.ink),
           ),
           children: [
             Align(
@@ -191,7 +186,7 @@ class _FaqTile extends StatelessWidget {
               child: Html(
                 data: faq.answerFor(lang),
                 style: {
-                  'body': Style(margin: Margins.zero, fontSize: FontSize(13), color: GRAY_TEXT),
+                  'body': Style(margin: Margins.zero, fontSize: FontSize(13), color: context.jb.gray),
                 },
               ),
             ),

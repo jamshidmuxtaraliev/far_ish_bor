@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/utils.dart';
 import 'employer_registration_screen.dart';
 import 'job_seeker_registration_screen.dart';
 import 'login_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class UserTypeScreen extends StatelessWidget {
   final String language;
@@ -27,21 +27,16 @@ class UserTypeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF9FAFB), Color(0xFFEFF6FF)],
+              colors: [context.jb.cardAlt, context.jb.blueTint],
             ),
           ),
           child: SafeArea(
@@ -54,16 +49,16 @@ class UserTypeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   Text(
                     isUz ? 'Kim siz?' : 'Кто вы?',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: DARK_NAVY,
+                      color: context.jb.ink,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     isUz ? 'Rolingizni tanlang' : 'Выберите вашу роль',
-                    style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
+                    style: TextStyle(fontSize: 15, color: context.jb.gray),
                   ),
                   if (notice != null) ...[
                     const SizedBox(height: 20),
@@ -71,19 +66,19 @@ class UserTypeScreen extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFEF9C3),
+                        color: context.jb.amberBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFDE68A)),
+                        border: Border.all(color: context.jb.amberBg),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.info_outline, size: 18, color: Color(0xFFB45309)),
+                          Icon(Icons.info_outline, size: 18, color: context.jb.amber),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               notice!,
-                              style: const TextStyle(fontSize: 13, color: Color(0xFF92400E), height: 1.35),
+                              style: TextStyle(fontSize: 13, color: context.jb.amber, height: 1.35),
                             ),
                           ),
                         ],
@@ -95,7 +90,7 @@ class UserTypeScreen extends StatelessWidget {
                     icon: Icons.person_outline,
                     title: isUz ? 'Ish izlovchi' : 'Соискатель',
                     subtitle: isUz ? 'Ish qidiryapman' : 'Ищу работу',
-                    gradientColors: const [PRIMARY_BLUE, SECONDARY_BLUE],
+                    gradientColors: [context.jb.blue, context.jb.blueLight],
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => JobSeekerRegistrationScreen(
@@ -110,7 +105,7 @@ class UserTypeScreen extends StatelessWidget {
                     icon: Icons.work_outline,
                     title: isUz ? 'Ish beruvchi' : 'Работодатель',
                     subtitle: isUz ? 'Xodim qidiryapman' : 'Ищу сотрудника',
-                    gradientColors: const [DARK_NAVY, Color(0xFF334155)],
+                    gradientColors: [context.jb.ink, context.jb.gray],
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => EmployerRegistrationScreen(
@@ -132,12 +127,12 @@ class UserTypeScreen extends StatelessWidget {
                     ),
                     child: RichText(
                       text: TextSpan(
-                        style: const TextStyle(fontSize: 14, color: GRAY_TEXT),
+                        style: TextStyle(fontSize: 14, color: context.jb.gray),
                         children: [
                           TextSpan(text: isUz ? 'Hisobingiz bormi? ' : 'Уже есть аккаунт? '),
                           TextSpan(
                             text: isUz ? 'Kirish' : 'Войти',
-                            style: const TextStyle(color: PRIMARY_BLUE, fontWeight: FontWeight.w600),
+                            style: TextStyle(color: context.jb.blue, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -176,7 +171,7 @@ class _TypeCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.jb.card,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -204,18 +199,18 @@ class _TypeCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: DARK_NAVY,
+                      color: context.jb.ink,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+                  Text(subtitle, style: TextStyle(fontSize: 13, color: context.jb.gray)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: GRAY_TEXT),
+            Icon(Icons.chevron_right, color: context.jb.gray),
           ],
         ),
       ),

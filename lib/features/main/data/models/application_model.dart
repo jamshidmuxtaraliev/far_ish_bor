@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
 import 'application_access.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class ApplicationModel {
   final int id;
@@ -103,25 +103,25 @@ class ApplicationModel {
       };
 
   Color get statusColor => switch (status) {
-        'pending' => const Color(0xFFD97706),
-        'viewed' => const Color(0xFF4F46E5),
-        'invited' => const Color(0xFF7C3AED),
-        'scheduled' || 'confirmed' || 'arrived' => const Color(0xFF16A34A),
-        'on_way' || 'probation' || 'suhbatga_yozildi' || 'suhbatga_bordi' => const Color(0xFF0891B2),
-        'accepted' || 'hired' || 'qabul_qilindi' => const Color(0xFF16A34A),
-        'rejected' => const Color(0xFFDC2626),
-        _ => GRAY_TEXT,
+        'pending' => jb.amber,
+        'viewed' => jb.violet,
+        'invited' => jb.violet,
+        'scheduled' || 'confirmed' || 'arrived' => jb.green,
+        'on_way' || 'probation' || 'suhbatga_yozildi' || 'suhbatga_bordi' => jb.cyan,
+        'accepted' || 'hired' || 'qabul_qilindi' => jb.green,
+        'rejected' => jb.red,
+        _ => jb.gray,
       };
 
   Color get statusBgColor => switch (status) {
-        'pending' => const Color(0xFFFEF3C7),
-        'viewed' => const Color(0xFFEEF2FF),
-        'invited' => const Color(0xFFF5F3FF),
-        'scheduled' || 'confirmed' || 'arrived' => const Color(0xFFF0FDF4),
-        'on_way' || 'probation' || 'suhbatga_yozildi' || 'suhbatga_bordi' => const Color(0xFFECFEFF),
-        'accepted' || 'hired' || 'qabul_qilindi' => const Color(0xFFF0FDF4),
-        'rejected' => const Color(0xFFFEF2F2),
-        _ => const Color(0xFFF3F4F6),
+        'pending' => jb.amberBg,
+        'viewed' => jb.blueTint,
+        'invited' => jb.violetBg,
+        'scheduled' || 'confirmed' || 'arrived' => jb.greenBg,
+        'on_way' || 'probation' || 'suhbatga_yozildi' || 'suhbatga_bordi' => jb.blueTint,
+        'accepted' || 'hired' || 'qabul_qilindi' => jb.greenBg,
+        'rejected' => jb.redBg,
+        _ => jb.cardAlt,
       };
 
   IconData get statusIcon => switch (status) {

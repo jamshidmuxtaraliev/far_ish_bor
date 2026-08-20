@@ -5,12 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/geo_utils.dart';
 import '../../data/models/interview_model.dart';
 import '../logic/interview_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
-const Color _indigo = Color(0xFF4F46E5);
+final Color _indigo = jb.violet;
 
 /// Seeker — Track / "Yo'lga chiqish" (PROMPT_SUHBATLAR_MOBILE.md §3.2).
 /// Foreground GPS: ekran ochiq turganda lokatsiya uzatiladi.
@@ -126,7 +126,7 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LIGHT_GRAY_BG,
+      backgroundColor: context.jb.bg,
       appBar: AppBar(
         backgroundColor: _indigo,
         foregroundColor: Colors.white,
@@ -141,11 +141,11 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
           return Column(
             children: [
               _destBar(),
-              if (_geoError != null) _warning(_geoError!, RED_COLOR),
+              if (_geoError != null) _warning(_geoError!, context.jb.red),
               if (!_hasDest)
                 _warning(
                     'Manzil koordinatasi yo\'q — faqat lokatsiyangiz uzatiladi, ETA hisoblanmaydi.',
-                    AMBER_COLOR),
+                    context.jb.amber),
               Expanded(child: _map()),
               if (_sharing && _hasDest && _myPos != null) _etaRow(),
               _controls(arrived),
@@ -159,25 +159,25 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
   Widget _destBar() {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: jb.card,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(_i.employer?.name ?? 'Kompaniya',
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.bold, color: jb.ink)),
           if ((_i.employer?.address ?? '').isNotEmpty) ...[
             const SizedBox(height: 4),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on_outlined,
-                    size: 15, color: GRAY_TEXT),
+                Icon(Icons.location_on_outlined,
+                    size: 15, color: jb.gray),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(_i.employer!.address!,
-                      style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+                      style: TextStyle(fontSize: 13, color: jb.gray)),
                 ),
               ],
             ),
@@ -252,7 +252,7 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
     final km =
         haversineKm(_myPos!.latitude, _myPos!.longitude, _destPos!.latitude, _destPos!.longitude);
     return Container(
-      color: Colors.white,
+      color: jb.card,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
@@ -262,7 +262,7 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
           const SizedBox(width: 12),
           Expanded(
               child: _statCard(Icons.straighten, 'Masofa',
-                  distanceDisplay(km), AMBER_COLOR)),
+                  distanceDisplay(km), jb.amber)),
         ],
       ),
     );
@@ -283,7 +283,7 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style: const TextStyle(fontSize: 11, color: GRAY_TEXT)),
+                  style: TextStyle(fontSize: 11, color: jb.gray)),
               const SizedBox(height: 2),
               Text(value,
                   style: TextStyle(
@@ -300,7 +300,7 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
   Widget _controls(bool arrived) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: jb.card,
       padding: EdgeInsets.fromLTRB(
           16, 14, 16, MediaQuery.of(context).padding.bottom + 14),
       child: arrived
@@ -336,7 +336,7 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
                               style: TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w600)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: GREEN_COLOR,
+                            backgroundColor: jb.green,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -351,9 +351,9 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
                       child: OutlinedButton(
                         onPressed: () => _stopSharing('stopped'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: RED_COLOR,
+                          foregroundColor: jb.red,
                           side: BorderSide(
-                              color: RED_COLOR.withValues(alpha: 0.5)),
+                              color: jb.red.withValues(alpha: 0.5)),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                         ),
@@ -372,13 +372,13 @@ class _SeekerTrackScreenState extends State<SeekerTrackScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: GREEN_COLOR.withValues(alpha: 0.12),
+        color: jb.green.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: const Text('Yetib keldingiz! Omad 🤝',
+      child: Text('Yetib keldingiz! Omad 🤝',
           textAlign: TextAlign.center,
           style: TextStyle(
-              fontSize: 15, fontWeight: FontWeight.bold, color: GREEN_COLOR)),
+              fontSize: 15, fontWeight: FontWeight.bold, color: jb.green)),
     );
   }
 }

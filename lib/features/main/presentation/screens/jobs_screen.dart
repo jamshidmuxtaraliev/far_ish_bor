@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../../data/models/vacancy_model.dart';
@@ -12,6 +11,7 @@ import '../widgets/job_map_view.dart';
 import '../widgets/vacancy_job_card.dart';
 import 'create_vacancy_screen.dart';
 import 'job_detail_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class JobsScreen extends StatefulWidget {
   final bool isEmployer;
@@ -78,26 +78,20 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarContrastEnforced: false,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: Column(
           children: [
             // ── White header ──
             Container(
               width: double.infinity,
-              color: Colors.white,
+              color: context.jb.card,
               padding: EdgeInsets.only(top: topPad + 18, left: 20, right: 20, bottom: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Ishlar', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: JB_INK)),
+                  Text('Ishlar', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.jb.ink)),
                   const SizedBox(height: 14),
                   Row(
                     children: [
@@ -105,20 +99,20 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                         child: Container(
                           height: 46,
                           padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(color: JB_CHIP_BG, borderRadius: BorderRadius.circular(14)),
+                          decoration: BoxDecoration(color: context.jb.chipBg, borderRadius: BorderRadius.circular(14)),
                           child: Row(
                             children: [
-                              const Icon(Icons.search_rounded, color: JB_GRAY_LIGHT, size: 20),
+                              Icon(Icons.search_rounded, color: context.jb.grayLight, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: TextField(
                                   controller: _searchCtrl,
                                   onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-                                  style: const TextStyle(fontSize: 14, color: JB_INK),
-                                  decoration: const InputDecoration(
+                                  style: TextStyle(fontSize: 14, color: context.jb.ink),
+                                  decoration: InputDecoration(
                                     isCollapsed: true,
                                     hintText: 'Qidirish...',
-                                    hintStyle: TextStyle(color: JB_GRAY_LIGHT, fontSize: 14),
+                                    hintStyle: TextStyle(color: context.jb.grayLight, fontSize: 14),
                                     border: InputBorder.none,
                                   ),
                                 ),
@@ -131,7 +125,7 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                       Container(
                         width: 44,
                         height: 44,
-                        decoration: BoxDecoration(color: JB_BLUE, borderRadius: BorderRadius.circular(14)),
+                        decoration: BoxDecoration(color: context.jb.blue, borderRadius: BorderRadius.circular(14)),
                         child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
                       ),
                     ],
@@ -150,7 +144,7 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
               child: BlocBuilder<VacancyBloc, VacancyState>(
                 builder: (context, state) {
                   if (state.vacanciesStatus.isInProgress) {
-                    return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE));
+                    return Center(child: CircularProgressIndicator(color: context.jb.blue));
                   }
                   if (state.vacanciesStatus == FormzSubmissionStatus.failure) {
                     return _ErrorView(message: state.error?.errorMessage ?? 'Xato yuz berdi', onRetry: widget.onRefresh);
@@ -172,14 +166,14 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                           children: [
                             Text(
                               '${vacancies.length} ta ish topildi',
-                              style: const TextStyle(fontSize: 13, color: JB_GRAY),
+                              style: TextStyle(fontSize: 13, color: context.jb.gray),
                             ),
                             const Spacer(),
                             GestureDetector(
                               onTap: () {},
-                              child: const Text(
+                              child: Text(
                                 'Saralash',
-                                style: TextStyle(fontSize: 13, color: JB_BLUE, fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: 13, color: context.jb.blue, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -189,7 +183,7 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
                         child: vacancies.isEmpty
                             ? _EmptyView(message: "Hozircha mos vakansiya yo'q", onRefresh: widget.onRefresh)
                             : RefreshIndicator(
-                                color: JB_BLUE,
+                                color: context.jb.blue,
                                 onRefresh: () async => widget.onRefresh(),
                                 child: ListView.separated(
                                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -230,15 +224,9 @@ class _EmployerJobsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarContrastEnforced: false,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocListener<VacancyBloc, VacancyState>(
           listener: (context, state) {
             if (state.manageVacancyStatus == FormzSubmissionStatus.failure) {
@@ -251,7 +239,7 @@ class _EmployerJobsView extends StatelessWidget {
             children: [
               Container(
                 width: double.infinity,
-                color: Colors.white,
+                color: context.jb.card,
                 padding: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top + 18,
                   left: 20,
@@ -260,13 +248,13 @@ class _EmployerJobsView extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Vakansiyalarim', style: TextStyle(color: JB_INK, fontSize: 22, fontWeight: FontWeight.w800)),
+                          Text('Vakansiyalarim', style: TextStyle(color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
                           SizedBox(height: 4),
-                          Text("Kompaniya vakansiyalari", style: TextStyle(color: JB_GRAY, fontSize: 13.5)),
+                          Text("Kompaniya vakansiyalari", style: TextStyle(color: context.jb.gray, fontSize: 13.5)),
                         ],
                       ),
                     ),
@@ -277,7 +265,7 @@ class _EmployerJobsView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                          gradient: LinearGradient(colors: [context.jb.blue, context.jb.blueLight]),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Row(
@@ -296,7 +284,7 @@ class _EmployerJobsView extends StatelessWidget {
                 child: BlocBuilder<VacancyBloc, VacancyState>(
                   builder: (context, state) {
                     if (state.vacanciesStatus.isInProgress && state.employerVacancies.isEmpty) {
-                      return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE));
+                      return Center(child: CircularProgressIndicator(color: context.jb.blue));
                     }
                     if (state.vacanciesStatus == FormzSubmissionStatus.failure && state.employerVacancies.isEmpty) {
                       return _ErrorView(message: state.error?.errorMessage ?? 'Xato', onRetry: onRefresh);
@@ -306,7 +294,7 @@ class _EmployerJobsView extends StatelessWidget {
                       return _EmptyView(message: "Hech qanday vakansiya yo'q", onRefresh: onRefresh);
                     }
                     return RefreshIndicator(
-                      color: PRIMARY_BLUE,
+                      color: context.jb.blue,
                       onRefresh: () async => onRefresh(),
                       child: ListView.separated(
                         padding: const EdgeInsets.all(16),
@@ -369,7 +357,7 @@ class _EmployerVacancyCard extends StatelessWidget {
               Navigator.pop(ctx);
               context.read<VacancyBloc>().add(DeleteVacancyEvent(vacancy.id));
             },
-            child: const Text("O'chirish", style: TextStyle(color: Color(0xFFDC2626))),
+            child: Text("O'chirish", style: TextStyle(color: context.jb.red)),
           ),
         ],
       ),
@@ -385,9 +373,9 @@ class _EmployerVacancyCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: CARD_BORDER),
+        border: Border.all(color: context.jb.border),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
@@ -401,13 +389,13 @@ class _EmployerVacancyCard extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: context.jb.cardAlt,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
                   child: Text(
                     initial,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: context.jb.ink),
                   ),
                 ),
               ),
@@ -418,12 +406,12 @@ class _EmployerVacancyCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.jb.ink),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Kompaniyam',
-                      style: TextStyle(fontSize: 13, color: GRAY_TEXT),
+                      style: TextStyle(fontSize: 13, color: context.jb.gray),
                     ),
                   ],
                 ),
@@ -431,7 +419,7 @@ class _EmployerVacancyCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (vacancy.isActive ? const Color(0xFF16A34A) : GRAY_TEXT).withValues(alpha: 0.12),
+                  color: (vacancy.isActive ? context.jb.green : context.jb.gray).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -439,7 +427,7 @@ class _EmployerVacancyCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: vacancy.isActive ? const Color(0xFF16A34A) : GRAY_TEXT,
+                    color: vacancy.isActive ? context.jb.green : context.jb.gray,
                   ),
                 ),
               ),
@@ -462,11 +450,11 @@ class _EmployerVacancyCard extends StatelessWidget {
           ),
           if (vacancy.comment != null && vacancy.comment!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            Divider(height: 1, color: context.jb.cardAlt),
             const SizedBox(height: 10),
             Text(
               vacancy.comment!,
-              style: const TextStyle(fontSize: 13, color: GRAY_TEXT, height: 1.45),
+              style: TextStyle(fontSize: 13, color: context.jb.gray, height: 1.45),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -483,7 +471,7 @@ class _EmployerVacancyCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                      gradient: LinearGradient(colors: [context.jb.blue, context.jb.blueLight]),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(
@@ -506,17 +494,17 @@ class _EmployerVacancyCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
+                    color: context.jb.redBg,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFECACA)),
+                    border: Border.all(color: context.jb.redBg),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 16),
+                      Icon(Icons.delete_outline, color: context.jb.red, size: 16),
                       SizedBox(width: 6),
                       Text(
                         "O'chirish",
-                        style: TextStyle(color: Color(0xFFDC2626), fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: context.jb.red, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -540,9 +528,9 @@ class _InfoRow extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 15, color: GRAY_TEXT),
+        Icon(icon, size: 15, color: context.jb.gray),
         const SizedBox(width: 6),
-        Text(text, style: const TextStyle(fontSize: 13, color: GRAY_TEXT, fontWeight: FontWeight.w500)),
+        Text(text, style: TextStyle(fontSize: 13, color: context.jb.gray, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -561,11 +549,11 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.work_off_outlined, size: 64, color: GRAY_TEXT),
+          Icon(Icons.work_off_outlined, size: 64, color: context.jb.gray),
           const SizedBox(height: 16),
-          Text(message, style: const TextStyle(fontSize: 15, color: GRAY_TEXT), textAlign: TextAlign.center),
+          Text(message, style: TextStyle(fontSize: 15, color: context.jb.gray), textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          TextButton(onPressed: onRefresh, child: const Text('Yangilash', style: TextStyle(color: PRIMARY_BLUE))),
+          TextButton(onPressed: onRefresh, child: Text('Yangilash', style: TextStyle(color: context.jb.blue))),
         ],
       ),
     );
@@ -585,13 +573,13 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 64, color: GRAY_TEXT),
+            Icon(Icons.cloud_off_outlined, size: 64, color: context.jb.gray),
             const SizedBox(height: 16),
-            Text(message, style: const TextStyle(fontSize: 15, color: GRAY_TEXT), textAlign: TextAlign.center),
+            Text(message, style: TextStyle(fontSize: 15, color: context.jb.gray), textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onRetry,
-              style: ElevatedButton.styleFrom(backgroundColor: PRIMARY_BLUE, foregroundColor: Colors.white, elevation: 0),
+              style: ElevatedButton.styleFrom(backgroundColor: context.jb.blue, foregroundColor: Colors.white, elevation: 0),
               child: const Text('Qayta urinish'),
             ),
           ],

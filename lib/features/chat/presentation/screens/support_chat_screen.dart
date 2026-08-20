@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../logic/chat_bloc.dart';
 import '../widgets/chat_view.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Operator bilan suhbat (`support:{role}:{mobile_user_id}`).
 class SupportChatScreen extends StatefulWidget {
@@ -32,12 +32,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   Widget build(BuildContext context) {
     final key = _sessionKey;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: BlocListener<AuthBloc, AuthState>(
         // User keshda yo'q edi — GetMe qaytgach session'ni qayta boshlaymiz.
         listenWhen: (p, c) => _sessionKey == null && p.user?.id != c.user?.id,
@@ -58,21 +53,21 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         avatar: Container(
           width: 38,
           height: 38,
-          decoration: const BoxDecoration(
-            color: JB_INDIGO_TINT,
+          decoration: BoxDecoration(
+            color: jb.blueTint,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.support_agent, color: JB_BLUE, size: 22),
+          child: Icon(Icons.support_agent, color: jb.blue, size: 22),
         ),
       );
 
   Widget _buildWaiting() {
     return Scaffold(
-      backgroundColor: JB_BG,
+      backgroundColor: jb.bg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        foregroundColor: JB_INK,
+        backgroundColor: jb.card,
+        surfaceTintColor: jb.card,
+        foregroundColor: jb.ink,
         elevation: 0,
         title: const Text("Qo'llab-quvvatlash",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -80,7 +75,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, auth) =>
             auth.getMeStatus == FormzSubmissionStatus.inProgress
-                ? const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE))
+                ? Center(child: CircularProgressIndicator(color: jb.blue))
                 : const ChatCenterNote(
                     text: 'Foydalanuvchi aniqlanmadi. Qaytadan kiring.',
                   ),

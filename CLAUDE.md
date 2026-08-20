@@ -37,7 +37,7 @@ Feature-first clean-ish architecture. Each feature lives in `lib/features/<featu
 
 Features: `auth`, `main` (vacancies/candidates/applications — the largest), `billing`, `chat`, `notifications`.
 
-Shared code lives in `lib/core/`: `network/` (DioClient + response wrapper), `error/`, `services/` (DI, connectivity, audio, file picker, local notifications), `constants/` (`constants.dart` for URLs/pref keys, `colors.dart`), `theme/`, `locale/`, `utils/` (reusable widgets like `custom_button`, `custom_textfield`, `search_field`).
+Shared code lives in `lib/core/`: `network/` (DioClient + response wrapper), `error/`, `services/` (DI, connectivity, audio, file picker, local notifications), `constants/` (`constants.dart` for URLs/pref keys), `theme/` (`jb_palette.dart`, `app_theme.dart`, `jb_ui.dart`, `theme_cubit.dart`), `locale/`, `utils/` (reusable widgets like `custom_button`, `custom_textfield`, `search_field`).
 
 ### Dependency injection
 
@@ -74,8 +74,12 @@ The trailing reset-to-`initial` makes status changes behave like one-shot events
 ## Conventions
 
 - **Navigation:** plain `Navigator` (`MaterialPageRoute`). GoRouter is intentionally not used.
-- **Theme:** light and dark themes exist (`ThemeCubit`), but the app currently ships **light-only**. Design reference screenshots may be dark/web — copy structure, not the dark theme.
+- **Theme:** light **and** dark ship (`ThemeCubit` → `PREF_THEME`, `light`/`dark`/`system`; toggle lives in Sozlamalar). Both `ThemeData`s are built from one source: the `JbPalette` token set in `lib/core/theme/jb_palette.dart`.
+  - Read colors as **`context.jb.<token>`** (a `ThemeExtension`, so widgets rebuild on theme change). Where no `BuildContext` is in scope (model getters, top-level helpers), use the global mirror `jb.<token>`, which `ThemeCubit`/`MyApp` keep in sync.
+  - Never hard-code a color literal or `Colors.white` for a surface. `Colors.white` is only for foregrounds on brand-colored backgrounds (or `context.jb.onBrand`).
+  - Status/navigation bar: use `jb.overlay` (or `jb.overlayOnBrand` above a blue header) in `AnnotatedRegion<SystemUiOverlayStyle>`.
+  - Because palette tokens are runtime values, colored widgets can't be `const` — that's expected.
 - **Localization:** primary locales are Uzbek (`uz`) and Russian (`ru`). The persisted default is `uz` (`DEFAULT_LANG_KEY`). User-facing error strings are often hardcoded Uzbek in data sources.
-- **Constants:** API base/domain, SharedPreferences keys, and language keys are centralized in `lib/core/constants/constants.dart`; colors in `lib/core/constants/colors.dart` (uppercase `snake_case` color consts).
+- **Constants:** API base/domain, SharedPreferences keys, and language keys are centralized in `lib/core/constants/constants.dart`. Colors live **only** in `lib/core/theme/jb_palette.dart` (the old `core/constants/colors.dart` with `SCREAMING_CASE` consts is gone); add a semantic token there with both a light and a dark value instead of introducing a literal.
 - **Models:** prefer `@JsonSerializable` + build_runner for new DTOs; regenerate `.g.dart` after edits.
 - Roles are stored under `PREF_ROLE` and gate employer vs. seeker screens.

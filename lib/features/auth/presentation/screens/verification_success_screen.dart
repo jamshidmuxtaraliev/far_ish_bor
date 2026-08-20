@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/colors.dart';
 import '../../../main/presentation/screens/main_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class VerificationSuccessScreen extends StatefulWidget {
   final String language;
@@ -56,21 +56,16 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF9FAFB), Color(0xFFEFF6FF)],
+              colors: [context.jb.cardAlt, context.jb.blueTint],
             ),
           ),
           child: SafeArea(
@@ -85,15 +80,15 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                       width: 128,
                       height: 128,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [GREEN_COLOR, Color(0xFF16A34A)],
+                          colors: [context.jb.green, context.jb.green],
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: GREEN_COLOR.withValues(alpha: 0.4),
+                            color: context.jb.green.withValues(alpha: 0.4),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),
@@ -113,10 +108,10 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                       isUz
                           ? "Muvaffaqiyatli ro'yxatdan o'tdingiz!"
                           : 'Вы успешно зарегистрировались!',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: DARK_NAVY,
+                        color: context.jb.ink,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -126,7 +121,7 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                     opacity: _fadeAnim,
                     child: Text(
                       '${isUz ? "Xush kelibsiz" : "Добро пожаловать"}, ${widget.name}',
-                      style: const TextStyle(fontSize: 15, color: GRAY_TEXT),
+                      style: TextStyle(fontSize: 15, color: context.jb.gray),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -137,7 +132,7 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.jb.card,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
@@ -153,8 +148,8 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [PRIMARY_BLUE, SECONDARY_BLUE],
+                              gradient: LinearGradient(
+                                colors: [context.jb.blue, context.jb.blueLight],
                               ),
                               shape: BoxShape.circle,
                             ),
@@ -171,10 +166,10 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                               children: [
                                 Text(
                                   widget.name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: DARK_NAVY,
+                                    color: context.jb.ink,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -183,8 +178,8 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                                     Container(
                                       width: 18,
                                       height: 18,
-                                      decoration: const BoxDecoration(
-                                        color: PRIMARY_BLUE,
+                                      decoration: BoxDecoration(
+                                        color: context.jb.blue,
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
@@ -202,9 +197,9 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                                           : (isUz
                                               ? 'Tasdiqlangan foydalanuvchi'
                                               : 'Проверенный пользователь'),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
-                                        color: PRIMARY_BLUE,
+                                        color: context.jb.blue,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -235,7 +230,7 @@ class _VerificationSuccessScreenState extends State<VerificationSuccessScreen>
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: PRIMARY_BLUE,
+                          backgroundColor: context.jb.blue,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(

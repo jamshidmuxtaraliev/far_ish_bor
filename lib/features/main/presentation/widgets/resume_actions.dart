@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../../core/utils/utils.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Yuklab olingan rezyume bilan ishlash: ochish / ulashish / natija oynasi.
 ///
@@ -80,7 +80,7 @@ class ResumeActions {
     final filename = path.split('/').last;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.jb.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -95,33 +95,33 @@ class ResumeActions {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: JB_BORDER,
+                    color: context.jb.border,
                     borderRadius: BorderRadius.circular(100),
                   ),
                 ),
                 const SizedBox(height: 18),
-                const JBIconTile(
+                JBIconTile(
                   icon: Icons.check_circle_outline,
-                  bg: JB_GREEN_BG,
-                  fg: JB_GREEN_FG,
+                  bg: context.jb.greenBg,
+                  fg: context.jb.green,
                   size: 52,
                   radius: 18,
                   iconSize: 26,
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Rezyume yuklab olindi',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: JB_INK,
+                    color: context.jb.ink,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   filename,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12.5, color: JB_GRAY),
+                  style: TextStyle(fontSize: 12.5, color: context.jb.gray),
                 ),
                 const SizedBox(height: 20),
                 JBPillButton(

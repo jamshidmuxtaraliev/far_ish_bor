@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/balance_model.dart';
 import '../../data/models/premium_tariff_model.dart';
 import '../logic/billing_bloc.dart';
 import 'topup_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key});
@@ -72,11 +72,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Row(
+            title: Row(
               children: [
                 Icon(
                   Icons.account_balance_wallet_outlined,
-                  color: Color(0xFFD97706),
+                  color: jb.amber,
                   size: 22,
                 ),
                 SizedBox(width: 8),
@@ -86,7 +86,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: DARK_NAVY,
+                      color: jb.ink,
                     ),
                   ),
                 ),
@@ -101,9 +101,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       (tariff != null
                           ? '"${tariff.name.isNotEmpty ? tariff.name : 'Premium'}" tarifini sotib olish uchun balansingizda mablag\' yetarli emas.'
                           : 'Premium sotib olish uchun balansni to\'ldiring.'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: GRAY_TEXT,
+                    color: jb.gray,
                     height: 1.4,
                   ),
                 ),
@@ -115,9 +115,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: jb.cardAlt,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      border: Border.all(color: jb.border),
                     ),
                     child: Column(
                       children: [
@@ -140,11 +140,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dCtx, false),
-                child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT)),
+                child: Text('Bekor', style: TextStyle(color: jb.gray)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: PRIMARY_BLUE,
+                  backgroundColor: jb.blue,
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(dCtx, true),
@@ -176,13 +176,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+          Text(label, style: TextStyle(fontSize: 13, color: jb.gray)),
           Text(
             value,
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: highlight ? FontWeight.bold : FontWeight.w600,
-              color: highlight ? const Color(0xFFDC2626) : DARK_NAVY,
+              color: highlight ? jb.red : jb.ink,
             ),
           ),
         ],
@@ -193,23 +193,18 @@ class _PremiumScreenState extends State<PremiumScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocListener<BillingBloc, BillingState>(
           listenWhen: (p, c) => p.buyPremiumStatus != c.buyPremiumStatus,
           listener: (context, state) {
             if (state.buyPremiumStatus == FormzSubmissionStatus.success) {
               setState(() => _buyingId = null);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text('✅ Premium faollashtirildi'),
-                  backgroundColor: Color(0xFF10B981),
+                  backgroundColor: context.jb.green,
                 ),
               );
             }
@@ -251,15 +246,15 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     if (state.premiumStatus ==
                             FormzSubmissionStatus.inProgress &&
                         state.premiumTariffs.isEmpty) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: PRIMARY_BLUE),
+                      return Center(
+                        child: CircularProgressIndicator(color: context.jb.blue),
                       );
                     }
                     if (state.premiumTariffs.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
                           'Hozircha tarif mavjud emas',
-                          style: TextStyle(color: GRAY_TEXT),
+                          style: TextStyle(color: context.jb.gray),
                         ),
                       );
                     }
@@ -289,7 +284,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         right: 20,
         bottom: 16,
       ),
-      color: Colors.white,
+      color: jb.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -297,22 +292,22 @@ class _PremiumScreenState extends State<PremiumScreen> {
             children: [
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_ios_new,
-                  color: JB_INK,
+                  color: jb.ink,
                   size: 20,
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.workspace_premium,
-                color: Color(0xFFFBBF24),
+                color: jb.amber,
                 size: 22,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Premium',
                 style: TextStyle(
-                  color: JB_INK,
+                  color: jb.ink,
                   fontSize: 19,
                   fontWeight: FontWeight.w800,
                 ),
@@ -326,7 +321,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               builder:
                   (context, state) => Text(
                     'Balans: ${state.balance?.balanceDisplay ?? '—'}',
-                    style: const TextStyle(color: JB_GRAY, fontSize: 13),
+                    style: TextStyle(color: jb.gray, fontSize: 13),
                   ),
             ),
           ),
@@ -341,9 +336,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: jb.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: jb.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -361,12 +356,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
+                  color: jb.amberBg,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.workspace_premium,
-                  color: Color(0xFFD97706),
+                  color: jb.amber,
                   size: 22,
                 ),
               ),
@@ -377,26 +372,26 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   children: [
                     Text(
                       tariff.name.isNotEmpty ? tariff.name : 'Premium',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: DARK_NAVY,
+                        color: jb.ink,
                       ),
                     ),
                     if (tariff.durationDisplay.isNotEmpty)
                       Text(
                         tariff.durationDisplay,
-                        style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
+                        style: TextStyle(fontSize: 13, color: jb.gray),
                       ),
                   ],
                 ),
               ),
               Text(
                 tariff.priceDisplay,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: PRIMARY_BLUE,
+                  color: jb.blue,
                 ),
               ),
             ],
@@ -410,25 +405,25 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 vertical: 8,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFBEB),
+                color: jb.amberBg,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFDE68A)),
+                border: Border.all(color: jb.amberBg),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.info_outline,
-                    color: Color(0xFFD97706),
+                    color: jb.amber,
                     size: 16,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Balans yetarli emas — ${formatSom(missing)} yetishmayapti',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF92400E),
+                        color: jb.amber,
                       ),
                     ),
                   ),
@@ -444,9 +439,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
               onPressed: buying ? null : () => _buy(tariff),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    missing != null ? const Color(0xFFD97706) : PRIMARY_BLUE,
+                    missing != null ? jb.amber : jb.blue,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFFCBD5E1),
+                disabledBackgroundColor: jb.borderStrong,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

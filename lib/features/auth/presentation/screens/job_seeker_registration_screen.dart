@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_error_kind.dart';
 import '../logic/auth_bloc.dart';
@@ -12,6 +11,7 @@ import '../widgets/auth_snack.dart';
 import '../widgets/otp_countdown.dart';
 import '../../../main/presentation/screens/main_screen.dart';
 import 'login_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class JobSeekerRegistrationScreen extends StatefulWidget {
   final String language;
@@ -380,14 +380,9 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
         _handleState(context, state);
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          systemNavigationBarColor: Colors.white,
-          systemNavigationBarIconBrightness: Brightness.dark,
-        ),
+        value: context.jb.overlay,
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: context.jb.card,
           body: SafeArea(
             child: Column(
               children: [
@@ -486,12 +481,12 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
         children: [
           IconButton(
             onPressed: _back,
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: DARK_NAVY),
+            icon: Icon(Icons.arrow_back_ios_new, size: 20, color: jb.ink),
           ),
           const Spacer(),
           Text(
             'Qadam ${_step + 1} / $_total',
-            style: const TextStyle(fontSize: 13, color: GRAY_TEXT, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 13, color: jb.gray, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -504,15 +499,15 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text('${(_progress * 100).round()}%', style: const TextStyle(fontSize: 11, color: GRAY_TEXT)),
+          Text('${(_progress * 100).round()}%', style: TextStyle(fontSize: 11, color: jb.gray)),
           const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: _progress,
               minHeight: 6,
-              backgroundColor: const Color(0xFFE2E8F0),
-              color: PRIMARY_BLUE,
+              backgroundColor: jb.border,
+              color: jb.blue,
             ),
           ),
         ],
@@ -544,8 +539,8 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
                   child: OutlinedButton(
                     onPressed: _back,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: DARK_NAVY,
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      foregroundColor: context.jb.ink,
+                      side: BorderSide(color: context.jb.border),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -559,9 +554,9 @@ class _JobSeekerRegistrationScreenState extends State<JobSeekerRegistrationScree
                 child: ElevatedButton(
                   onPressed: isLoading || blockedOnOtp ? null : () => _next(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: PRIMARY_BLUE,
+                    backgroundColor: context.jb.blue,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFCBD5E1),
+                    disabledBackgroundColor: context.jb.borderStrong,
                     disabledForegroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -639,16 +634,16 @@ class _StepSms extends StatelessWidget {
         onChanged: onChanged,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DARK_NAVY, letterSpacing: 10),
+        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: context.jb.ink, letterSpacing: 10),
         decoration: InputDecoration(
           hintText: '------',
-          hintStyle: const TextStyle(color: GRAY_TEXT, letterSpacing: 10, fontSize: 28),
+          hintStyle: TextStyle(color: context.jb.gray, letterSpacing: 10, fontSize: 28),
           counterText: '',
           filled: true,
-          fillColor: const Color(0xFFF8FAFC),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 2)),
+          fillColor: context.jb.cardAlt,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.jb.border)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.jb.border)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.jb.blue, width: 2)),
         ),
       ),
     );
@@ -702,11 +697,11 @@ class _GenderBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+          color: isSelected ? context.jb.blueTint : context.jb.cardAlt,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isSelected ? PRIMARY_BLUE : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
+          border: Border.all(color: isSelected ? context.jb.blue : context.jb.border, width: isSelected ? 2 : 1),
         ),
-        child: Center(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSelected ? PRIMARY_BLUE : DARK_NAVY))),
+        child: Center(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSelected ? context.jb.blue : context.jb.ink))),
       ),
     );
   }
@@ -739,7 +734,7 @@ class _StepBirthday extends StatelessWidget {
               },
             ),
           ),
-          const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 22, color: GRAY_TEXT))),
+          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 22, color: context.jb.gray))),
           Expanded(
             flex: 2,
             child: _Field(
@@ -754,7 +749,7 @@ class _StepBirthday extends StatelessWidget {
               },
             ),
           ),
-          const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 22, color: GRAY_TEXT))),
+          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 22, color: context.jb.gray))),
           Expanded(
             flex: 3,
             child: _Field(
@@ -802,7 +797,7 @@ class _StepLocation extends StatelessWidget {
         buildWhen: (p, c) => p.regions != c.regions || p.regionsStatus != c.regionsStatus,
         builder: (context, state) {
           if (state.regionsStatus.isInProgress) {
-            return const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2)));
+            return Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2)));
           }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -886,15 +881,15 @@ class _StepJobTypeState extends State<_StepJobType> {
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: context.jb.blueTint, borderRadius: BorderRadius.circular(10)),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: PRIMARY_BLUE, size: 18),
+                  Icon(Icons.check_circle, color: context.jb.blue, size: 18),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(widget.selectedJobType!.name, style: const TextStyle(color: PRIMARY_BLUE, fontWeight: FontWeight.w600, fontSize: 14))),
+                  Expanded(child: Text(widget.selectedJobType!.name, style: TextStyle(color: context.jb.blue, fontWeight: FontWeight.w600, fontSize: 14))),
                   GestureDetector(
                     onTap: () { widget.onFreeText(''); widget.searchCtrl.clear(); },
-                    child: const Icon(Icons.close, color: PRIMARY_BLUE, size: 18),
+                    child: Icon(Icons.close, color: context.jb.blue, size: 18),
                   ),
                 ],
               ),
@@ -905,13 +900,13 @@ class _StepJobTypeState extends State<_StepJobType> {
             buildWhen: (p, c) => p.jobTypes != c.jobTypes || p.jobTypesStatus != c.jobTypesStatus,
             builder: (context, state) {
               if (state.jobTypesStatus.isInProgress) {
-                return const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2)));
+                return Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2)));
               }
               if (state.jobTypes.isEmpty && widget.searchCtrl.text.length >= 2 && widget.selectedJobType == null) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Topilmadi. Qo\'lda kiriting:', style: TextStyle(fontSize: 12, color: GRAY_TEXT)),
+                    Text('Topilmadi. Qo\'lda kiriting:', style: TextStyle(fontSize: 12, color: context.jb.gray)),
                     const SizedBox(height: 8),
                     _Field(ctrl: _freeCtrl, hint: 'Kasbni kiriting...', onChanged: widget.onFreeText),
                   ],
@@ -920,14 +915,14 @@ class _StepJobTypeState extends State<_StepJobType> {
               if (state.jobTypes.isEmpty || widget.selectedJobType != null) return const SizedBox.shrink();
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: context.jb.card,
+                  border: Border.all(color: context.jb.border),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   children: state.jobTypes.take(7).map((jt) => ListTile(
                     dense: true,
-                    title: Text(jt.name, style: const TextStyle(fontSize: 14, color: DARK_NAVY)),
+                    title: Text(jt.name, style: TextStyle(fontSize: 14, color: context.jb.ink)),
                     onTap: () {
                       widget.onSelect(jt);
                       widget.searchCtrl.text = jt.name;
@@ -978,8 +973,8 @@ class _StepExperience extends StatelessWidget {
               Container(
                 width: 88,
                 height: 48,
-                decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('$years yil', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: PRIMARY_BLUE))),
+                decoration: BoxDecoration(color: context.jb.blueTint, borderRadius: BorderRadius.circular(12)),
+                child: Center(child: Text('$years yil', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.jb.blue))),
               ),
               const SizedBox(width: 16),
               _CounterBtn(icon: Icons.add, isPrimary: true, onTap: years < 60 ? () => onYears(years + 1) : null),
@@ -998,11 +993,11 @@ class _StepExperience extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+                    color: isSelected ? context.jb.blueTint : context.jb.cardAlt,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isSelected ? PRIMARY_BLUE : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
+                    border: Border.all(color: isSelected ? context.jb.blue : context.jb.border, width: isSelected ? 2 : 1),
                   ),
-                  child: Text(e, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? PRIMARY_BLUE : DARK_NAVY)),
+                  child: Text(e, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? context.jb.blue : context.jb.ink)),
                 ),
               );
             }).toList(),
@@ -1027,10 +1022,10 @@ class _CounterBtn extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: isPrimary ? PRIMARY_BLUE : const Color(0xFFF1F5F9),
+          color: isPrimary ? context.jb.blue : context.jb.cardAlt,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: isPrimary ? Colors.white : (onTap != null ? DARK_NAVY : GRAY_TEXT)),
+        child: Icon(icon, color: isPrimary ? Colors.white : (onTap != null ? context.jb.ink : context.jb.gray)),
       ),
     );
   }
@@ -1113,7 +1108,7 @@ class _StepLanguages extends StatelessWidget {
         buildWhen: (p, c) => p.languages != c.languages || p.languagesStatus != c.languagesStatus,
         builder: (context, state) {
           if (state.languagesStatus.isInProgress) {
-            return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2));
+            return Center(child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2));
           }
           final langs = state.languages.isNotEmpty
               ? state.languages
@@ -1132,11 +1127,11 @@ class _StepLanguages extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+                    color: isSelected ? context.jb.blueTint : context.jb.cardAlt,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isSelected ? PRIMARY_BLUE : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
+                    border: Border.all(color: isSelected ? context.jb.blue : context.jb.border, width: isSelected ? 2 : 1),
                   ),
-                  child: Text(lang.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? PRIMARY_BLUE : DARK_NAVY)),
+                  child: Text(lang.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? context.jb.blue : context.jb.ink)),
                 ),
               );
             }).toList(),
@@ -1179,21 +1174,21 @@ class _StepExtras extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
+              color: context.jb.blueTint,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFBFDBFE)),
+              border: Border.all(color: context.jb.blueTint),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, color: PRIMARY_BLUE, size: 20),
+                Icon(Icons.info_outline, color: context.jb.blue, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     isUz
                         ? 'Anketangiz to\'ldirilgandan so\'ng mos vakansiyalar ko\'rsatiladi'
                         : 'После заполнения анкеты будут показаны подходящие вакансии',
-                    style: const TextStyle(fontSize: 13, color: PRIMARY_BLUE),
+                    style: TextStyle(fontSize: 13, color: context.jb.blue),
                   ),
                 ),
               ],
@@ -1234,15 +1229,15 @@ class _StepWrapper extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [PRIMARY_BLUE, Color(0xFF3B82F6)]),
+              gradient: LinearGradient(colors: [context.jb.blue, context.jb.blue]),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: Colors.white, size: 26),
           ),
           const SizedBox(height: 16),
-          Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+          Text(title, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.jb.ink)),
           const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(fontSize: 13, color: GRAY_TEXT)),
+          Text(subtitle, style: TextStyle(fontSize: 13, color: context.jb.gray)),
           const SizedBox(height: 24),
           child,
           if (footer != null) ...[
@@ -1261,7 +1256,7 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY));
+    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink));
   }
 }
 
@@ -1279,14 +1274,14 @@ class _SelectableCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
+          color: isSelected ? context.jb.blueTint : context.jb.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? PRIMARY_BLUE : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
+          border: Border.all(color: isSelected ? context.jb.blue : context.jb.border, width: isSelected ? 2 : 1),
         ),
         child: Row(
           children: [
-            Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isSelected ? PRIMARY_BLUE : DARK_NAVY))),
-            if (isSelected) const Icon(Icons.check_circle, color: PRIMARY_BLUE, size: 20),
+            Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isSelected ? context.jb.blue : context.jb.ink))),
+            if (isSelected) Icon(Icons.check_circle, color: context.jb.blue, size: 20),
           ],
         ),
       ),
@@ -1309,16 +1304,16 @@ class _CheckCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: value ? const Color(0xFFEFF6FF) : Colors.white,
+          color: value ? context.jb.blueTint : context.jb.card,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: value ? PRIMARY_BLUE : const Color(0xFFE2E8F0), width: value ? 2 : 1),
+          border: Border.all(color: value ? context.jb.blue : context.jb.border, width: value ? 2 : 1),
         ),
         child: Row(
           children: [
-            Icon(icon, color: value ? PRIMARY_BLUE : GRAY_TEXT, size: 22),
+            Icon(icon, color: value ? context.jb.blue : context.jb.gray, size: 22),
             const SizedBox(width: 12),
-            Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: value ? PRIMARY_BLUE : DARK_NAVY))),
-            Icon(value ? Icons.check_box : Icons.check_box_outline_blank, color: value ? PRIMARY_BLUE : GRAY_TEXT, size: 22),
+            Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: value ? context.jb.blue : context.jb.ink))),
+            Icon(value ? Icons.check_box : Icons.check_box_outline_blank, color: value ? context.jb.blue : context.jb.gray, size: 22),
           ],
         ),
       ),
@@ -1359,17 +1354,17 @@ class _Field extends StatelessWidget {
       maxLength: maxLength,
       inputFormatters: inputFormatters,
       onChanged: onChanged,
-      style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+      style: TextStyle(fontSize: 15, color: context.jb.ink),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: GRAY_TEXT),
+        hintStyle: TextStyle(color: context.jb.gray),
         counterText: '',
         suffixText: suffix,
         filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 2)),
+        fillColor: context.jb.cardAlt,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.jb.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.jb.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.jb.blue, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
@@ -1402,15 +1397,15 @@ class _DropdownField<T> extends StatelessWidget {
           builder: (ctx) => Column(
             children: [
               const SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: context.jb.border, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
               Expanded(
                 child: ListView(
                   children: items.map((item) {
                     final isSelected = value != null && display(value as T) == display(item);
                     return ListTile(
-                      title: Text(display(item), style: TextStyle(fontSize: 14, color: isSelected ? PRIMARY_BLUE : DARK_NAVY, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
-                      trailing: isSelected ? const Icon(Icons.check, color: PRIMARY_BLUE) : null,
+                      title: Text(display(item), style: TextStyle(fontSize: 14, color: isSelected ? context.jb.blue : context.jb.ink, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
+                      trailing: isSelected ? Icon(Icons.check, color: context.jb.blue) : null,
                       onTap: () => Navigator.pop(ctx, item),
                     );
                   }).toList(),
@@ -1424,19 +1419,19 @@ class _DropdownField<T> extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: context.jb.cardAlt,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: value != null ? PRIMARY_BLUE : const Color(0xFFE2E8F0), width: value != null ? 2 : 1),
+          border: Border.all(color: value != null ? context.jb.blue : context.jb.border, width: value != null ? 2 : 1),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 value != null ? display(value as T) : hint,
-                style: TextStyle(fontSize: 15, color: value != null ? DARK_NAVY : GRAY_TEXT),
+                style: TextStyle(fontSize: 15, color: value != null ? context.jb.ink : context.jb.gray),
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down_rounded, color: GRAY_TEXT),
+            Icon(Icons.keyboard_arrow_down_rounded, color: context.jb.gray),
           ],
         ),
       ),

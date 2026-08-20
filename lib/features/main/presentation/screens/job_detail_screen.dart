@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../data/models/application_access.dart';
@@ -12,6 +11,7 @@ import '../../data/models/application_model.dart';
 import '../../data/models/vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'company_profile_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final VacancyModel vacancy;
@@ -82,7 +82,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   Navigator.pop(ctx);
                   setState(() => _applied = true);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ariza muvaffaqiyatli yuborildi!'), backgroundColor: JB_GREEN_FG),
+                    SnackBar(content: Text('Ariza muvaffaqiyatli yuborildi!'), backgroundColor: context.jb.green),
                   );
                 } else if (state.applyStatus == FormzSubmissionStatus.failure) {
                   Navigator.pop(ctx);
@@ -96,7 +96,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 return PopScope(
                   canPop: !isLoading,
                   child: Dialog(
-                    backgroundColor: Colors.white,
+                    backgroundColor: context.jb.card,
                     insetPadding: const EdgeInsets.symmetric(horizontal: 28),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                     child: Padding(
@@ -107,34 +107,34 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           Container(
                             width: 64,
                             height: 64,
-                            decoration: const BoxDecoration(color: JB_INDIGO_TINT, shape: BoxShape.circle),
-                            child: const Icon(Icons.send_rounded, color: JB_BLUE, size: 28),
+                            decoration: BoxDecoration(color: context.jb.blueTint, shape: BoxShape.circle),
+                            child: Icon(Icons.send_rounded, color: context.jb.blue, size: 28),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Ariza yuborilsinmi?',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: JB_INK),
+                            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: context.jb.ink),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             v.jobTypeName ?? 'Kasb #${v.jobTypeId}',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: JB_INK),
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.jb.ink),
                           ),
                           if (v.companyName?.isNotEmpty == true) ...[
                             const SizedBox(height: 2),
                             Text(
                               v.companyName!,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 14, color: JB_GRAY),
+                              style: TextStyle(fontSize: 14, color: context.jb.gray),
                             ),
                           ],
                           const SizedBox(height: 14),
-                          const Text(
+                          Text(
                             'Profilingiz ma\'lumotlari ish beruvchiga yuboriladi.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: JB_GRAY, height: 1.4),
+                            style: TextStyle(fontSize: 13, color: context.jb.gray, height: 1.4),
                           ),
                           const SizedBox(height: 22),
                           Row(
@@ -158,9 +158,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                             ? null
                                             : () => context.read<VacancyBloc>().add(ApplyVacancyEvent(v.id)),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: JB_BLUE,
+                                      backgroundColor: context.jb.blue,
                                       foregroundColor: Colors.white,
-                                      disabledBackgroundColor: JB_BLUE.withValues(alpha: 0.7),
+                                      disabledBackgroundColor: context.jb.blue.withValues(alpha: 0.7),
                                       elevation: 0,
                                       padding: EdgeInsets.zero,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
@@ -199,14 +199,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final initial = (v.companyName?.isNotEmpty == true) ? v.companyName![0].toUpperCase() : '?';
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: JB_BG,
+        backgroundColor: context.jb.bg,
         body: BlocBuilder<VacancyBloc, VacancyState>(
           buildWhen: (p, c) => p.myApplications != c.myApplications,
           builder: (context, state) {
@@ -221,9 +216,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   slivers: [
                     SliverAppBar(
                       pinned: true,
-                      backgroundColor: Colors.white,
-                      surfaceTintColor: Colors.white,
-                      foregroundColor: JB_INK,
+                      backgroundColor: context.jb.card,
+                      surfaceTintColor: context.jb.card,
+                      foregroundColor: context.jb.ink,
                       elevation: 0,
                       scrolledUnderElevation: 0.5,
                       leading: Padding(
@@ -238,11 +233,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                             Container(
                               width: 38,
                               height: 38,
-                              decoration: BoxDecoration(color: JB_INDIGO_TINT, borderRadius: BorderRadius.circular(12)),
+                              decoration: BoxDecoration(color: context.jb.blueTint, borderRadius: BorderRadius.circular(12)),
                               alignment: Alignment.center,
                               child: Text(
                                 initial,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: JB_BLUE),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: context.jb.blue),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -255,19 +250,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                     v.companyName ?? 'Kompaniya',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: JB_INK),
+                                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: context.jb.ink),
                                   ),
                                   if (v.companyAddress != null)
                                     Text(
                                       v.companyAddress!,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12, color: JB_GRAY),
+                                      style: TextStyle(fontSize: 12, color: context.jb.gray),
                                     ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right_rounded, color: JB_GRAY_LIGHT, size: 20),
+                            Icon(Icons.chevron_right_rounded, color: context.jb.grayLight, size: 20),
                           ],
                         ),
                       ),
@@ -280,7 +275,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               padding: const EdgeInsets.only(right: 12),
                               child: JBCircleButton(
                                 icon: isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                                fg: isSaved ? JB_BLUE : JB_INK,
+                                fg: isSaved ? context.jb.blue : context.jb.ink,
                                 onTap: () {
                                   final userId = context.read<AuthBloc>().state.user?.id;
                                   if (userId == null) return;
@@ -298,24 +293,24 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Container(
-                        color: Colors.white,
+                        color: context.jb.card,
                         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               v.jobTypeName ?? 'Kasb #${v.jobTypeId}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 23,
                                 fontWeight: FontWeight.w800,
-                                color: JB_INK,
+                                color: context.jb.ink,
                                 height: 1.25,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               v.salaryDisplay,
-                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: JB_BLUE),
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: context.jb.blue),
                             ),
                             const SizedBox(height: 14),
                             Row(
@@ -326,8 +321,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                 ],
                                 JBChip(
                                   text: v.status == 'active' ? 'Faol' : 'Nofaol',
-                                  bg: v.status == 'active' ? JB_GREEN_BG : JB_CHIP_BG,
-                                  fg: v.status == 'active' ? JB_GREEN_FG : JB_GRAY,
+                                  bg: v.status == 'active' ? context.jb.greenBg : context.jb.chipBg,
+                                  fg: v.status == 'active' ? context.jb.green : context.jb.gray,
                                 ),
                               ],
                             ),
@@ -376,15 +371,15 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          const Text(
+                          Text(
                             'Ish tavsifi',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: JB_INK),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.jb.ink),
                           ),
                           const SizedBox(height: 10),
-                          const Text(
+                          Text(
                             'Ushbu vakansiyaga murojaat qilish uchun "Ishga topshirish" tugmasini bosing. '
                             "Ish beruvchi siz bilan bog'lanadi.",
-                            style: TextStyle(fontSize: 14, color: JB_GRAY, height: 1.6),
+                            style: TextStyle(fontSize: 14, color: context.jb.gray, height: 1.6),
                           ),
                         ]),
                       ),
@@ -398,9 +393,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   bottom: 0,
                   child: Container(
                     padding: EdgeInsets.fromLTRB(20, 14, 20, bottomPad + 14),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(top: BorderSide(color: JB_BORDER)),
+                    decoration: BoxDecoration(
+                      color: context.jb.card,
+                      border: Border(top: BorderSide(color: context.jb.border)),
                     ),
                     child: Row(
                       children: [
@@ -463,12 +458,12 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: JB_DIVIDER))),
+      decoration: BoxDecoration(border: last ? null : Border(bottom: BorderSide(color: context.jb.divider))),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: JB_GRAY_LIGHT),
+          Icon(icon, size: 16, color: context.jb.grayLight),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(fontSize: 14, color: JB_GRAY)),
+          Text(label, style: TextStyle(fontSize: 14, color: context.jb.gray)),
           const Spacer(),
           Flexible(
             child: Text(
@@ -478,7 +473,7 @@ class _InfoRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: muted ? 12.5 : 14.5,
                 fontWeight: muted ? FontWeight.w500 : FontWeight.w700,
-                color: muted ? JB_GRAY : JB_INK,
+                color: muted ? context.jb.gray : context.jb.ink,
               ),
             ),
           ),

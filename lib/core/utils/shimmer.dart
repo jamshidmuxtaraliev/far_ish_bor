@@ -2,10 +2,11 @@ import 'package:jobUp24/core/extensions/extensions.dart';
 import 'package:jobUp24/core/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../theme/jb_palette.dart';
 
-// Asosiy ranglar
-final baseShimmerColor = Colors.grey[800]!;
-final highlightShimmerColor = Colors.grey[700]!;
+// Asosiy ranglar — mavzuga qarab o'zgaradi (getter, shuning uchun keshlanmaydi).
+Color get baseShimmerColor => jb.isDark ? jb.cardAlt : jb.border;
+Color get highlightShimmerColor => jb.isDark ? jb.chipBg : jb.card;
 
 Widget listViewShimmer({required BuildContext context, double? height, int? itemCount, EdgeInsetsGeometry? padding}) {
   return ListView.builder(
@@ -26,7 +27,7 @@ Widget shimmerContainer(double width, {double? height, double? borderRadius}) {
     child: Container(
       width: width,
       height: height ?? 14,
-      decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(borderRadius ?? 4)),
+      decoration: BoxDecoration(color: baseShimmerColor, borderRadius: BorderRadius.circular(borderRadius ?? 4)),
     ),
   );
 }
@@ -39,7 +40,7 @@ class ShimmerListItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 3),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: context.jb.chipBg, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           Row(
@@ -51,7 +52,7 @@ class ShimmerListItem extends StatelessWidget {
                 child: Container(
                   width: 25,
                   height: 25,
-                  decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: baseShimmerColor, shape: BoxShape.circle),
                 ),
               ),
               const SizedBox(width: 12),

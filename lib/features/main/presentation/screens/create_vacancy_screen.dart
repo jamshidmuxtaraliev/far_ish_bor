@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../auth/data/models/anketa_models.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../data/models/create_vacancy_request.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class CreateVacancyScreen extends StatefulWidget {
   final EmployerVacancyModel? existing;
@@ -68,9 +68,9 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
   void _submit() {
     if (_selectedJobType == null && !_isEdit) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text("Iltimos, kasb turini tanlang"),
-          backgroundColor: RED_COLOR,
+          backgroundColor: jb.red,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -104,22 +104,22 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
       context: context,
       builder: (dCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.account_balance_wallet_outlined, color: PRIMARY_BLUE, size: 22),
+            Icon(Icons.account_balance_wallet_outlined, color: jb.blue, size: 22),
             SizedBox(width: 10),
-            Text('Balans / Tarif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+            Text('Balans / Tarif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: jb.ink)),
           ],
         ),
         content: Text(
           message ?? 'Balans yetarli emas. Davom etish uchun balansni to\'ldiring yoki tarifni faollashtiring.',
-          style: const TextStyle(fontSize: 14, color: GRAY_TEXT, height: 1.4),
+          style: TextStyle(fontSize: 14, color: jb.gray, height: 1.4),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Bekor', style: TextStyle(color: GRAY_TEXT))),
+          TextButton(onPressed: () => Navigator.pop(dCtx), child: Text('Bekor', style: TextStyle(color: jb.gray))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: PRIMARY_BLUE,
+              backgroundColor: jb.blue,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -160,7 +160,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(_isEdit ? 'Vakansiya yangilandi' : 'Vakansiya yaratildi'),
-              backgroundColor: GREEN_COLOR,
+              backgroundColor: context.jb.green,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -175,7 +175,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error?.errorMessage ?? 'Xatolik yuz berdi'),
-                backgroundColor: RED_COLOR,
+                backgroundColor: context.jb.red,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -183,12 +183,9 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-        ),
+        value: context.jb.overlay,
         child: Scaffold(
-          backgroundColor: LIGHT_GRAY_BG,
+          backgroundColor: context.jb.bg,
           body: Column(
             children: [
               _buildHeader(),
@@ -228,7 +225,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
         right: 16,
         bottom: 16,
       ),
-      color: Colors.white,
+      color: jb.card,
       child: Row(
         children: [
           GestureDetector(
@@ -237,10 +234,10 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: JB_CHIP_BG,
+                color: jb.chipBg,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: JB_INK, size: 18),
+              child: Icon(Icons.arrow_back_ios_new_rounded, color: jb.ink, size: 18),
             ),
           ),
           const SizedBox(width: 14),
@@ -248,10 +245,10 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Ishchi e\'lonlar', style: TextStyle(color: JB_GRAY, fontSize: 12)),
+                Text('Ishchi e\'lonlar', style: TextStyle(color: jb.gray, fontSize: 12)),
                 Text(
                   _isEdit ? "Vakansiyani tahrirlash" : "Yangi vakansiya",
-                  style: const TextStyle(color: JB_INK, fontSize: 17, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: jb.ink, fontSize: 17, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
@@ -259,16 +256,16 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: JB_INDIGO_TINT,
+              color: jb.blueTint,
               borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               children: [
-                const Icon(Icons.work_outline, color: JB_BLUE, size: 13),
+                Icon(Icons.work_outline, color: jb.blue, size: 13),
                 const SizedBox(width: 4),
                 Text(
                   _isEdit ? 'Tahrirlash' : 'Yangi',
-                  style: const TextStyle(color: JB_BLUE, fontSize: 12, fontWeight: FontWeight.w700),
+                  style: TextStyle(color: jb.blue, fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -332,7 +329,7 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
               lastDate: DateTime.now().add(const Duration(days: 365)),
               builder: (ctx, child) => Theme(
                 data: Theme.of(ctx).copyWith(
-                  colorScheme: const ColorScheme.light(primary: PRIMARY_BLUE),
+                  colorScheme: ColorScheme.light(primary: jb.blue),
                 ),
                 child: child!,
               ),
@@ -343,24 +340,24 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             height: 52,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: LIGHT_GRAY_BG,
+              color: jb.bg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: _deadline != null ? PRIMARY_BLUE.withValues(alpha: 0.4) : const Color(0xFFE5E7EB),
+                color: _deadline != null ? jb.blue.withValues(alpha: 0.4) : jb.border,
               ),
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today_outlined, color: _deadline != null ? PRIMARY_BLUE : GRAY_TEXT, size: 18),
+                Icon(Icons.calendar_today_outlined, color: _deadline != null ? jb.blue : jb.gray, size: 18),
                 const SizedBox(width: 10),
                 Text(
                   _deadline != null
                       ? '${_deadline!.day.toString().padLeft(2, '0')}.${_deadline!.month.toString().padLeft(2, '0')}.${_deadline!.year}'
                       : 'Muddatni tanlang',
-                  style: TextStyle(color: _deadline != null ? DARK_NAVY : GRAY_TEXT, fontSize: 15),
+                  style: TextStyle(color: _deadline != null ? jb.ink : jb.gray, fontSize: 15),
                 ),
                 const Spacer(),
-                const Icon(Icons.chevron_right, color: GRAY_TEXT, size: 20),
+                Icon(Icons.chevron_right, color: jb.gray, size: 20),
               ],
             ),
           ),
@@ -404,9 +401,9 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
   }
 
   Widget _buildStatusCard() {
-    const options = [
-      ('active', 'Faol', Icons.check_circle_outline, GREEN_COLOR),
-      ('inactive', 'Nofaol', Icons.pause_circle_outline, GRAY_TEXT),
+    final options = [
+      ('active', 'Faol', Icons.check_circle_outline, jb.green),
+      ('inactive', 'Nofaol', Icons.pause_circle_outline, jb.gray),
     ];
     return _SectionCard(
       title: 'Vakansiya holati',
@@ -424,22 +421,22 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
                     duration: const Duration(milliseconds: 180),
                     height: 56,
                     decoration: BoxDecoration(
-                      color: isSelected ? opt.$4.withValues(alpha: 0.08) : LIGHT_GRAY_BG,
+                      color: isSelected ? opt.$4.withValues(alpha: 0.08) : jb.bg,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? opt.$4 : const Color(0xFFE5E7EB),
+                        color: isSelected ? opt.$4 : jb.border,
                         width: isSelected ? 1.5 : 1,
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(opt.$3, color: isSelected ? opt.$4 : GRAY_TEXT, size: 18),
+                        Icon(opt.$3, color: isSelected ? opt.$4 : jb.gray, size: 18),
                         const SizedBox(width: 6),
                         Text(
                           opt.$2,
                           style: TextStyle(
-                            color: isSelected ? opt.$4 : GRAY_TEXT,
+                            color: isSelected ? opt.$4 : jb.gray,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             fontSize: 14,
                           ),
@@ -466,16 +463,16 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
           maxLines: 4,
           minLines: 3,
           textCapitalization: TextCapitalization.sentences,
-          style: const TextStyle(fontSize: 14, color: DARK_NAVY, height: 1.5),
+          style: TextStyle(fontSize: 14, color: jb.ink, height: 1.5),
           decoration: InputDecoration(
             hintText: 'Vakansiya haqida qo\'shimcha ma\'lumot...',
-            hintStyle: const TextStyle(color: GRAY_TEXT, fontSize: 13),
+            hintStyle: TextStyle(color: jb.gray, fontSize: 13),
             filled: true,
-            fillColor: LIGHT_GRAY_BG,
+            fillColor: jb.bg,
             contentPadding: const EdgeInsets.all(14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: jb.border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: jb.border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: jb.blue, width: 1.5)),
           ),
         ),
       ],
@@ -494,8 +491,8 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             top: 12,
             bottom: MediaQuery.of(context).padding.bottom + 12,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: jb.card,
             boxShadow: [BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, -2))],
           ),
           child: GestureDetector(
@@ -503,10 +500,10 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             child: Container(
               height: 52,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+                gradient: LinearGradient(colors: [jb.blue, jb.blueLight]),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
-                  BoxShadow(color: PRIMARY_BLUE.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4)),
+                  BoxShadow(color: jb.blue.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4)),
                 ],
               ),
               child: isLoading
@@ -569,8 +566,8 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
       minChildSize: 0.4,
       maxChildSize: 0.92,
       builder: (_, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: context.jb.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -579,29 +576,29 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
             Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: const Color(0xFFE5E7EB), borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: context.jb.border, borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  const Text('Kasb tanlang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+                  Text('Kasb tanlang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.jb.ink)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+                    style: TextStyle(fontSize: 15, color: context.jb.ink),
                     decoration: InputDecoration(
                       hintText: 'Kasb nomini kiriting...',
-                      hintStyle: const TextStyle(color: GRAY_TEXT),
-                      prefixIcon: const Icon(Icons.search, color: GRAY_TEXT, size: 20),
+                      hintStyle: TextStyle(color: context.jb.gray),
+                      prefixIcon: Icon(Icons.search, color: context.jb.gray, size: 20),
                       filled: true,
-                      fillColor: LIGHT_GRAY_BG,
+                      fillColor: context.jb.bg,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
                     ),
                   ),
                 ],
@@ -613,18 +610,18 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
                 buildWhen: (p, c) => p.jobTypes != c.jobTypes || p.jobTypesStatus != c.jobTypesStatus,
                 builder: (context, state) {
                   if (state.jobTypesStatus.isInProgress) {
-                    return const Center(child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2));
+                    return Center(child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2));
                   }
                   if (state.jobTypes.isEmpty) {
-                    return const Center(
-                      child: Text('Natija topilmadi', style: TextStyle(color: GRAY_TEXT)),
+                    return Center(
+                      child: Text('Natija topilmadi', style: TextStyle(color: context.jb.gray)),
                     );
                   }
                   return ListView.separated(
                     controller: scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: state.jobTypes.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                    separatorBuilder: (_, __) => Divider(height: 1, color: context.jb.cardAlt),
                     itemBuilder: (_, i) {
                       final item = state.jobTypes[i];
                       final isSelected = item.id == widget.selectedId;
@@ -643,12 +640,12 @@ class _JobTypeSheetState extends State<_JobTypeSheet> {
                                   item.name,
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: isSelected ? PRIMARY_BLUE : DARK_NAVY,
+                                    color: isSelected ? context.jb.blue : context.jb.ink,
                                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                   ),
                                 ),
                               ),
-                              if (isSelected) const Icon(Icons.check_rounded, color: PRIMARY_BLUE, size: 18),
+                              if (isSelected) Icon(Icons.check_rounded, color: context.jb.blue, size: 18),
                             ],
                           ),
                         ),
@@ -686,7 +683,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
@@ -699,21 +696,21 @@ class _SectionCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: PRIMARY_BLUE.withValues(alpha: 0.1),
+                  color: context.jb.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: PRIMARY_BLUE, size: 16),
+                child: Icon(icon, color: context.jb.blue, size: 16),
               ),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+              Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: context.jb.ink)),
               if (required) ...[
                 const SizedBox(width: 4),
-                const Text('*', style: TextStyle(color: RED_COLOR, fontSize: 14, fontWeight: FontWeight.bold)),
+                Text('*', style: TextStyle(color: context.jb.red, fontSize: 14, fontWeight: FontWeight.bold)),
               ],
             ],
           ),
           const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFFF3F4F6)),
+          Divider(height: 1, color: context.jb.cardAlt),
           const SizedBox(height: 14),
           ...children,
         ],
@@ -729,7 +726,7 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GRAY_TEXT));
+    return Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.jb.gray));
   }
 }
 
@@ -746,17 +743,17 @@ class _NumField extends StatelessWidget {
       controller: controller,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+      style: TextStyle(fontSize: 15, color: context.jb.ink),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: GRAY_TEXT),
-        prefixIcon: Icon(icon, color: GRAY_TEXT, size: 18),
+        hintStyle: TextStyle(color: context.jb.gray),
+        prefixIcon: Icon(icon, color: context.jb.gray, size: 18),
         filled: true,
-        fillColor: LIGHT_GRAY_BG,
+        fillColor: context.jb.bg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
       ),
     );
   }
@@ -778,22 +775,22 @@ class _SelectField extends StatelessWidget {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: LIGHT_GRAY_BG,
+          color: context.jb.bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: value != null ? PRIMARY_BLUE.withValues(alpha: 0.4) : const Color(0xFFE5E7EB)),
+          border: Border.all(color: value != null ? context.jb.blue.withValues(alpha: 0.4) : context.jb.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: value != null ? PRIMARY_BLUE : GRAY_TEXT, size: 18),
+            Icon(icon, color: value != null ? context.jb.blue : context.jb.gray, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 value ?? hint,
-                style: TextStyle(color: value != null ? DARK_NAVY : GRAY_TEXT, fontSize: 15),
+                style: TextStyle(color: value != null ? context.jb.ink : context.jb.gray, fontSize: 15),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down_rounded, color: GRAY_TEXT, size: 20),
+            Icon(Icons.keyboard_arrow_down_rounded, color: context.jb.gray, size: 20),
           ],
         ),
       ),

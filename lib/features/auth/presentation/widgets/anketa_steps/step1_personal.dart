@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/constants/colors.dart';
+import '../../../../../core/theme/jb_palette.dart';
 
 class Step1Personal extends StatelessWidget {
   final TextEditingController fullnameController;
@@ -49,7 +49,7 @@ class Step1Personal extends StatelessWidget {
                       label: 'Erkak',
                       icon: Icons.male_rounded,
                       isSelected: gender == 'male',
-                      color: PRIMARY_BLUE,
+                      color: context.jb.blue,
                       onTap: () => onGenderChanged('male'),
                     ),
                   ),
@@ -59,7 +59,7 @@ class Step1Personal extends StatelessWidget {
                       label: 'Ayol',
                       icon: Icons.female_rounded,
                       isSelected: gender == 'female',
-                      color: const Color(0xFFEC4899),
+                      color: context.jb.pink,
                       onTap: () => onGenderChanged('female'),
                     ),
                   ),
@@ -81,7 +81,7 @@ class Step1Personal extends StatelessWidget {
                     lastDate: DateTime.now().subtract(const Duration(days: 365 * 16)),
                     builder: (ctx, child) => Theme(
                       data: Theme.of(ctx).copyWith(
-                        colorScheme: const ColorScheme.light(primary: PRIMARY_BLUE),
+                        colorScheme: ColorScheme.light(primary: context.jb.blue),
                       ),
                       child: child!,
                     ),
@@ -92,25 +92,25 @@ class Step1Personal extends StatelessWidget {
                   height: 52,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: LIGHT_GRAY_BG,
+                    color: context.jb.bg,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    border: Border.all(color: context.jb.border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined, color: GRAY_TEXT, size: 18),
+                      Icon(Icons.calendar_today_outlined, color: context.jb.gray, size: 18),
                       const SizedBox(width: 10),
                       Text(
                         birthday != null
                             ? '${birthday!.day.toString().padLeft(2, '0')}.${birthday!.month.toString().padLeft(2, '0')}.${birthday!.year}'
                             : 'Sanani tanlang',
                         style: TextStyle(
-                          color: birthday != null ? DARK_NAVY : GRAY_TEXT,
+                          color: birthday != null ? context.jb.ink : context.jb.gray,
                           fontSize: 15,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right, color: GRAY_TEXT, size: 20),
+                      Icon(Icons.chevron_right, color: context.jb.gray, size: 20),
                     ],
                   ),
                 ),
@@ -146,22 +146,22 @@ class _GenderChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         height: 52,
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : LIGHT_GRAY_BG,
+          color: isSelected ? color.withValues(alpha: 0.1) : context.jb.bg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : const Color(0xFFE5E7EB),
+            color: isSelected ? color : context.jb.border,
             width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: isSelected ? color : GRAY_TEXT, size: 20),
+            Icon(icon, color: isSelected ? color : context.jb.gray, size: 20),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : GRAY_TEXT,
+                color: isSelected ? color : context.jb.gray,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 15,
               ),
@@ -184,7 +184,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
@@ -207,7 +207,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DARK_NAVY),
+      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.jb.ink),
     );
   }
 }
@@ -230,17 +230,17 @@ class _InputField extends StatelessWidget {
     return TextField(
       controller: controller,
       textCapitalization: textCapitalization,
-      style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+      style: TextStyle(fontSize: 15, color: context.jb.ink),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: GRAY_TEXT, fontSize: 15),
-        prefixIcon: Icon(icon, color: GRAY_TEXT, size: 18),
+        hintStyle: TextStyle(color: context.jb.gray, fontSize: 15),
+        prefixIcon: Icon(icon, color: context.jb.gray, size: 18),
         filled: true,
-        fillColor: LIGHT_GRAY_BG,
+        fillColor: context.jb.bg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 1.5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: context.jb.blue, width: 1.5)),
       ),
     );
   }

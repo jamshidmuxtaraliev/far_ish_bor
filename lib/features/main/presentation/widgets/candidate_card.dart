@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../../../core/utils/custom_cached_network_image.dart';
 import '../../data/models/candidate_model.dart';
@@ -11,22 +10,23 @@ import '../logic/candidate_stages.dart';
 import '../logic/vacancy_bloc.dart';
 import '../screens/candidate_detail_screen.dart';
 import 'otklik_actions.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 /// Mos foiz / bucket bo'yicha badge rangi (§5.2):
 /// 🟢 auto (≥80) yashil · 🔵 operator (60–79) ko'k · ⚪ past (<60) kulrang.
 Color matchBucketColor(CandidateModel c) {
   switch (c.matchBucket) {
     case 'auto':
-      return const Color(0xFF16A34A);
+      return jb.green;
     case 'operator':
-      return PRIMARY_BLUE;
+      return jb.blue;
     case 'past':
-      return GRAY_TEXT;
+      return jb.gray;
   }
   final p = c.matchPercent;
-  if (p >= 80) return const Color(0xFF16A34A);
-  if (p >= 60) return PRIMARY_BLUE;
-  return GRAY_TEXT;
+  if (p >= 80) return jb.green;
+  if (p >= 60) return jb.blue;
+  return jb.gray;
 }
 
 const _assignmentLabels = {
@@ -76,7 +76,7 @@ class CandidateUnlockListener extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error?.errorMessage ?? 'Xatolik'),
-                backgroundColor: JB_RED_FG,
+                backgroundColor: context.jb.red,
               ),
             );
           }
@@ -97,7 +97,7 @@ void showUnlockSuccessSheet(
     context: context,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-    backgroundColor: Colors.white,
+    backgroundColor: context.jb.card,
     builder: (sheetCtx) => Padding(
       padding: EdgeInsets.fromLTRB(
           24, 24, 24, MediaQuery.of(sheetCtx).padding.bottom + 24),
@@ -107,40 +107,40 @@ void showUnlockSuccessSheet(
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-                color: JB_GREEN_BG, shape: BoxShape.circle),
-            child: const Icon(Icons.lock_open_rounded,
-                color: JB_GREEN_FG, size: 30),
+            decoration: BoxDecoration(
+                color: context.jb.greenBg, shape: BoxShape.circle),
+            child: Icon(Icons.lock_open_rounded,
+                color: context.jb.green, size: 30),
           ),
           const SizedBox(height: 16),
-          const Text('Nomzod ochildi!',
+          Text('Nomzod ochildi!',
               style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: JB_INK)),
+                  fontSize: 18, fontWeight: FontWeight.w800, color: context.jb.ink)),
           const SizedBox(height: 8),
           Text(
             result.phone,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: JB_BLUE,
+                color: context.jb.blue,
                 letterSpacing: 1),
           ),
           if (result.additionalContact != null) ...[
             const SizedBox(height: 4),
             Text(result.additionalContact!,
-                style: const TextStyle(fontSize: 14, color: JB_GRAY)),
+                style: TextStyle(fontSize: 14, color: context.jb.gray)),
           ],
           const SizedBox(height: 8),
           if (result.charged && !result.free && result.fee > 0)
             Text(
               "${formatAmount(result.fee)} so'm yechildi"
               "${result.balance != null ? ' • Qolgan balans: ${formatAmount(result.balance!)} so\'m' : ''}",
-              style: const TextStyle(fontSize: 12, color: JB_GRAY),
+              style: TextStyle(fontSize: 12, color: context.jb.gray),
               textAlign: TextAlign.center,
             )
           else
-            const Text('Bepul ochildi',
-                style: TextStyle(fontSize: 12, color: JB_GREEN_FG)),
+            Text('Bepul ochildi',
+                style: TextStyle(fontSize: 12, color: context.jb.green)),
           const SizedBox(height: 18),
           if (candidate != null)
             UnlockedActionsRow(candidate: candidate, phone: result.phone),
@@ -149,7 +149,7 @@ void showUnlockSuccessSheet(
             width: double.infinity,
             child: TextButton(
               onPressed: () => Navigator.pop(sheetCtx),
-              child: const Text('Yopish', style: TextStyle(color: JB_GRAY)),
+              child: Text('Yopish', style: TextStyle(color: context.jb.gray)),
             ),
           ),
         ],
@@ -199,8 +199,8 @@ class CandidateCard extends StatelessWidget {
           decoration: jbCardDecoration(
             radius: 18,
             border: isRecommended
-                ? JB_PURPLE_FG.withValues(alpha: 0.28)
-                : JB_BORDER,
+                ? context.jb.violet.withValues(alpha: 0.28)
+                : context.jb.border,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,29 +219,29 @@ class CandidateCard extends StatelessWidget {
                           candidate.fullname ?? "Ism noma'lum",
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.w700,
-                              color: JB_INK),
+                              color: context.jb.ink),
                         ),
                         const SizedBox(height: 4),
                         Text(_metaLine(unlocked: isUnlocked),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 12.5, color: JB_GRAY)),
+                            style: TextStyle(
+                                fontSize: 12.5, color: context.jb.gray)),
                         if (experience != null && experience > 0) ...[
                           const SizedBox(height: 3),
                           Text('Tajriba: $experience yil',
-                              style: const TextStyle(
-                                  fontSize: 12.5, color: JB_GRAY)),
+                              style: TextStyle(
+                                  fontSize: 12.5, color: context.jb.gray)),
                         ],
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
                   if (isRecommended)
-                    const _Badge('Operator tavsiyasi', JB_PURPLE_FG)
+                    _Badge('Operator tavsiyasi', context.jb.violet)
                   else if (candidate.matchPercent > 0)
                     _Badge('${candidate.matchPercent}%',
                         matchBucketColor(candidate)),
@@ -251,10 +251,10 @@ class CandidateCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   assignmentLabel(candidate.assignment!.status),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: JB_PURPLE_FG),
+                      color: context.jb.violet),
                 ),
               ],
               const SizedBox(height: 12),
@@ -322,14 +322,14 @@ class _Avatar extends StatelessWidget {
       width: 46,
       height: 46,
       decoration: BoxDecoration(
-        color: JB_INDIGO_TINT,
+        color: context.jb.blueTint,
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: Alignment.center,
       child: Text(
         candidate.initials,
-        style: const TextStyle(
-            fontSize: 15, fontWeight: FontWeight.w800, color: JB_BLUE),
+        style: TextStyle(
+            fontSize: 15, fontWeight: FontWeight.w800, color: context.jb.blue),
       ),
     );
   }
@@ -362,14 +362,14 @@ class _PhoneRow extends StatelessWidget {
     final value = (phone ?? '').isNotEmpty ? phone! : '—';
     return Row(
       children: [
-        const Icon(Icons.phone_rounded, size: 15, color: JB_GREEN_FG),
+        Icon(Icons.phone_rounded, size: 15, color: context.jb.green),
         const SizedBox(width: 7),
         Flexible(
           child: Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  color: JB_INK)),
+                  color: context.jb.ink)),
         ),
       ],
     );
@@ -396,8 +396,8 @@ class _DetailButton extends StatelessWidget {
         ),
         icon: const Icon(Icons.visibility_outlined, size: 15),
         style: OutlinedButton.styleFrom(
-          foregroundColor: JB_INK,
-          side: const BorderSide(color: JB_BORDER, width: 1.5),
+          foregroundColor: context.jb.ink,
+          side: BorderSide(color: context.jb.border, width: 1.5),
           padding: EdgeInsets.zero,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
@@ -452,7 +452,7 @@ class UnlockButton extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isFree ? JB_GREEN_FG : JB_BLUE,
+          backgroundColor: isFree ? context.jb.green : context.jb.blue,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.zero,

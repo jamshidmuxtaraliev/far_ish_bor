@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:formz/formz.dart';
-import '../../../../core/constants/colors.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_error_kind.dart';
 import '../logic/auth_bloc.dart';
@@ -11,6 +10,7 @@ import '../widgets/auth_snack.dart';
 import '../widgets/otp_countdown.dart';
 import 'login_screen.dart';
 import 'verification_success_screen.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class EmployerRegistrationScreen extends StatefulWidget {
   final String language;
@@ -281,14 +281,14 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
   InputDecoration _inputDeco(String hint, {bool counter = false}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: GRAY_TEXT),
+      hintStyle: TextStyle(color: jb.gray),
       counterText: counter ? null : '',
       filled: true,
-      fillColor: Colors.white,
+      fillColor: jb.card,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 2)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 2)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 2)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: jb.border, width: 2)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: jb.border, width: 2)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: jb.blue, width: 2)),
     );
   }
 
@@ -296,12 +296,12 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: DARK_NAVY)),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: jb.ink)),
         const SizedBox(height: 8),
         TextField(
           controller: ctrl,
           keyboardType: type,
-          style: const TextStyle(fontSize: 15, color: DARK_NAVY),
+          style: TextStyle(fontSize: 15, color: jb.ink),
           decoration: _inputDeco(hint),
         ),
       ],
@@ -312,21 +312,21 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: DARK_NAVY)),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: jb.ink)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: value.isEmpty ? null : value,
-          hint: Text(isUz ? 'Tanlang' : 'Выберите', style: const TextStyle(color: GRAY_TEXT)),
+          hint: Text(isUz ? 'Tanlang' : 'Выберите', style: TextStyle(color: jb.gray)),
           items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: onChanged,
-          style: const TextStyle(color: DARK_NAVY, fontSize: 15),
+          style: TextStyle(color: jb.ink, fontSize: 15),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: jb.card,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 2)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 2)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: PRIMARY_BLUE, width: 2)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: jb.border, width: 2)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: jb.border, width: 2)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: jb.blue, width: 2)),
           ),
         ),
       ],
@@ -337,7 +337,7 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: DARK_NAVY)),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: jb.ink)),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
@@ -348,15 +348,15 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
               builder: (ctx) => Column(
                 children: [
                   const SizedBox(height: 12),
-                  Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: jb.border, borderRadius: BorderRadius.circular(2))),
                   const SizedBox(height: 8),
                   Expanded(
                     child: ListView(
                       children: items.map((item) {
                         final isSelected = value != null && display(value) == display(item);
                         return ListTile(
-                          title: Text(display(item), style: TextStyle(fontSize: 14, color: isSelected ? PRIMARY_BLUE : DARK_NAVY, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
-                          trailing: isSelected ? const Icon(Icons.check, color: PRIMARY_BLUE) : null,
+                          title: Text(display(item), style: TextStyle(fontSize: 14, color: isSelected ? jb.blue : jb.ink, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400)),
+                          trailing: isSelected ? Icon(Icons.check, color: jb.blue) : null,
                           onTap: () => Navigator.pop(ctx, item),
                         );
                       }).toList(),
@@ -370,19 +370,19 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: jb.card,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: value != null ? PRIMARY_BLUE : const Color(0xFFE5E7EB), width: 2),
+              border: Border.all(color: value != null ? jb.blue : jb.border, width: 2),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     value != null ? display(value) : (isUz ? 'Tanlang' : 'Выберите'),
-                    style: TextStyle(fontSize: 15, color: value != null ? DARK_NAVY : GRAY_TEXT),
+                    style: TextStyle(fontSize: 15, color: value != null ? jb.ink : jb.gray),
                   ),
                 ),
-                const Icon(Icons.keyboard_arrow_down_rounded, color: GRAY_TEXT),
+                Icon(Icons.keyboard_arrow_down_rounded, color: jb.gray),
               ],
             ),
           ),
@@ -402,14 +402,9 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
         _handleState(state);
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          systemNavigationBarColor: Colors.white,
-          systemNavigationBarIconBrightness: Brightness.dark,
-        ),
+        value: context.jb.overlay,
         child: Scaffold(
-          backgroundColor: const Color(0xFFF9FAFB),
+          backgroundColor: context.jb.cardAlt,
           body: SafeArea(
             child: Column(
               children: [
@@ -422,14 +417,14 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         child: Icon(
                           Icons.arrow_back_ios_new,
                           size: 20,
-                          color: _step == 0 ? const Color(0xFFD1D5DB) : DARK_NAVY,
+                          color: _step == 0 ? context.jb.borderStrong : context.jb.ink,
                         ),
                       ),
                       Expanded(
                         child: Center(
                           child: Text(
                             '${isUz ? "Qadam" : "Шаг"} ${_step + 1} ${isUz ? "dan" : "из"} $_total',
-                            style: const TextStyle(fontSize: 13, color: GRAY_TEXT),
+                            style: TextStyle(fontSize: 13, color: context.jb.gray),
                           ),
                         ),
                       ),
@@ -444,8 +439,8 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                     child: LinearProgressIndicator(
                       value: (_step + 1) / _total,
                       minHeight: 6,
-                      backgroundColor: const Color(0xFFE5E7EB),
-                      valueColor: const AlwaysStoppedAnimation<Color>(PRIMARY_BLUE),
+                      backgroundColor: context.jb.border,
+                      valueColor: AlwaysStoppedAnimation<Color>(context.jb.blue),
                     ),
                   ),
                 ),
@@ -459,7 +454,7 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         title: isUz ? 'Kompaniya nomi' : 'Название компании',
                         child: TextField(
                           controller: _companyName,
-                          style: const TextStyle(fontSize: 16, color: DARK_NAVY),
+                          style: TextStyle(fontSize: 16, color: context.jb.ink),
                           decoration: _inputDeco(isUz ? 'Kompaniya nomini kiriting' : 'Введите название компании'),
                         ),
                       ),
@@ -471,7 +466,7 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                           controller: _phone,
                           keyboardType: TextInputType.phone,
                           inputFormatters: [_phoneMask],
-                          style: const TextStyle(fontSize: 16, color: DARK_NAVY),
+                          style: TextStyle(fontSize: 16, color: context.jb.ink),
                           decoration: _inputDeco('+998 (90) 123 45 67'),
                         ),
                       ),
@@ -492,7 +487,7 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                           enabled: !otpVerified && !otpExpired,
                           onChanged: (_) => setState(() {}),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 24, letterSpacing: 12, fontWeight: FontWeight.bold, color: DARK_NAVY),
+                          style: TextStyle(fontSize: 24, letterSpacing: 12, fontWeight: FontWeight.bold, color: context.jb.ink),
                           decoration: _inputDeco('_ _ _ _ _ _', counter: true),
                         ),
                       ),
@@ -503,7 +498,7 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                           buildWhen: (p, c) => p.regions != c.regions || p.regionsStatus != c.regionsStatus,
                           builder: (context, state) {
                             if (state.regionsStatus.isInProgress) {
-                              return const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: PRIMARY_BLUE, strokeWidth: 2)));
+                              return Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: context.jb.blue, strokeWidth: 2)));
                             }
                             return Column(
                               children: [
@@ -534,7 +529,7 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         title: isUz ? "Mas'ul shaxs" : 'Контактное лицо',
                         child: TextField(
                           controller: _contactPerson,
-                          style: const TextStyle(fontSize: 16, color: DARK_NAVY),
+                          style: TextStyle(fontSize: 16, color: context.jb.ink),
                           decoration: _inputDeco(isUz ? 'Ism Familiya' : 'Имя Фамилия'),
                         ),
                       ),
@@ -550,17 +545,17 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                           width: double.infinity,
                           padding: const EdgeInsets.all(32),
                           decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFFD1D5DB), width: 2),
+                            border: Border.all(color: context.jb.borderStrong, width: 2),
                             borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
+                            color: context.jb.card,
                           ),
                           child: Column(
                             children: [
-                              const Icon(Icons.business_outlined, size: 48, color: GRAY_TEXT),
+                              Icon(Icons.business_outlined, size: 48, color: context.jb.gray),
                               const SizedBox(height: 16),
                               Text(
                                 isUz ? 'Kompaniya logotipini yuklang' : 'Загрузите логотип компании',
-                                style: const TextStyle(color: GRAY_TEXT, fontSize: 14),
+                                style: TextStyle(color: context.jb.gray, fontSize: 14),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -581,9 +576,9 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                     final blockedOnOtp = _step == _smsStep && !otpVerified && otpExpired;
                     return Container(
                       padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 12),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                      decoration: BoxDecoration(
+                        color: context.jb.card,
+                        border: Border(top: BorderSide(color: context.jb.border)),
                       ),
                       child: SizedBox(
                         width: double.infinity,
@@ -591,10 +586,10 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
                         child: ElevatedButton(
                           onPressed: isLoading || blockedOnOtp ? null : _next,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: PRIMARY_BLUE,
+                            backgroundColor: context.jb.blue,
                             foregroundColor: Colors.white,
                             disabledBackgroundColor:
-                                blockedOnOtp ? const Color(0xFFCBD5E1) : PRIMARY_BLUE.withValues(alpha: 0.7),
+                                blockedOnOtp ? context.jb.borderStrong : context.jb.blue.withValues(alpha: 0.7),
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
@@ -636,16 +631,16 @@ class _EmployerRegistrationScreenState extends State<EmployerRegistrationScreen>
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [PRIMARY_BLUE, SECONDARY_BLUE]),
+              gradient: LinearGradient(colors: [jb.blue, jb.blueLight]),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(icon, color: Colors.white, size: 30),
           ),
           const SizedBox(height: 20),
-          Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: DARK_NAVY)),
+          Text(title, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: jb.ink)),
           if (subtitle != null && subtitle.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(subtitle, style: const TextStyle(color: GRAY_TEXT, fontSize: 14)),
+            Text(subtitle, style: TextStyle(color: jb.gray, fontSize: 14)),
           ],
           const SizedBox(height: 24),
           child,

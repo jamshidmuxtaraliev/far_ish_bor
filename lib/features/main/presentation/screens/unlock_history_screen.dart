@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../core/constants/colors.dart';
 import '../../data/models/contact_unlock_model.dart';
 import '../logic/vacancy_bloc.dart';
+import '../../../../core/theme/jb_palette.dart';
 
 class UnlockHistoryScreen extends StatefulWidget {
   const UnlockHistoryScreen({super.key});
@@ -24,19 +24,16 @@ class _UnlockHistoryScreenState extends State<UnlockHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
+      value: context.jb.overlay,
       child: Scaffold(
-        backgroundColor: LIGHT_GRAY_BG,
+        backgroundColor: context.jb.bg,
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
               pinned: true,
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.white,
-              foregroundColor: JB_INK,
+              backgroundColor: context.jb.card,
+              surfaceTintColor: context.jb.card,
+              foregroundColor: context.jb.ink,
               elevation: 0,
               scrolledUnderElevation: 0.5,
               title: const Text('Otklik tarixi',
@@ -50,29 +47,29 @@ class _UnlockHistoryScreenState extends State<UnlockHistoryScreen> {
             BlocBuilder<VacancyBloc, VacancyState>(
               builder: (context, state) {
                 if (state.unlockHistoryStatus == FormzSubmissionStatus.inProgress) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     child: Center(
                         child:
-                            CircularProgressIndicator(color: PRIMARY_BLUE)),
+                            CircularProgressIndicator(color: context.jb.blue)),
                   );
                 }
                 if (state.unlockHistory.isEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.lock_open_outlined,
-                              size: 64, color: GRAY_TEXT),
+                              size: 64, color: context.jb.gray),
                           SizedBox(height: 16),
                           Text("Ochilgan kontakt yo'q",
                               style: TextStyle(
-                                  fontSize: 15, color: GRAY_TEXT)),
+                                  fontSize: 15, color: context.jb.gray)),
                           SizedBox(height: 8),
                           Text(
                             "Nomzod kontaktlarini ochgach bu yerda ko'rinadi",
                             style: TextStyle(
-                                fontSize: 12, color: GRAY_TEXT),
+                                fontSize: 12, color: context.jb.gray),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -122,7 +119,7 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -137,15 +134,15 @@ class _SummaryCard extends StatelessWidget {
             child: _StatItem(
                 label: 'Ochilgan',
                 value: '$total ta',
-                color: PRIMARY_BLUE),
+                color: context.jb.blue),
           ),
-          Container(width: 1, height: 40, color: const Color(0xFFE5E7EB)),
+          Container(width: 1, height: 40, color: context.jb.border),
           Expanded(
             child: _StatItem(
                 label: "To'langan",
                 value: _formatAmount(spent),
                 color:
-                    spent > 0 ? const Color(0xFFDC2626) : GREEN_COLOR),
+                    spent > 0 ? context.jb.red : context.jb.green),
           ),
         ],
       ),
@@ -183,7 +180,7 @@ class _StatItem extends StatelessWidget {
                 fontSize: 18, fontWeight: FontWeight.bold, color: color)),
         const SizedBox(height: 4),
         Text(label,
-            style: const TextStyle(fontSize: 12, color: GRAY_TEXT)),
+            style: TextStyle(fontSize: 12, color: context.jb.gray)),
       ],
     );
   }
@@ -208,9 +205,9 @@ class _HistoryItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.jb.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.jb.border),
       ),
       child: Row(
         children: [
@@ -219,13 +216,13 @@ class _HistoryItem extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: item.isFree
-                  ? GREEN_COLOR.withValues(alpha: 0.1)
-                  : PRIMARY_BLUE.withValues(alpha: 0.1),
+                  ? context.jb.green.withValues(alpha: 0.1)
+                  : context.jb.blue.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               item.isFree ? Icons.star_border : Icons.lock_open_outlined,
-              color: item.isFree ? GREEN_COLOR : PRIMARY_BLUE,
+              color: item.isFree ? context.jb.green : context.jb.blue,
               size: 20,
             ),
           ),
@@ -235,14 +232,14 @@ class _HistoryItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Anketa #${item.anketaId}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: DARK_NAVY)),
+                        color: context.jb.ink)),
                 const SizedBox(height: 2),
                 Text(_formatDate(item.unlockedAt),
-                    style: const TextStyle(
-                        fontSize: 12, color: GRAY_TEXT)),
+                    style: TextStyle(
+                        fontSize: 12, color: context.jb.gray)),
               ],
             ),
           ),
@@ -251,8 +248,8 @@ class _HistoryItem extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: item.isFree
-                  ? GREEN_COLOR.withValues(alpha: 0.1)
-                  : const Color(0xFFFEF2F2),
+                  ? context.jb.green.withValues(alpha: 0.1)
+                  : context.jb.redBg,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -263,7 +260,7 @@ class _HistoryItem extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color:
-                    item.isFree ? GREEN_COLOR : const Color(0xFFDC2626),
+                    item.isFree ? context.jb.green : context.jb.red,
               ),
             ),
           ),
