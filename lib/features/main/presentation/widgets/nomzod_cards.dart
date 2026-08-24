@@ -9,6 +9,7 @@ import '../logic/candidate_buckets.dart';
 import '../logic/candidate_stages.dart';
 import '../logic/vacancy_bloc.dart';
 import '../screens/applicant_profile_screen.dart';
+import '../screens/application_history_screen.dart';
 import '../screens/candidate_detail_screen.dart';
 import 'candidate_card.dart' show matchBucketColor;
 import 'otklik_actions.dart';
@@ -245,6 +246,22 @@ class ApplicationNomzodCard extends StatelessWidget {
                 icon: Icons.swap_horiz_rounded,
                 color: context.jb.blue,
                 onTap: onChangeStatus,
+              ),
+              const SizedBox(width: 6),
+              // Otklik tarixi (PROMPT_VAKANSIYA_OTKLIKLARI §5).
+              IconButton(
+                tooltip: 'Otklik tarixi',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.history, size: 20, color: context.jb.gray),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ApplicationHistoryScreen(
+                      applicationId: app.id,
+                      subtitle: app.anketaFullname,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

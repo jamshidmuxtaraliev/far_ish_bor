@@ -6,11 +6,11 @@ import 'package:formz/formz.dart';
 import '../../../../core/services/get_it.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../auth/data/datasource/local/user_local_data_source.dart';
+import '../../../auth/data/models/employer_model.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../auth/presentation/screens/anketa_screen.dart';
 import '../../../auth/presentation/screens/language_screen.dart';
-import '../../../billing/presentation/screens/premium_screen.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../../chat/presentation/logic/chat_bloc.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
@@ -208,6 +208,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                       if (!widget.isEmployer) ...[
                         _buildResumeCard(state),
+                        const SizedBox(height: 16),
+                      ],
+                      if (widget.isEmployer) ...[
+                        _buildTariffCard(state.employer),
                         const SizedBox(height: 16),
                       ],
                       if (!widget.isEmployer &&
@@ -535,6 +539,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${buf.toString().split('').reversed.join()} so\'m';
   }
 
+  /// Tarif turi — faqat ko'rsatish uchun. Premium tariflar call-markaz
+  /// operatori orqali faollashtiriladi, ilovada sotib olinmaydi.
+  Widget _buildTariffCard(EmployerModel? employer) {
+    final p = context.jb;
+    final premium = employer?.isPremiumTier ?? false;
+    final label = employer?.tierLabel ?? '—';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: p.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: premium ? p.gold : p.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: premium ? p.goldSoft : p.chipBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              premium
+                  ? Icons.workspace_premium
+                  : Icons.workspace_premium_outlined,
+              color: premium ? p.gold : p.gray,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Tarif',
+                      style: TextStyle(fontSize: 13, color: p.gray),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: premium ? p.goldSoft : p.chipBg,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: premium ? p.gold : p.gray,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Tarifni faollashtirish yoki o\'zgartirish call-markaz '
+                  'operatori orqali amalga oshiriladi.',
+                  style: TextStyle(fontSize: 12.5, color: p.gray, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMenuSection(BuildContext context) {
     final List<_MenuItem> jobSeekerItems = [
       _MenuItem(
@@ -552,15 +631,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               MaterialPageRoute(builder: (_) => const MyApplicationsScreen()),
             ),
       ),
-      // _MenuItem(
-      //   icon: Icons.workspace_premium_outlined,
-      //   label: 'Premium',
-      //   color: const Color(0xFFD97706),
-      //   onTap:
-      //       () => Navigator.of(
-      //         context,
-      //       ).push(MaterialPageRoute(builder: (_) => const PremiumScreen())),
-      // ),
     ];
 
     final List<_MenuItem> employerItems = [
@@ -583,15 +653,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         label: 'Nomzodlarni kuzatish',
         color: context.jb.violet,
         onTap: () => widget.onSelectTab?.call(1),
-      ),
-      _MenuItem(
-        icon: Icons.workspace_premium_outlined,
-        label: 'Premium',
-        color: context.jb.amber,
-        onTap:
-            () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const PremiumScreen())),
       ),
     ];
 

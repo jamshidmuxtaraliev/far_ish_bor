@@ -371,6 +371,31 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
+                          // Filiallar — kompaniyaning qo'shimcha manzillari.
+                          if (v.branches.isNotEmpty) ...[
+                            Text(
+                              'Filiallar (${v.branches.length})',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.jb.ink),
+                            ),
+                            const SizedBox(height: 10),
+                            JBCard(
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                              child: Column(
+                                children: [
+                                  for (var i = 0; i < v.branches.length; i++)
+                                    _InfoRow(
+                                      icon: Icons.location_on_outlined,
+                                      label: v.branches[i].title(i),
+                                      value: v.branches[i].addressLine.isEmpty
+                                          ? 'Manzil ko\'rsatilmagan'
+                                          : v.branches[i].addressLine,
+                                      last: i == v.branches.length - 1,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
                           Text(
                             'Ish tavsifi',
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: context.jb.ink),

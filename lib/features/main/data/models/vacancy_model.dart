@@ -1,3 +1,5 @@
+import '../../../auth/data/models/branch_model.dart';
+
 class VacancyModel {
   final int id;
   final int? jobTypeId;
@@ -19,6 +21,8 @@ class VacancyModel {
   // Employer joylashuvi — xaritada marker sifatida ko'rsatish uchun.
   final double? latitude;
   final double? longitude;
+  // Ish beruvchining qo'shimcha manzillari — serverdan faqat faollari keladi.
+  final List<BranchModel> branches;
 
   VacancyModel({
     required this.id,
@@ -39,6 +43,7 @@ class VacancyModel {
     this.companyContact,
     this.latitude,
     this.longitude,
+    this.branches = const [],
   });
 
   factory VacancyModel.fromJson(Map<String, dynamic> json) {
@@ -63,6 +68,9 @@ class VacancyModel {
       companyContact: (employer?['contact_person'] ?? employer?['responsible_person'] ?? employer?['contact']) as String?,
       latitude: (employer?['latitude'] as num?)?.toDouble(),
       longitude: (employer?['longitude'] as num?)?.toDouble(),
+      branches: (employer?['branches'] as List<dynamic>? ?? [])
+          .map((e) => BranchModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -72,6 +80,10 @@ class VacancyModel {
 
   /// True agar vakansiyani xaritada ko'rsatish uchun koordinatalar mavjud bo'lsa.
   bool get hasCoords => latitude != null && longitude != null;
+
+  /// Xaritada ko'rsatiladigan filiallar (koordinatasi borlari).
+  List<BranchModel> get locatedBranches =>
+      branches.where((b) => b.hasCoords).toList();
 
   String get salaryDisplay {
     if (salary == null) return "Ko'rsatilmagan";

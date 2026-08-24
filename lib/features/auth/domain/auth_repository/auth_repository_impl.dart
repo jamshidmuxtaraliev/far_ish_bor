@@ -6,6 +6,7 @@ import '../../data/datasource/remote/auth_remote_data_source.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_flow_models.dart';
 import '../../data/models/auth_response_model.dart';
+import '../../data/models/branch_model.dart';
 import '../../data/models/employer_model.dart';
 import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
@@ -66,6 +67,22 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data) =>
       remoteDataSource.updateEmployer(data);
+
+  @override
+  Future<Either<ErrorModel, List<BranchModel>>> getBranches() =>
+      remoteDataSource.getBranches();
+
+  @override
+  Future<Either<ErrorModel, BranchModel>> createBranch(Map<String, dynamic> data) =>
+      remoteDataSource.createBranch(data);
+
+  @override
+  Future<Either<ErrorModel, BranchModel>> updateBranch(int id, Map<String, dynamic> data) =>
+      remoteDataSource.updateBranch(id, data);
+
+  @override
+  Future<Either<ErrorModel, bool>> deleteBranch(int id) =>
+      remoteDataSource.deleteBranch(id);
 
   @override
   Future<Either<ErrorModel, String>> uploadLogo(String filePath) =>

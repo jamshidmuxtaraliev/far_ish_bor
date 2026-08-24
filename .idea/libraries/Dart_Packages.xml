@@ -5,24 +5,24 @@
         <entry key="_fe_analyzer_shared">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-93.0.0/lib" />
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-95.0.0/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-93.0.0/lib" />
             </list>
           </value>
         </entry>
         <entry key="analyzer">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/analyzer-10.0.1/lib" />
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/analyzer-10.1.0/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/analyzer-10.0.1/lib" />
             </list>
           </value>
         </entry>
         <entry key="archive">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/archive-4.0.9/lib" />
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/archive-3.6.1/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/archive-4.0.9/lib" />
             </list>
           </value>
         </entry>
@@ -113,8 +113,8 @@
         <entry key="built_value">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/built_value-8.12.6/lib" />
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/built_value-8.12.5/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/built_value-8.12.6/lib" />
             </list>
           </value>
         </entry>
@@ -275,8 +275,8 @@
         <entry key="dart_style">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/dart_style-3.1.5/lib" />
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/dart_style-3.1.7/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/dart_style-3.1.5/lib" />
             </list>
           </value>
         </entry>
@@ -1599,8 +1599,8 @@
         <entry key="vm_service">
           <value>
             <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/vm_service-15.2.0/lib" />
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/vm_service-15.0.2/lib" />
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/vm_service-15.2.0/lib" />
             </list>
           </value>
         </entry>

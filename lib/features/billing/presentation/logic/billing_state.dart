@@ -18,9 +18,6 @@ class BillingState extends Equatable {
 
   final FormzSubmissionStatus blacklistPayStatus;
 
-  final List<PremiumTariffModel> premiumTariffs;
-  final FormzSubmissionStatus premiumStatus;
-  final FormzSubmissionStatus buyPremiumStatus;
 
   final List<InvoiceModel> invoices;
   final InvoiceModel? pendingInvoice;
@@ -39,9 +36,6 @@ class BillingState extends Equatable {
     this.topupStatus = FormzSubmissionStatus.initial,
     this.confirmStatus = FormzSubmissionStatus.initial,
     this.blacklistPayStatus = FormzSubmissionStatus.initial,
-    this.premiumTariffs = const [],
-    this.premiumStatus = FormzSubmissionStatus.initial,
-    this.buyPremiumStatus = FormzSubmissionStatus.initial,
     this.invoices = const [],
     this.pendingInvoice,
     this.invoicesStatus = FormzSubmissionStatus.initial,
@@ -59,9 +53,6 @@ class BillingState extends Equatable {
     FormzSubmissionStatus? topupStatus,
     FormzSubmissionStatus? confirmStatus,
     FormzSubmissionStatus? blacklistPayStatus,
-    List<PremiumTariffModel>? premiumTariffs,
-    FormzSubmissionStatus? premiumStatus,
-    FormzSubmissionStatus? buyPremiumStatus,
     List<InvoiceModel>? invoices,
     InvoiceModel? pendingInvoice,
     FormzSubmissionStatus? invoicesStatus,
@@ -81,9 +72,6 @@ class BillingState extends Equatable {
       topupStatus: topupStatus ?? this.topupStatus,
       confirmStatus: confirmStatus ?? this.confirmStatus,
       blacklistPayStatus: blacklistPayStatus ?? this.blacklistPayStatus,
-      premiumTariffs: premiumTariffs ?? this.premiumTariffs,
-      premiumStatus: premiumStatus ?? this.premiumStatus,
-      buyPremiumStatus: buyPremiumStatus ?? this.buyPremiumStatus,
       invoices: invoices ?? this.invoices,
       pendingInvoice: clearPendingInvoice ? null : (pendingInvoice ?? this.pendingInvoice),
       invoicesStatus: invoicesStatus ?? this.invoicesStatus,
@@ -103,9 +91,6 @@ class BillingState extends Equatable {
     topupStatus,
     confirmStatus,
     blacklistPayStatus,
-    premiumTariffs,
-    premiumStatus,
-    buyPremiumStatus,
     invoices,
     pendingInvoice,
     invoicesStatus,

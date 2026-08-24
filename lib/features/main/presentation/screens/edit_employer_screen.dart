@@ -5,9 +5,12 @@ import 'package:formz/formz.dart';
 
 import '../../../../core/utils/utils.dart';
 import '../../../auth/data/models/anketa_models.dart';
+import '../../../auth/data/models/branch_model.dart';
 import '../../../auth/data/models/employer_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../../core/theme/jb_palette.dart';
+import 'branch_form_screen.dart';
+import 'map_location_picker_screen.dart';
 
 class EditEmployerScreen extends StatefulWidget {
   const EditEmployerScreen({super.key});
@@ -15,6 +18,9 @@ class EditEmployerScreen extends StatefulWidget {
   @override
   State<EditEmployerScreen> createState() => _EditEmployerScreenState();
 }
+
+/// Server cheklovi — bitta kompaniyada eng ko'pi 100 ta filial.
+const int _kMaxBranches = 100;
 
 class _EditEmployerScreenState extends State<EditEmployerScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -24,6 +30,15 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   final _phone2Controller = TextEditingController();
   final _tinController = TextEditingController();
   final _addressController = TextEditingController();
+
+  /// Xaritadan tanlangan koordinata — API'ga `latitude` / `longitude` bo'lib
+  /// yuboriladi.
+  double? _latitude;
+  double? _longitude;
+
+  /// Serverdan kelgan dastlabki koordinata — foydalanuvchi uni o'chirganini
+  /// aniqlab, API'ga bo'shatish uchun `null` yuborish kerakligini biladi.
+  bool _hadCoords = false;
 
   RegionModel? _selectedRegion;
   DistrictModel? _selectedDistrict;
@@ -38,6 +53,7 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     final bloc = context.read<AuthBloc>();
     bloc.add(LoadEmployerEvent());
     bloc.add(LoadRegionsEvent());
+    bloc.add(LoadBranchesEvent());
   }
 
   @override
@@ -59,6 +75,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     _phone2Controller.text = employer.phone2 ?? '';
     _tinController.text = employer.tin ?? '';
     _addressController.text = employer.address ?? '';
+    _latitude = employer.latitude;
+    _longitude = employer.longitude;
+    _hadCoords = _latitude != null && _longitude != null;
     _isAllRegions = employer.isAllRegions;
     _coverageRegions = List.from(employer.coverageRegions);
 
@@ -88,6 +107,14 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
         'tin': _tinController.text.trim(),
       if (_addressController.text.trim().isNotEmpty)
         'address': _addressController.text.trim(),
+      if (_latitude != null && _longitude != null) ...{
+        'latitude': _latitude,
+        'longitude': _longitude,
+      } else if (_hadCoords) ...{
+        // Xaritadagi nuqta olib tashlandi — serverdagi eskisi ham tozalansin.
+        'latitude': null,
+        'longitude': null,
+      },
       if (_selectedRegion != null) 'region_id': _selectedRegion!.id,
       if (_selectedDistrict != null) 'district_id': _selectedDistrict!.id,
       'is_all_regions': _isAllRegions,
@@ -96,6 +123,88 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     };
 
     context.read<AuthBloc>().add(UpdateEmployerEvent(data));
+  }
+
+  Future<void> _pickOnMap() async {
+    final picked = await pickLocationOnMap(
+      context,
+      initialLat: _latitude,
+      initialLng: _longitude,
+      title: 'Kompaniya manzili',
+    );
+    if (picked == null) return;
+    setState(() {
+      _latitude = picked.latitude;
+      _longitude = picked.longitude;
+      // Qo'lda yozilgan manzilni bosib ketmaymiz — faqat bo'sh bo'lsa
+      // xaritadan kelgan manzil bilan to'ldiramiz.
+      final resolved = picked.address;
+      if (resolved != null &&
+          resolved.isNotEmpty &&
+          _addressController.text.trim().isEmpty) {
+        _addressController.text = resolved;
+      }
+    });
+  }
+
+  /// Manzil koordinatasini xaritadan tanlash tugmasi.
+  Widget _buildMapPickerTile() {
+    final p = context.jb;
+    final hasCoords = _latitude != null && _longitude != null;
+    return InkWell(
+      onTap: _pickOnMap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasCoords ? p.blueTint : p.chipBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: hasCoords ? p.blue : p.border),
+        ),
+        child: Row(
+          children: [
+            Icon(hasCoords ? Icons.place : Icons.add_location_alt_outlined,
+                color: p.blue, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hasCoords
+                        ? 'Xaritadagi nuqta belgilangan'
+                        : 'Manzilni xaritadan belgilash',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: p.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    hasCoords
+                        ? '${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}'
+                        : 'Koordinata yuborilmaydi',
+                    style: TextStyle(fontSize: 12.5, color: p.gray),
+                  ),
+                ],
+              ),
+            ),
+            if (hasCoords)
+              IconButton(
+                tooltip: 'Koordinatani olib tashlash',
+                icon: Icon(Icons.close, size: 18, color: p.gray),
+                onPressed: () => setState(() {
+                  _latitude = null;
+                  _longitude = null;
+                }),
+              )
+            else
+              Icon(Icons.chevron_right, color: p.gray),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showCoverageRegionPicker() {
@@ -229,7 +338,8 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
         body: BlocConsumer<AuthBloc, AuthState>(
           listenWhen: (prev, curr) =>
               prev.updateEmployerStatus != curr.updateEmployerStatus ||
-              prev.uploadLogoStatus != curr.uploadLogoStatus,
+              prev.uploadLogoStatus != curr.uploadLogoStatus ||
+              prev.deleteBranchStatus != curr.deleteBranchStatus,
           listener: (context, state) {
             if (state.updateEmployerStatus.isSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -243,6 +353,20 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.error?.errorMessage ?? 'Xatolik yuz berdi'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            } else if (state.deleteBranchStatus.isSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Filial o\'chirildi'),
+                  backgroundColor: context.jb.green,
+                ),
+              );
+            } else if (state.deleteBranchStatus.isFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error?.errorMessage ?? 'Filial o\'chirilmadi'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -337,6 +461,8 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                                   decoration: _inputDecoration('Manzil'),
                                   maxLines: 2,
                                 ),
+                                const SizedBox(height: 12),
+                                _buildMapPickerTile(),
                               ],
                             ),
                             const SizedBox(height: 16),
@@ -383,6 +509,8 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                                 ],
                               ],
                             ),
+                            const SizedBox(height: 16),
+                            _buildBranchesSection(state.branches),
                             const SizedBox(height: 16),
                             _buildCoverageSection(),
                             const SizedBox(height: 24),
@@ -589,6 +717,225 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     if (picked == null) return;
     if (!mounted) return;
     context.read<AuthBloc>().add(UploadLogoEvent(picked.path));
+  }
+
+  /// Kompaniyaning qo'shimcha manzillari. Filialda faqat manzil bo'ladi —
+  /// telefon, tarif, balans va vakansiyalar kompaniya darajasida qoladi.
+  Widget _buildBranchesSection(List<BranchModel> branches) {
+    final p = context.jb;
+    final canAdd = branches.length < _kMaxBranches;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: p.card,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Filiallar (qo\'shimcha manzillar)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: p.gray,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              if (branches.isNotEmpty)
+                Text(
+                  '${branches.length}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: p.blue,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Kompaniya bir nechta joyda ishlasa — har bir manzilni qo\'shing.',
+            style: TextStyle(fontSize: 12, color: p.gray),
+          ),
+          const SizedBox(height: 12),
+          if (branches.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              decoration: BoxDecoration(
+                color: p.cardAlt,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: p.border),
+              ),
+              child: Text(
+                'Filial yo\'q — kompaniya faqat asosiy manzilda ishlaydi.',
+                style: TextStyle(fontSize: 13, color: p.gray),
+              ),
+            )
+          else
+            ...branches.asMap().entries.map(
+                  (e) => _buildBranchTile(e.value, e.key),
+                ),
+          const SizedBox(height: 4),
+          TextButton.icon(
+            onPressed: canAdd ? () => _openBranchForm() : null,
+            icon: Icon(Icons.add, color: canAdd ? p.blue : p.gray, size: 18),
+            label: Text(
+              canAdd
+                  ? 'Filial qo\'shish'
+                  : 'Filiallar soni $_kMaxBranches tadan oshmasligi kerak',
+              style: TextStyle(color: canAdd ? p.blue : p.gray, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBranchTile(BranchModel branch, int index) {
+    final p = context.jb;
+    final line = branch.addressLine;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+      decoration: BoxDecoration(
+        color: branch.isActive ? p.blueTint : p.cardAlt,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: branch.isActive ? p.blue.withValues(alpha: 0.2) : p.border,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(Icons.location_on_outlined,
+                color: branch.isActive ? p.blue : p.gray, size: 18),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        branch.title(index),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: p.ink,
+                        ),
+                      ),
+                    ),
+                    if (!branch.isActive) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: p.chipBg,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Yashirilgan',
+                          style: TextStyle(fontSize: 11, color: p.gray),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (line.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(line, style: TextStyle(fontSize: 13, color: p.ink)),
+                ],
+                const SizedBox(height: 3),
+                Text(
+                  branch.coordsLine,
+                  style: TextStyle(fontSize: 12, color: p.gray),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Tahrirlash',
+            visualDensity: VisualDensity.compact,
+            icon: Icon(Icons.edit_outlined, size: 18, color: p.gray),
+            onPressed: () => _openBranchForm(branch: branch),
+          ),
+          IconButton(
+            tooltip: 'O\'chirish',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+            onPressed: () => _confirmDeleteBranch(branch, index),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openBranchForm({BranchModel? branch}) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => BranchFormScreen(
+          branch: branch,
+          employer: context.read<AuthBloc>().state.employer,
+        ),
+      ),
+    );
+    if (saved != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(branch == null ? 'Filial qo\'shildi' : 'Filial yangilandi'),
+        backgroundColor: context.jb.green,
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteBranch(BranchModel branch, int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: jb.card,
+        title: Text(
+          'Filial o\'chirilsinmi?',
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.w800, color: jb.ink),
+        ),
+        content: Text(
+          '${branch.title(index)} butunlay o\'chiriladi va qayta tiklanmaydi. '
+          'Vaqtincha yashirish uchun tahrirlashdagi "Faol" tugmasidan foydalaning.',
+          style: TextStyle(fontSize: 13.5, color: jb.gray, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Bekor qilish', style: TextStyle(color: jb.gray)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('O\'chirish', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    context.read<AuthBloc>().add(DeleteBranchEvent(branch.id));
   }
 
   Widget _buildCoverageSection() {

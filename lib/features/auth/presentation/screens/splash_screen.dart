@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 scale: _scaleAnim,
                 child: FadeTransition(
                   opacity: _fadeAnim,
-                  child: Image.asset('assets/images/logo.png', width: 200, height: 200),
+                  child: Image.asset('assets/images/logo.png', color: Colors.white, width: 200, height: 200),
                 ),
               ),
               const SizedBox(height: 12),

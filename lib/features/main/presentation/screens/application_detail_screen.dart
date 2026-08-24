@@ -6,6 +6,7 @@ import 'package:formz/formz.dart';
 import '../../data/models/application_access.dart';
 import '../../data/models/application_model.dart';
 import '../logic/vacancy_bloc.dart';
+import 'application_history_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
 
 class ApplicationDetailScreen extends StatelessWidget {
@@ -146,6 +147,37 @@ class ApplicationDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ],
+
+                      const SizedBox(height: 12),
+
+                      // Otklik tarixi (§5) — ariza qanday bosqichlardan o'tgani.
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ApplicationHistoryScreen(
+                                applicationId: a.id,
+                                asEmployer: false,
+                                subtitle: a.jobTypeName,
+                              ),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: context.jb.ink,
+                            side: BorderSide(color: context.jb.borderStrong),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: const Icon(Icons.history, size: 18),
+                          label: const Text(
+                            'Otklik tarixi',
+                            style: TextStyle(
+                                fontSize: 14.5, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
 
                       const SizedBox(height: 24),
 

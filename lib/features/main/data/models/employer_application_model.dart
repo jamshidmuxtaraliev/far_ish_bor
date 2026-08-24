@@ -70,7 +70,7 @@ class EmployerApplicationModel {
       case 'mos_kelmadi': return 'Mos kelmadi';
       case 'suhbatga_yozildi': return 'Suhbat vaqti belgilandi';
       case 'suhbatga_bordi': return 'Suhbatga bordi';
-      case 'bormadi': return 'Bormadi';
+      case 'bormadi': return 'Kelmadi';
       default: return 'Jarayonda';
     }
   }

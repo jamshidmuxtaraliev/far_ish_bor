@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 
+import '../../../auth/data/models/branch_model.dart';
 import '../../data/models/vacancy_model.dart';
 import 'job_map_markers.dart';
 import '../../../../core/theme/jb_palette.dart';
 
 /// Ish izlovchi "Ishlar" oynasining xarita ko'rinishi.
+///
+/// Bitta vakansiya bir nechta pin berishi mumkin: kompaniyaning asosiy manzili
+/// va har bir filial. Pin `vacancy_id + branch_id` juftligi bo'yicha unikal.
 ///
 /// Vakansiyalar Yandex xaritasida point marker'lar sifatida ko'rsatiladi. Zoom
 /// uzoqda bo'lsa ular klasterlarga (ish soni bilan) guruhlanadi; yaqinlashganda
@@ -29,8 +33,8 @@ class _JobMapViewState extends State<JobMapView> {
   YandexMapController? _controller;
   BitmapDescriptor? _jobIcon;
   double _dpr = 3;
-  List<VacancyModel> _located = const [];
-  VacancyModel? _selected;
+  List<_JobPin> _pins = const [];
+  _JobPin? _selected;
 
   /// Marker'lar palitra rangida chizilgani uchun mavzu almashsa qaytadan
   /// chiziladi — shuning uchun oxirgi ishlatilgan palitra saqlanadi.
@@ -40,7 +44,7 @@ class _JobMapViewState extends State<JobMapView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _dpr = MediaQuery.of(context).devicePixelRatio;
-    _located = widget.vacancies.where((v) => v.hasCoords).toList();
+    _pins = _buildPins(widget.vacancies);
     final palette = context.jb;
     if (_palette?.brightness != palette.brightness) {
       _palette = palette;
@@ -53,8 +57,21 @@ class _JobMapViewState extends State<JobMapView> {
   void didUpdateWidget(covariant JobMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.vacancies, widget.vacancies)) {
-      setState(() => _located = widget.vacancies.where((v) => v.hasCoords).toList());
+      setState(() => _pins = _buildPins(widget.vacancies));
     }
+  }
+
+  /// Har bir vakansiya uchun: asosiy manzil (koordinatasi bo'lsa) + har bir
+  /// koordinatali filial.
+  static List<_JobPin> _buildPins(List<VacancyModel> vacancies) {
+    final pins = <_JobPin>[];
+    for (final v in vacancies) {
+      if (v.hasCoords) pins.add(_JobPin(v, null));
+      for (final b in v.locatedBranches) {
+        pins.add(_JobPin(v, b));
+      }
+    }
+    return pins;
   }
 
   Future<void> _prepareIcon() async {
@@ -67,22 +84,22 @@ class _JobMapViewState extends State<JobMapView> {
   }
 
   Point _initialTarget() {
-    if (_located.isEmpty) return _tashkent;
+    if (_pins.isEmpty) return _tashkent;
     double lat = 0, lng = 0;
-    for (final v in _located) {
-      lat += v.latitude!;
-      lng += v.longitude!;
+    for (final pin in _pins) {
+      lat += pin.latitude;
+      lng += pin.longitude;
     }
-    return Point(latitude: lat / _located.length, longitude: lng / _located.length);
+    return Point(latitude: lat / _pins.length, longitude: lng / _pins.length);
   }
 
   List<PlacemarkMapObject> _placemarks() {
     final icon = _jobIcon;
     if (icon == null) return const [];
-    return _located.map((v) {
+    return _pins.map((pin) {
       return PlacemarkMapObject(
-        mapId: MapObjectId('job_${v.id}'),
-        point: Point(latitude: v.latitude!, longitude: v.longitude!),
+        mapId: MapObjectId(pin.mapKey),
+        point: Point(latitude: pin.latitude, longitude: pin.longitude),
         opacity: 1,
         consumeTapEvents: true, // tap onMapTap'ga tarqalmasin (dialog o'chib qolmasligi uchun)
         icon: PlacemarkIcon.single(
@@ -92,16 +109,16 @@ class _JobMapViewState extends State<JobMapView> {
             scale: 1 / _dpr,
           ),
         ),
-        onTap: (_, __) => _onJobTap(v),
+        onTap: (_, __) => _onJobTap(pin),
       );
     }).toList();
   }
 
-  void _onJobTap(VacancyModel v) {
-    setState(() => _selected = v);
+  void _onJobTap(_JobPin pin) {
+    setState(() => _selected = pin);
     _controller?.moveCamera(
       CameraUpdate.newCameraPosition(
-        CameraPosition(target: Point(latitude: v.latitude!, longitude: v.longitude!), zoom: 16),
+        CameraPosition(target: Point(latitude: pin.latitude, longitude: pin.longitude), zoom: 16),
       ),
       animation: const MapAnimation(type: MapAnimationType.smooth, duration: 0.35),
     );
@@ -161,7 +178,7 @@ class _JobMapViewState extends State<JobMapView> {
             _controller = c;
             c.moveCamera(
               CameraUpdate.newCameraPosition(
-                CameraPosition(target: _initialTarget(), zoom: _located.isEmpty ? 11 : 12),
+                CameraPosition(target: _initialTarget(), zoom: _pins.isEmpty ? 11 : 12),
               ),
             );
           },
@@ -196,14 +213,30 @@ class _JobMapViewState extends State<JobMapView> {
             right: 16,
             bottom: 92,
             child: _JobInfoCard(
-              vacancy: _selected!,
+              vacancy: _selected!.vacancy,
+              branch: _selected!.branch,
               onClose: () => setState(() => _selected = null),
-              onTap: () => widget.onOpenJob(_selected!),
+              onTap: () => widget.onOpenJob(_selected!.vacancy),
             ),
           ),
       ],
     );
   }
+}
+
+/// Xaritadagi bitta nuqta: vakansiya + (bo'lsa) filial. [branch] `null` bo'lsa
+/// bu kompaniyaning asosiy manzili.
+class _JobPin {
+  final VacancyModel vacancy;
+  final BranchModel? branch;
+
+  const _JobPin(this.vacancy, this.branch);
+
+  double get latitude => branch?.latitude ?? vacancy.latitude!;
+  double get longitude => branch?.longitude ?? vacancy.longitude!;
+
+  /// `vacancy_id + branch_id` juftligi — pin identifikatori.
+  String get mapKey => 'job_${vacancy.id}_${branch?.id ?? 'main'}';
 }
 
 class _ZoomButton extends StatelessWidget {
@@ -231,10 +264,30 @@ class _ZoomButton extends StatelessWidget {
 /// Screenshot 3'dagi kabi — marker bosilganda chiqadigan kichik ma'lumot kartasi.
 class _JobInfoCard extends StatelessWidget {
   final VacancyModel vacancy;
+
+  /// Filial pinida bosilgan bo'lsa — o'sha filial manzili ko'rsatiladi.
+  final BranchModel? branch;
   final VoidCallback onClose;
   final VoidCallback onTap;
 
-  const _JobInfoCard({required this.vacancy, required this.onClose, required this.onTap});
+  const _JobInfoCard({
+    required this.vacancy,
+    this.branch,
+    required this.onClose,
+    required this.onTap,
+  });
+
+  /// Filial pinida filial manzili, aks holda kompaniyaning asosiy manzili.
+  String get addressLine {
+    final b = branch;
+    if (b == null) return vacancy.companyAddress ?? '';
+    final line = b.addressLine;
+    final name = b.name?.trim();
+    if (name != null && name.isNotEmpty) {
+      return line.isEmpty ? name : '$name · $line';
+    }
+    return line;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -292,6 +345,23 @@ class _JobInfoCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (addressLine.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 14, color: context.jb.gray),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              addressLine,
+                              style: TextStyle(fontSize: 12, color: context.jb.gray),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Row(
                       children: [

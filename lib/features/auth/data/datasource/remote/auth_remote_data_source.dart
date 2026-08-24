@@ -10,6 +10,7 @@ import '../../../../../core/network/dio_client.dart';
 import '../../models/anketa_models.dart';
 import '../../models/auth_flow_models.dart';
 import '../../models/auth_response_model.dart';
+import '../../models/branch_model.dart';
 import '../../models/employer_model.dart';
 import '../../models/resume_model.dart';
 import '../../models/user_model.dart';
@@ -28,6 +29,10 @@ abstract class AuthRemoteDataSource {
   Future<Either<ErrorModel, List<LanguageModel>>> getLanguages();
   Future<Either<ErrorModel, EmployerModel>> getEmployer();
   Future<Either<ErrorModel, EmployerModel>> updateEmployer(Map<String, dynamic> data);
+  Future<Either<ErrorModel, List<BranchModel>>> getBranches();
+  Future<Either<ErrorModel, BranchModel>> createBranch(Map<String, dynamic> data);
+  Future<Either<ErrorModel, BranchModel>> updateBranch(int id, Map<String, dynamic> data);
+  Future<Either<ErrorModel, bool>> deleteBranch(int id);
   Future<Either<ErrorModel, String>> uploadLogo(String filePath);
   Future<Either<ErrorModel, String>> uploadPhoto(String filePath);
   Future<Either<ErrorModel, ResumeInfoModel>> getResumeInfo();
@@ -160,6 +165,41 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return dioClient.dio.wrapResponse<EmployerModel>(
       () => dioClient.dio.post('mobile/employer', data: data),
       (json) => EmployerModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, List<BranchModel>>> getBranches() {
+    return dioClient.dio.wrapResponse<List<BranchModel>>(
+      () => dioClient.dio.get('mobile/employer/branches'),
+      (json) => (json as List)
+          .map((e) => BranchModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, BranchModel>> createBranch(Map<String, dynamic> data) {
+    return dioClient.dio.wrapResponse<BranchModel>(
+      () => dioClient.dio.post('mobile/employer/branches', data: data),
+      (json) => BranchModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, BranchModel>> updateBranch(int id, Map<String, dynamic> data) {
+    // PATCH — faqat yuborilgan maydonlar o'zgaradi, qolgani tegilmaydi.
+    return dioClient.dio.wrapResponse<BranchModel>(
+      () => dioClient.dio.patch('mobile/employer/branches/$id', data: data),
+      (json) => BranchModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> deleteBranch(int id) {
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.delete('mobile/employer/branches/$id'),
+      (_) => true,
     );
   }
 

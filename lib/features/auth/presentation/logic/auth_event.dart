@@ -65,6 +65,27 @@ class UpdateEmployerEvent extends AuthEvent {
   UpdateEmployerEvent(this.data);
 }
 
+/// Filiallar ro'yxatini alohida yuklash. `LoadEmployerEvent` javobida ham
+/// `branches` keladi — bu hodisa faqat ro'yxatni yangilash uchun kerak.
+class LoadBranchesEvent extends AuthEvent {}
+
+class CreateBranchEvent extends AuthEvent {
+  final Map<String, dynamic> data;
+  CreateBranchEvent(this.data);
+}
+
+/// Qisman tahrirlash — `data` da faqat o'zgargan maydonlar bo'ladi.
+class UpdateBranchEvent extends AuthEvent {
+  final int id;
+  final Map<String, dynamic> data;
+  UpdateBranchEvent(this.id, this.data);
+}
+
+class DeleteBranchEvent extends AuthEvent {
+  final int id;
+  DeleteBranchEvent(this.id);
+}
+
 class UploadLogoEvent extends AuthEvent {
   final String filePath;
   UploadLogoEvent(this.filePath);

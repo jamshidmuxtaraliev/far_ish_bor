@@ -8,7 +8,6 @@ import '../../data/models/balance_model.dart';
 import '../../data/models/invoice_model.dart';
 import '../../data/models/online_payment_model.dart';
 import '../../data/models/payment_system_model.dart';
-import '../../data/models/premium_tariff_model.dart';
 
 part 'billing_event.dart';
 part 'billing_state.dart';
@@ -24,8 +23,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<ConfirmTestPaymentEvent>(_onConfirmTestPayment);
     on<TestTopupEvent>(_onTestTopup);
     on<PayBlacklistEvent>(_onPayBlacklist);
-    on<LoadPremiumTariffsEvent>(_onLoadPremiumTariffs);
-    on<BuyPremiumEvent>(_onBuyPremium);
     on<ResetCheckoutEvent>(_onResetCheckout);
     on<LoadEmployerInvoicesEvent>(_onLoadEmployerInvoices);
   }
@@ -87,7 +84,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     final result = await dataSource.createCheckout(
       paymentSystemId: event.paymentSystemId,
       amount: event.amount,
-      tariffId: event.tariffId,
     );
     result.fold(
       (failure) => emit(
@@ -200,49 +196,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     emit(state.copyWith(blacklistPayStatus: FormzSubmissionStatus.initial));
   }
 
-  Future<void> _onLoadPremiumTariffs(
-    LoadPremiumTariffsEvent event,
-    Emitter<BillingState> emit,
-  ) async {
-    emit(state.copyWith(premiumStatus: FormzSubmissionStatus.inProgress));
-    final result = await dataSource.getPremiumTariffs();
-    result.fold(
-      (failure) => emit(
-        state.copyWith(
-          premiumStatus: FormzSubmissionStatus.failure,
-          error: failure,
-        ),
-      ),
-      (list) => emit(
-        state.copyWith(
-          premiumStatus: FormzSubmissionStatus.success,
-          premiumTariffs: list,
-        ),
-      ),
-    );
-  }
 
-  Future<void> _onBuyPremium(
-    BuyPremiumEvent event,
-    Emitter<BillingState> emit,
-  ) async {
-    emit(state.copyWith(buyPremiumStatus: FormzSubmissionStatus.inProgress));
-    final result = await dataSource.buyPremium(event.tariffId);
-    await result.fold(
-      (failure) async => emit(
-        state.copyWith(
-          buyPremiumStatus: FormzSubmissionStatus.failure,
-          error: failure,
-        ),
-      ),
-      (_) async {
-        emit(state.copyWith(buyPremiumStatus: FormzSubmissionStatus.success));
-        final balance = await dataSource.getBalance(isEmployer: false);
-        balance.fold((_) {}, (b) => emit(state.copyWith(balance: b)));
-      },
-    );
-    emit(state.copyWith(buyPremiumStatus: FormzSubmissionStatus.initial));
-  }
 
   Future<void> _onLoadEmployerInvoices(LoadEmployerInvoicesEvent event, Emitter<BillingState> emit) async {
     emit(state.copyWith(invoicesStatus: FormzSubmissionStatus.inProgress));

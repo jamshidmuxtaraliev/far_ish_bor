@@ -7,6 +7,7 @@ import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/application_model.dart';
 import '../logic/vacancy_bloc.dart';
 import 'application_detail_screen.dart';
+import 'application_history_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
 
 class MyApplicationsScreen extends StatefulWidget {
@@ -281,6 +282,35 @@ class _ApplicationCard extends StatelessWidget {
               ),
             ),
           ],
+          // ── Otklik tarixi (§7) ──
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ApplicationHistoryScreen(
+                    applicationId: application.id,
+                    asEmployer: false,
+                    subtitle: application.jobTypeName,
+                  ),
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(Icons.history, size: 16, color: context.jb.blue),
+              label: Text(
+                'Otklik tarixi',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.jb.blue),
+              ),
+            ),
+          ),
           // ── Action buttons ──
           if (onUpdateStatus != null && (application.canConfirm || application.canGoOnWay)) ...[
             const SizedBox(height: 12),

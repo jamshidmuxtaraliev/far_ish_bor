@@ -1,5 +1,6 @@
 import '../../../../core/constants/constants.dart';
 import 'anketa_models.dart';
+import 'branch_model.dart';
 
 class CoverageRegionModel {
   final int? id;
@@ -66,6 +67,9 @@ class EmployerModel {
   final DistrictModel? district;
   final List<CoverageRegionModel> coverageRegions;
 
+  /// Qo'shimcha manzillar — `/mobile/employer/me` javobida birga keladi.
+  final List<BranchModel> branches;
+
   const EmployerModel({
     required this.id,
     required this.name,
@@ -86,6 +90,7 @@ class EmployerModel {
     this.region,
     this.district,
     this.coverageRegions = const [],
+    this.branches = const [],
   });
 
   factory EmployerModel.fromJson(Map<String, dynamic> json) => EmployerModel(
@@ -114,12 +119,28 @@ class EmployerModel {
         coverageRegions: (json['coverage_regions'] as List<dynamic>? ?? [])
             .map((e) => CoverageRegionModel.fromJson(e as Map<String, dynamic>))
             .toList(),
+        branches: (json['branches'] as List<dynamic>? ?? [])
+            .map((e) => BranchModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
-  String? get logoUrl {
-    final l = logo;
-    if (l == null || l.isEmpty) return null;
-    if (l.startsWith('http')) return l;
-    return '$BASE_IMAGE_URL$l';
+  /// Tarif faqat call-markaz operatori tomonidan berilgani uchun mobil ilovada
+  /// bu qiymat faqat ko'rsatiladi — o'zgartirilmaydi.
+  bool get isPremiumTier => tier.isNotEmpty && tier.toLowerCase() != 'free';
+
+  /// `premium_a` → `Premium A`, `free` → `Bepul`. Tariflar ro'yxati CRM'da
+  /// o'sib borgani uchun qat'iy jadval emas — formatlash.
+  String get tierLabel {
+    final raw = tier.trim();
+    if (raw.isEmpty || raw.toLowerCase() == 'free') return 'Bepul';
+    return raw
+        .split(RegExp(r'[_\s]+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => w.length <= 2
+            ? w.toUpperCase()
+            : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
   }
+
+  String? get logoUrl => resolveMediaUrl(logo);
 }

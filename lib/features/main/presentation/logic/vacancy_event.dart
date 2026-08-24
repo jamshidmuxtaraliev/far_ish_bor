@@ -69,6 +69,20 @@ class UnsaveVacancyEvent extends VacancyEvent {
 // Employer applications
 class LoadEmployerApplicationsEvent extends VacancyEvent {}
 
+/// Bitta vakansiyaning otkliklari + statistika + kontakt siyosati (§4).
+class LoadVacancyApplicationsEvent extends VacancyEvent {
+  final int vacancyId;
+  final String? status;
+  LoadVacancyApplicationsEvent(this.vacancyId, {this.status});
+}
+
+/// Otklik tarixi (§5) — `asEmployer` yo'lni tanlaydi.
+class LoadApplicationHistoryEvent extends VacancyEvent {
+  final int applicationId;
+  final bool asEmployer;
+  LoadApplicationHistoryEvent(this.applicationId, {this.asEmployer = true});
+}
+
 // Contact unlock
 class LoadRecommendedCandidatesEvent extends VacancyEvent {}
 

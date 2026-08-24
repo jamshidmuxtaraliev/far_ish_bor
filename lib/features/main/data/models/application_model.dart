@@ -96,7 +96,7 @@ class ApplicationModel {
         // Biriktirish (assignment) statuslari — ba'zi javoblarda shular keladi.
         'suhbatga_yozildi' => 'Suhbat vaqti belgilandi',
         'suhbatga_bordi' => 'Suhbatga bordingiz',
-        'bormadi' => 'Bormadingiz',
+        'bormadi' => 'Kelmadingiz',
         'qabul_qilindi' => 'Qabul qilindingiz',
         'mos_kelmadi' => 'Mos kelmadi',
         _ => 'Jarayonda',

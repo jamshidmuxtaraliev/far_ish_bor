@@ -32,7 +32,7 @@ Color matchBucketColor(CandidateModel c) {
 const _assignmentLabels = {
   'suhbatga_yozildi': 'Suhbatga yozildi',
   'suhbatga_bordi': 'Suhbatga bordi',
-  'bormadi': 'Bormadi',
+  'bormadi': 'Kelmadi',
   'qabul_qilindi': 'Qabul qilindi',
   'mos_kelmadi': 'Mos kelmadi',
   // Eski statuslar (orqaga moslik)

@@ -208,6 +208,15 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
               ),
       if (v.companyAddress != null)
         _InfoTile(icon: Icons.location_on_outlined, label: 'Joylashuv', value: v.companyAddress!),
+      // Filiallar — kompaniyaning qo'shimcha manzillari.
+      for (int i = 0; i < v.branches.length; i++)
+        _InfoTile(
+          icon: Icons.store_outlined,
+          label: v.branches[i].title(i),
+          value: v.branches[i].addressLine.isEmpty
+              ? "Manzil ko'rsatilmagan"
+              : v.branches[i].addressLine,
+        ),
       if (v.companyContact != null)
         _InfoTile(icon: Icons.person_outline_rounded, label: "Mas'ul shaxs", value: v.companyContact!),
     ];

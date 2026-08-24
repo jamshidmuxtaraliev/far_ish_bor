@@ -70,14 +70,7 @@ class ChatPeerModel {
 
   const ChatPeerModel({this.type, this.anketaId, this.name, this.photo});
 
-  String? get photoUrl {
-    final p = photo;
-    if (p == null || p.isEmpty) return null;
-    if (p.startsWith('http')) return p;
-    // Backend `uploads/anketa/..` yoki `anketa/..` yuborishi mumkin; baza URL
-    // allaqachon `.../uploads/` bilan tugaydi.
-    return '$BASE_IMAGE_URL${p.startsWith('uploads/') ? p.substring(8) : p}';
-  }
+  String? get photoUrl => resolveMediaUrl(photo);
 
   factory ChatPeerModel.fromJson(Map<String, dynamic> json) => ChatPeerModel(
         type: json['type'] as String?,

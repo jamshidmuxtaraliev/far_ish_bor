@@ -89,7 +89,7 @@ class MyApp extends StatelessWidget {
                         child: Stack(
                           children: [
                             child!,
-                            if (true)
+                            if (false)
                               Positioned(
                                 bottom: 100,
                                 right: 16,

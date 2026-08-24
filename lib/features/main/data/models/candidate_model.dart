@@ -120,6 +120,15 @@ bool? _asBool(Object? value) {
   return null;
 }
 
+/// `public_id` goh `5501`, goh `"A-5501"` bo'lib keladi — raqamli qismini
+/// olamiz, aks holda butun parse yiqilardi.
+int? _asId(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toInt();
+  final digits = value.toString().replaceAll(RegExp(r'\D'), '');
+  return digits.isEmpty ? null : int.tryParse(digits);
+}
+
 class CandidateModel {
   final int id;
   final int? publicId;
@@ -252,7 +261,7 @@ class CandidateModel {
 
     return CandidateModel(
       id: json['id'] as int? ?? 0,
-      publicId: json['public_id'] as int?,
+      publicId: _asId(json['public_id']),
       fullname: json['fullname'] as String?,
       gender: json['gender'] as String?,
       age: json['age'] as int?,
@@ -323,14 +332,8 @@ class CandidateModel {
     return rawExperienceYear;
   }
 
-  /// Rasm to'liq URL'i (PROMPT §6): `http` bilan boshlansa o'zini, aks holda
-  /// nisbiy yo'l `{BASE_IMAGE_URL}{photo}` ko'rinishida.
-  String? get photoUrl {
-    final p = photo;
-    if (p == null || p.isEmpty) return null;
-    if (p.startsWith('http')) return p;
-    return '$BASE_IMAGE_URL$p';
-  }
+  /// Rasm to'liq URL'i (PROMPT §6) — normalizatsiya [resolveMediaUrl] da.
+  String? get photoUrl => resolveMediaUrl(photo);
 
   String get initials {
     if (fullname == null || fullname!.isEmpty) return '?';

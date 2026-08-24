@@ -10,6 +10,7 @@ import '../logic/vacancy_bloc.dart';
 import '../widgets/job_map_view.dart';
 import '../widgets/vacancy_job_card.dart';
 import 'create_vacancy_screen.dart';
+import 'vacancy_applications_screen.dart';
 import 'job_detail_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
 
@@ -444,8 +445,6 @@ class _EmployerVacancyCard extends StatelessWidget {
                 _InfoRow(icon: Icons.calendar_today_outlined, text: 'Muddat: ${_formatDeadline(vacancy.deadline!)}'),
               if (timeAgo.isNotEmpty)
                 _InfoRow(icon: Icons.access_time_outlined, text: timeAgo),
-              if (vacancy.applicationsCount != null && vacancy.applicationsCount! > 0)
-                _InfoRow(icon: Icons.people_outline, text: '${vacancy.applicationsCount} ta ariza'),
             ],
           ),
           if (vacancy.comment != null && vacancy.comment!.isNotEmpty) ...[
@@ -459,6 +458,10 @@ class _EmployerVacancyCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
+          const SizedBox(height: 12),
+          // ── Otkliklar (arizalar) qatori — bosilganda shu vakansiyaning
+          //    otkliklar ekrani ochiladi (§3.2) ──
+          _ApplicationsRow(vacancy: vacancy, title: title),
           const SizedBox(height: 14),
           // ── Action buttons ──
           Row(
@@ -513,6 +516,124 @@ class _EmployerVacancyCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Vakansiya kartasidagi otklik (ariza) statistikasi — PROMPT_VAKANSIYA_
+/// OTKLIKLARI_MOBILE.md §3.2. `total == 0` bo'lsa kul rang, aks holda ko'k;
+/// yangi arizalar qizil nishonda ko'rsatiladi.
+class _ApplicationsRow extends StatelessWidget {
+  final EmployerVacancyModel vacancy;
+  final String title;
+
+  const _ApplicationsRow({required this.vacancy, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.jb;
+    final stats = vacancy.applications;
+    final hasAny = stats.total > 0;
+    final accent = hasAny ? p.blue : p.gray;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => VacancyApplicationsScreen(
+            vacancyId: vacancy.id,
+            vacancyTitle: title,
+          ),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: hasAny ? p.blueTint : p.cardAlt,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.people_outline, size: 17, color: accent),
+                const SizedBox(width: 8),
+                Text(
+                  'Otkliklar: ${stats.total}',
+                  style: TextStyle(
+                      fontSize: 13.5, fontWeight: FontWeight.w700, color: accent),
+                ),
+                if (stats.newCount > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: p.red,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      '${stats.newCount} yangi',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                Icon(Icons.chevron_right, size: 20, color: p.gray),
+              ],
+            ),
+            if (hasAny &&
+                (stats.inProgress > 0 || stats.hired > 0 || stats.closed > 0)) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  if (stats.inProgress > 0)
+                    _StatChip(
+                        label: 'Jarayonda: ${stats.inProgress}', color: p.blue),
+                  if (stats.hired > 0)
+                    _StatChip(
+                      label: vacancy.anketaCount != null
+                          ? 'Ishga olindi: ${stats.hired} / ${vacancy.anketaCount}'
+                          : 'Ishga olindi: ${stats.hired}',
+                      color: p.green,
+                    ),
+                  if (stats.closed > 0)
+                    _StatChip(label: 'Yopilgan: ${stats.closed}', color: p.gray),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _StatChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontSize: 11.5, fontWeight: FontWeight.w600, color: color),
       ),
     );
   }

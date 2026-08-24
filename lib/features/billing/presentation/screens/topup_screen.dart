@@ -18,8 +18,8 @@ class TopUpScreen extends StatefulWidget {
   final bool isEmployer;
 
   /// Pre-selected top-up amount — used when the screen is opened from a paid
-  /// action that failed on an insufficient balance (e.g. buying a premium
-  /// tariff), so the missing sum is already filled in.
+  /// action that failed on an insufficient balance (e.g. unlocking a
+  /// candidate's contacts), so the missing sum is already filled in.
   final int? initialAmount;
 
   /// Nima uchun to'lanayotgani — otklikdan kelinganda nomzod nomi va narx

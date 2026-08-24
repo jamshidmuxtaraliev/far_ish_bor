@@ -8,6 +8,7 @@ import 'package:meta/meta.dart';
 import '../../../../core/error/error_model.dart';
 import '../../../chat/data/datasource/chat_realtime_datasource.dart';
 import '../../data/datasource/remote/vacancy_remote_data_source.dart';
+import '../../data/models/application_history_model.dart';
 import '../../data/models/application_model.dart';
 import '../../data/models/candidate_model.dart';
 import '../../data/models/contact_unlock_model.dart';
@@ -16,6 +17,7 @@ import '../../data/models/employer_application_model.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../../data/models/pipeline_model.dart';
 import '../../data/models/saved_vacancy_model.dart';
+import '../../data/models/vacancy_applications_model.dart';
 import '../../data/models/vacancy_candidates_model.dart';
 import '../../data/models/vacancy_model.dart';
 
@@ -47,6 +49,8 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     on<SaveVacancyEvent>(_onSave);
     on<UnsaveVacancyEvent>(_onUnsave);
     on<LoadEmployerApplicationsEvent>(_onLoadEmployerApplications);
+    on<LoadVacancyApplicationsEvent>(_onLoadVacancyApplications);
+    on<LoadApplicationHistoryEvent>(_onLoadApplicationHistory);
     on<UpdateEmployerApplicationStatusEvent>(_onUpdateEmployerAppStatus);
     on<LoadRecommendedCandidatesEvent>(_onLoadRecommended);
     on<LoadContactAccessEvent>(_onLoadContactAccess);
@@ -445,6 +449,42 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     emit(state.copyWith(assignmentActionStatus: FormzSubmissionStatus.initial));
   }
 
+  Future<void> _onLoadVacancyApplications(
+      LoadVacancyApplicationsEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(
+        vacancyApplicationsStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getVacancyApplications(
+      event.vacancyId,
+      status: event.status,
+    );
+    result.fold(
+      (failure) => emit(state.copyWith(
+          vacancyApplicationsStatus: FormzSubmissionStatus.failure,
+          error: failure)),
+      (data) => emit(state.copyWith(
+          vacancyApplicationsStatus: FormzSubmissionStatus.success,
+          vacancyApplications: data)),
+    );
+  }
+
+  Future<void> _onLoadApplicationHistory(
+      LoadApplicationHistoryEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(
+        applicationHistoryStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getApplicationHistory(
+      event.applicationId,
+      asEmployer: event.asEmployer,
+    );
+    result.fold(
+      (failure) => emit(state.copyWith(
+          applicationHistoryStatus: FormzSubmissionStatus.failure,
+          error: failure)),
+      (data) => emit(state.copyWith(
+          applicationHistoryStatus: FormzSubmissionStatus.success,
+          applicationHistory: data)),
+    );
+  }
+
   Future<void> _onUpdateEmployerAppStatus(UpdateEmployerApplicationStatusEvent event, Emitter<VacancyState> emit) async {
     emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.inProgress));
     final result = await dataSource.updateEmployerApplicationStatus(
@@ -459,6 +499,15 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
         emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.success));
         final refresh = await dataSource.getEmployerApplications();
         refresh.fold((_) {}, (list) => emit(state.copyWith(employerApplications: list)));
+        // Otkliklar ekrani ochiq bo'lsa — ro'yxat, statistika va vakansiya
+        // kartalaridagi sonlar ham yangilansin (§11).
+        final vacancyId = state.vacancyApplications?.vacancy?.id;
+        if (vacancyId != null) {
+          final apps = await dataSource.getVacancyApplications(vacancyId);
+          apps.fold((_) {}, (data) => emit(state.copyWith(vacancyApplications: data)));
+          final vacancies = await dataSource.getEmployerVacancies();
+          vacancies.fold((_) {}, (list) => emit(state.copyWith(employerVacancies: list)));
+        }
       },
     );
     emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.initial));

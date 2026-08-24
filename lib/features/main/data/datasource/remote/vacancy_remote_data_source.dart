@@ -3,6 +3,7 @@ import 'package:jobUp24/core/network/dio_response_extension.dart';
 
 import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';
+import '../../models/application_history_model.dart';
 import '../../models/application_model.dart';
 import '../../models/candidate_model.dart';
 import '../../models/contact_unlock_model.dart';
@@ -11,6 +12,7 @@ import '../../models/employer_application_model.dart';
 import '../../models/employer_vacancy_model.dart';
 import '../../models/pipeline_model.dart';
 import '../../models/saved_vacancy_model.dart';
+import '../../models/vacancy_applications_model.dart';
 import '../../models/vacancy_candidates_model.dart';
 import '../../models/vacancy_model.dart';
 
@@ -30,7 +32,22 @@ abstract class VacancyRemoteDataSource {
   Future<Either<ErrorModel, bool>> deleteVacancy(int id);
   Future<Either<ErrorModel, List<CandidateModel>>> getCandidates();
   Future<Either<ErrorModel, VacancyCandidatesModel>> getVacancyCandidates(int vacancyId);
-  Future<Either<ErrorModel, List<EmployerApplicationModel>>> getEmployerApplications();
+  /// §3.7 — server `vacancy_id` va `status` filtrlarini ham qabul qiladi;
+  /// ekranlar hozircha mahalliy filtrlaydi (PROMPT_NOMZODLAR_3TAB dizayni).
+  Future<Either<ErrorModel, List<EmployerApplicationModel>>> getEmployerApplications({
+    int? vacancyId,
+    String? status,
+  });
+  Future<Either<ErrorModel, VacancyApplicationsModel>> getVacancyApplications(
+    int vacancyId, {
+    String? status,
+    int? limit,
+    int? offset,
+  });
+  Future<Either<ErrorModel, ApplicationHistoryModel>> getApplicationHistory(
+    int applicationId, {
+    required bool asEmployer,
+  });
   Future<Either<ErrorModel, bool>> updateEmployerApplicationStatus(
     int applicationId,
     String status, {
@@ -170,10 +187,54 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
   }
 
   @override
-  Future<Either<ErrorModel, List<EmployerApplicationModel>>> getEmployerApplications() {
+  Future<Either<ErrorModel, List<EmployerApplicationModel>>> getEmployerApplications({
+    int? vacancyId,
+    String? status,
+  }) {
+    final params = <String, dynamic>{};
+    if (vacancyId != null) params['vacancy_id'] = vacancyId;
+    if (status != null && status.isNotEmpty) params['status'] = status;
     return dioClient.dio.wrapResponse<List<EmployerApplicationModel>>(
-      () => dioClient.dio.get('mobile/employer/applications'),
+      () => dioClient.dio.get(
+        'mobile/employer/applications',
+        queryParameters: params.isNotEmpty ? params : null,
+      ),
       (json) => (json as List).map((e) => EmployerApplicationModel.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, VacancyApplicationsModel>> getVacancyApplications(
+    int vacancyId, {
+    String? status,
+    int? limit,
+    int? offset,
+  }) {
+    final params = <String, dynamic>{};
+    if (status != null && status.isNotEmpty) params['status'] = status;
+    if (limit != null) params['limit'] = limit;
+    if (offset != null) params['offset'] = offset;
+    return dioClient.dio.wrapResponse<VacancyApplicationsModel>(
+      () => dioClient.dio.get(
+        'mobile/employer/vacancies/$vacancyId/applications',
+        queryParameters: params.isNotEmpty ? params : null,
+      ),
+      (json) => VacancyApplicationsModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  /// Tarix ikkala rol uchun bir xil tuzilmada keladi, faqat yo'l farq qiladi.
+  @override
+  Future<Either<ErrorModel, ApplicationHistoryModel>> getApplicationHistory(
+    int applicationId, {
+    required bool asEmployer,
+  }) {
+    final path = asEmployer
+        ? 'mobile/employer/applications/$applicationId/history'
+        : 'mobile/applications/$applicationId/history';
+    return dioClient.dio.wrapResponse<ApplicationHistoryModel>(
+      () => dioClient.dio.get(path),
+      (json) => ApplicationHistoryModel.fromJson(json as Map<String, dynamic>),
     );
   }
 

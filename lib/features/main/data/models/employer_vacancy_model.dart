@@ -1,3 +1,5 @@
+import 'application_stats_model.dart';
+
 class EmployerVacancyModel {
   final int id;
   final int? jobTypeId;
@@ -11,6 +13,8 @@ class EmployerVacancyModel {
   final String? comment;
   final String? createdAt;
   final int? applicationsCount;
+  /// Otklik (ariza) statistikasi — PROMPT_VAKANSIYA_OTKLIKLARI §3.1.
+  final ApplicationStatsModel applications;
   // Vakansiya-markazli oqim uchun badge sonlar (§4.1)
   final int mosCount;
   final int recommendedCount;
@@ -28,6 +32,7 @@ class EmployerVacancyModel {
     this.comment,
     this.createdAt,
     this.applicationsCount,
+    this.applications = ApplicationStatsModel.empty,
     this.mosCount = 0,
     this.recommendedCount = 0,
   });
@@ -50,6 +55,7 @@ class EmployerVacancyModel {
       comment: json['comment'] as String?,
       createdAt: json['created_at'] as String?,
       applicationsCount: json['applications_count'] as int?,
+      applications: ApplicationStatsModel.fromVacancyJson(json),
       mosCount: json['mos_count'] as int? ?? 0,
       recommendedCount: json['recommended_count'] as int? ?? 0,
     );

@@ -22,16 +22,14 @@ class LoadPaymentSystemsEvent extends BillingEvent {
 class CreateCheckoutEvent extends BillingEvent {
   final int paymentSystemId;
   final int? amount;
-  final int? tariffId;
 
   const CreateCheckoutEvent({
     required this.paymentSystemId,
     this.amount,
-    this.tariffId,
   });
 
   @override
-  List<Object?> get props => [paymentSystemId, amount, tariffId];
+  List<Object?> get props => [paymentSystemId, amount];
 }
 
 class PollPaymentStatusEvent extends BillingEvent {
@@ -63,18 +61,6 @@ class TestTopupEvent extends BillingEvent {
 /// Seeker: pay the blacklist fee from balance to leave the blacklist.
 class PayBlacklistEvent extends BillingEvent {
   const PayBlacklistEvent();
-}
-
-class LoadPremiumTariffsEvent extends BillingEvent {
-  const LoadPremiumTariffsEvent();
-}
-
-class BuyPremiumEvent extends BillingEvent {
-  final int tariffId;
-  const BuyPremiumEvent(this.tariffId);
-
-  @override
-  List<Object?> get props => [tariffId];
 }
 
 class ResetCheckoutEvent extends BillingEvent {

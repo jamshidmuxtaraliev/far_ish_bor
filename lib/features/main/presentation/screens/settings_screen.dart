@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/jb_palette.dart';
-import '../../../../core/theme/jb_ui.dart';
 import '../../../../core/theme/theme_cubit.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -164,56 +163,123 @@ class _SettingTile extends StatelessWidget {
 }
 
 
-/// Mavzu tanlovi: Yorug' · Tungi · Tizim. Tanlov `PREF_THEME`da saqlanadi.
+/// Mavzu tanlovi: Yorug' ⇄ Tungi. Tanlov `PREF_THEME`da saqlanadi.
+/// Tizim rejimi qo'llanilmaydi — faqat ikki holatli zamonaviy switch.
 class _ThemeModeTile extends StatelessWidget {
   const _ThemeModeTile();
-
-  static const _modes = [ThemeMode.light, ThemeMode.dark, ThemeMode.system];
 
   @override
   Widget build(BuildContext context) {
     final p = context.jb;
     return BlocBuilder<ThemeCubit, ThemeMode>(
       builder: (context, mode) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          decoration: BoxDecoration(
-            color: p.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: p.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    mode == ThemeMode.dark
-                        ? Icons.dark_mode_rounded
-                        : Icons.dark_mode_outlined,
-                    color: p.blue,
-                    size: 22,
+        final dark = mode == ThemeMode.dark;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => context.read<ThemeCubit>().setDark(!dark),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: p.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: p.border),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: dark ? p.violetBg : p.amberBg,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      'Tungi rejim',
-                      style: TextStyle(fontSize: 15, color: p.ink),
-                    ),
+                  child: Icon(
+                    dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                    color: dark ? p.violet : p.amber,
+                    size: 20,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              JBSegmented(
-                tabs: const ["Yorug'", 'Tungi', 'Tizim'],
-                index: _modes.indexOf(mode),
-                onChanged: (i) =>
-                    context.read<ThemeCubit>().setTheme(_modes[i]),
-              ),
-            ],
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tungi rejim',
+                        style: TextStyle(fontSize: 15, color: p.ink),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dark ? 'Yoqilgan' : "O'chirilgan",
+                        style: TextStyle(fontSize: 12.5, color: p.gray),
+                      ),
+                    ],
+                  ),
+                ),
+                _JBSwitch(
+                  value: dark,
+                  onChanged: (v) => context.read<ThemeCubit>().setDark(v),
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+/// Palitra tokenlaridan quriladigan animatsiyali switch.
+class _JBSwitch extends StatelessWidget {
+  const _JBSwitch({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  static const _duration = Duration(milliseconds: 220);
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.jb;
+    return Semantics(
+      toggled: value,
+      child: GestureDetector(
+        onTap: () => onChanged(!value),
+        child: AnimatedContainer(
+          duration: _duration,
+          curve: Curves.easeOut,
+          width: 52,
+          height: 30,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: value ? p.blue : p.chipBg,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: value ? p.blue : p.border),
+          ),
+          child: AnimatedAlign(
+            duration: _duration,
+            curve: Curves.easeOut,
+            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: value ? p.onBrand : p.card,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: p.shadow,
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

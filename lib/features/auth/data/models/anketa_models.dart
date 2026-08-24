@@ -161,10 +161,5 @@ class AnketaModel {
     return map;
   }
 
-  String? get photoUrl {
-    final p = photo;
-    if (p == null || p.isEmpty) return null;
-    if (p.startsWith('http')) return p;
-    return '$BASE_IMAGE_URL$p';
-  }
+  String? get photoUrl => resolveMediaUrl(photo);
 }

@@ -11,6 +11,7 @@ import '../../../../core/services/get_it.dart';
 import '../../data/datasource/local/user_local_data_source.dart';
 import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_flow_models.dart';
+import '../../data/models/branch_model.dart';
 import '../../data/models/employer_model.dart';
 import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
@@ -39,6 +40,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoadLanguagesEvent>(_onLoadLanguages);
     on<LoadEmployerEvent>(_onLoadEmployer);
     on<UpdateEmployerEvent>(_onUpdateEmployer);
+    on<LoadBranchesEvent>(_onLoadBranches);
+    on<CreateBranchEvent>(_onCreateBranch);
+    on<UpdateBranchEvent>(_onUpdateBranch);
+    on<DeleteBranchEvent>(_onDeleteBranch);
     on<UploadLogoEvent>(_onUploadLogo);
     on<UploadPhotoEvent>(_onUploadPhoto);
     on<LoadResumeInfoEvent>(_onLoadResumeInfo);
@@ -208,9 +213,66 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await repository.getEmployer();
     result.fold(
       (failure) => emit(state.copyWith(employerStatus: FormzSubmissionStatus.failure, error: failure)),
-      (employer) => emit(state.copyWith(employerStatus: FormzSubmissionStatus.success, employer: employer)),
+      (employer) => emit(state.copyWith(
+        employerStatus: FormzSubmissionStatus.success,
+        employer: employer,
+        // `/employer/me` filiallarni ham qaytaradi; bo'sh kelsa ro'yxatni
+        // tozalamaymiz — `LoadBranchesEvent` natijasi ustun turadi.
+        branches: employer.branches.isNotEmpty ? employer.branches : null,
+      )),
     );
     emit(state.copyWith(employerStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onLoadBranches(LoadBranchesEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(branchesStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.getBranches();
+    result.fold(
+      (failure) => emit(state.copyWith(branchesStatus: FormzSubmissionStatus.failure, error: failure)),
+      (branches) => emit(state.copyWith(branchesStatus: FormzSubmissionStatus.success, branches: branches)),
+    );
+    emit(state.copyWith(branchesStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onCreateBranch(CreateBranchEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(saveBranchStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.createBranch(event.data);
+    result.fold(
+      (failure) => emit(state.copyWith(saveBranchStatus: FormzSubmissionStatus.failure, error: failure)),
+      // Server tartibini buzmaslik uchun javobdagi obyekt ro'yxat oxiriga
+      // qo'shiladi — qayta `GET` shart emas.
+      (branch) => emit(state.copyWith(
+        saveBranchStatus: FormzSubmissionStatus.success,
+        branches: [...state.branches, branch],
+      )),
+    );
+    emit(state.copyWith(saveBranchStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onUpdateBranch(UpdateBranchEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(saveBranchStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.updateBranch(event.id, event.data);
+    result.fold(
+      (failure) => emit(state.copyWith(saveBranchStatus: FormzSubmissionStatus.failure, error: failure)),
+      (branch) => emit(state.copyWith(
+        saveBranchStatus: FormzSubmissionStatus.success,
+        branches: state.branches.map((b) => b.id == branch.id ? branch : b).toList(),
+      )),
+    );
+    emit(state.copyWith(saveBranchStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onDeleteBranch(DeleteBranchEvent event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(deleteBranchStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.deleteBranch(event.id);
+    result.fold(
+      (failure) => emit(state.copyWith(deleteBranchStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) => emit(state.copyWith(
+        deleteBranchStatus: FormzSubmissionStatus.success,
+        branches: state.branches.where((b) => b.id != event.id).toList(),
+      )),
+    );
+    emit(state.copyWith(deleteBranchStatus: FormzSubmissionStatus.initial));
   }
 
   Future<void> _onUploadLogo(UploadLogoEvent event, Emitter<AuthState> emit) async {

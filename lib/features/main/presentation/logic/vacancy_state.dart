@@ -13,12 +13,18 @@ class VacancyState extends Equatable {
   final FormzSubmissionStatus savedStatus;
   final FormzSubmissionStatus employerAppsStatus;
   final FormzSubmissionStatus updateEmpAppStatus;
+  final FormzSubmissionStatus vacancyApplicationsStatus;
+  final FormzSubmissionStatus applicationHistoryStatus;
   final List<VacancyModel> seekerVacancies;
   final List<EmployerVacancyModel> employerVacancies;
   final List<CandidateModel> candidates;
   final List<ApplicationModel> myApplications;
   final List<SavedVacancyModel> savedVacancies;
   final List<EmployerApplicationModel> employerApplications;
+  /// Ochilgan vakansiyaning otkliklari (§4.2).
+  final VacancyApplicationsModel? vacancyApplications;
+  /// Ochilgan otklikning tarixi (§5.2).
+  final ApplicationHistoryModel? applicationHistory;
 
   final List<CandidateModel> recommendedCandidates;
   final FormzSubmissionStatus recommendedStatus;
@@ -59,12 +65,16 @@ class VacancyState extends Equatable {
     this.savedStatus = FormzSubmissionStatus.initial,
     this.employerAppsStatus = FormzSubmissionStatus.initial,
     this.updateEmpAppStatus = FormzSubmissionStatus.initial,
+    this.vacancyApplicationsStatus = FormzSubmissionStatus.initial,
+    this.applicationHistoryStatus = FormzSubmissionStatus.initial,
     this.seekerVacancies = const [],
     this.employerVacancies = const [],
     this.candidates = const [],
     this.myApplications = const [],
     this.savedVacancies = const [],
     this.employerApplications = const [],
+    this.vacancyApplications,
+    this.applicationHistory,
     this.recommendedCandidates = const [],
     this.recommendedStatus = FormzSubmissionStatus.initial,
     this.contactAccess,
@@ -142,12 +152,16 @@ class VacancyState extends Equatable {
     FormzSubmissionStatus? savedStatus,
     FormzSubmissionStatus? employerAppsStatus,
     FormzSubmissionStatus? updateEmpAppStatus,
+    FormzSubmissionStatus? vacancyApplicationsStatus,
+    FormzSubmissionStatus? applicationHistoryStatus,
     List<VacancyModel>? seekerVacancies,
     List<EmployerVacancyModel>? employerVacancies,
     List<CandidateModel>? candidates,
     List<ApplicationModel>? myApplications,
     List<SavedVacancyModel>? savedVacancies,
     List<EmployerApplicationModel>? employerApplications,
+    VacancyApplicationsModel? vacancyApplications,
+    ApplicationHistoryModel? applicationHistory,
     List<CandidateModel>? recommendedCandidates,
     FormzSubmissionStatus? recommendedStatus,
     ContactAccessModel? contactAccess,
@@ -179,12 +193,18 @@ class VacancyState extends Equatable {
       savedStatus: savedStatus ?? this.savedStatus,
       employerAppsStatus: employerAppsStatus ?? this.employerAppsStatus,
       updateEmpAppStatus: updateEmpAppStatus ?? this.updateEmpAppStatus,
+      vacancyApplicationsStatus:
+          vacancyApplicationsStatus ?? this.vacancyApplicationsStatus,
+      applicationHistoryStatus:
+          applicationHistoryStatus ?? this.applicationHistoryStatus,
       seekerVacancies: seekerVacancies ?? this.seekerVacancies,
       employerVacancies: employerVacancies ?? this.employerVacancies,
       candidates: candidates ?? this.candidates,
       myApplications: myApplications ?? this.myApplications,
       savedVacancies: savedVacancies ?? this.savedVacancies,
       employerApplications: employerApplications ?? this.employerApplications,
+      vacancyApplications: vacancyApplications ?? this.vacancyApplications,
+      applicationHistory: applicationHistory ?? this.applicationHistory,
       recommendedCandidates: recommendedCandidates ?? this.recommendedCandidates,
       recommendedStatus: recommendedStatus ?? this.recommendedStatus,
       contactAccess: contactAccess ?? this.contactAccess,
@@ -216,6 +236,8 @@ class VacancyState extends Equatable {
         applicationsStatus, updateAppStatus, savedStatus, employerAppsStatus, updateEmpAppStatus,
         seekerVacancies, employerVacancies, candidates, myApplications,
         savedVacancies, employerApplications,
+        vacancyApplications, vacancyApplicationsStatus,
+        applicationHistory, applicationHistoryStatus,
         recommendedCandidates, recommendedStatus,
         contactAccess, contactAccessStatus,
         unlockResult, unlockStatus,
