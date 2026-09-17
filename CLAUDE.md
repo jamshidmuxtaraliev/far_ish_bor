@@ -34,9 +34,9 @@ Ikkita tuzoq: (a) lokal muhitda `localhost` YARAMAYDI — telefon uchun u telefo
 
 ⚠ **DEV serveri prod bilan bir mashinada, lekin bazasi ham, kaliti ham alohida**
 (`job_up_dev` — prod nusxasi). U yerda SMS, FCM push, Telegram bot va OnlinePBX
-**ataylab o'chirilgan**, OTP kodi har doim **123456**, Payme esa `is_test=1`
-(sandbox). Ya'ni dev'da "push kelmadi / SMS kelmadi" — xato emas, shunday
-sozlangan. To'liq jadval: [env/README.md](env/README.md).
+**ataylab o'chirilgan**, OTP kodi har doim **123456**, to'lov esa **avtomatik**
+(tugma bosilsa darhol to'lanadi, pul kerak emas). Ya'ni dev'da "push kelmadi /
+SMS kelmadi" — xato emas, shunday sozlangan. To'liq jadval: [env/README.md](env/README.md).
 
 VS Code'da uchala muhit Run panelida tayyor turadi (workspace ildizidagi `.vscode/launch.json`); LOCAL tanlansa `preLaunchTask` IP ni avtomatik yangilaydi.
 

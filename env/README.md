@@ -25,20 +25,33 @@ xabar ketmasligi uchun. Sinovda shuni kutib o'tirmang:
 | FCM push | **kelmaydi** (`FCM_ENABLED=0`) | keladi |
 | Telegram bot | o'chiq | `@Jobup24bot` |
 | Qo'ng'iroqlar (OnlinePBX) | o'chiq | ishlaydi |
-| To'lov (Payme) | `is_test=1` → **test.paycom.uz** (pul yechilmaydi) | jonli kassa |
+| To'lov | **avtomatik** — tugma bosilsa darhol to'lanadi | jonli Payme kassasi |
 
-⚠ To'lov haqida: dev'da Payme `is_test=1` qilingan, ya'ni ilova yasagan
-`checkout_url` sandbox hostiga (`test.paycom.uz`) ketadi va **haqiqiy pul
-yechilmaydi**. Ammo kassaning `merchant_id` si hamon jonliniki — sandbox uni
-tanimay "Поставщик не найден" deb qaytarishi mumkin. Ya'ni ilovadagi oqim
-(intent yaratish → `checkout_url` olish → ochish) to'liq sinaladi, Payme
-sahifasining o'zi esa xato beradi. To'lovni oxirigacha sinash kerak bo'lsa
-Payme kabinetida **alohida sandbox kassa** ochilib, uning `merchant_id`/kaliti
-dev bazasiga yozilishi kerak.
+## ✅ DEV'da TO'LOV AVTOMATIK
 
-⛔ `is_test` ni dev'da 0 ga QAYTARMANG: u holda ilova jonli kassaga olib boradi
-va sinovchi rostdan to'lab qo'ysa, Payme webhook'i **prod**ga ketadi (kabinetdagi
-callback manzili o'sha) — pul yechiladi, lekin hech qayerga bog'lanmaydi.
+Sinov serverida to'lov uchun pul ham, Payme akkaunti ham kerak EMAS. Ilovadagi
+har qanday "To'lash / Sotib olish" tugmasi bosilganda backend'ning o'z sahifasi
+ochiladi, to'lov darhol yakunlanadi va mijoz "To'lov qabul qilindi" degan
+sahifani ko'radi (Mini App ichida 2 soniyadan keyin o'zi yopiladi).
+
+**Ilova tomonda hech narsa o'zgarmaydi** — serverdan kelgan `checkout_url` ni
+odatdagidek ochaverasiz. Faqat u Payme o'rniga
+`api-dev.jobup24.uz/api/v1/online-payments/test-pay/...` ga ishora qiladi.
+
+Shu yo'l bilan sinaladigan oqimlar:
+
+| Oqim | Natija |
+|---|---|
+| Balans to'ldirish | balans oshadi |
+| Otklik paketi | hamyon faollashadi, kvota tushadi |
+| Tarif obunasi | obuna `active`, 30 kunlik kvota beriladi |
+| Shartnoma (operator havolasi) | shartnoma to'langan, varonka qulfi ochiladi |
+
+Tekshirilgan (2026-09-17): balans 0 → 50 000, otklik hamyoni 10 ta, obuna
+faollashdi — hammasi kassaga daromad yozib.
+
+⚠ Qayta bosilsa ikkinchi marta pul yozilmaydi ("Allaqachon to'langan").
+⚠ Bu faqat DEV'da: prod'da bu manzil 404 qaytaradi.
 
 ## Domen o'zgarsa
 
