@@ -19,6 +19,7 @@ import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../widgets/resume_actions.dart';
 import '../widgets/resume_card.dart';
 import 'edit_employer_screen.dart';
+import 'employer_interviews_screen.dart';
 import 'my_applications_screen.dart';
 import 'settings_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
@@ -195,6 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     isLoading,
                     avatarUrl,
                     isAvatarUploading,
+                    state.employer,
                   ),
                 ),
                 SliverPadding(
@@ -208,10 +210,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                       if (!widget.isEmployer) ...[
                         _buildResumeCard(state),
-                        const SizedBox(height: 16),
-                      ],
-                      if (widget.isEmployer) ...[
-                        _buildTariffCard(state.employer),
                         const SizedBox(height: 16),
                       ],
                       if (!widget.isEmployer &&
@@ -242,6 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool isLoading,
     String? avatarUrl,
     bool isAvatarUploading,
+    EmployerModel? employer,
   ) {
     final displayName =
         user?.displayName ??
@@ -387,19 +386,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(width: 6),
+              // ⚠ Ish beruvchida yorliq HAQIQIY holatdan olinadi
+              // (`lifecycle_status`) — ilgari hammaga "Tasdiqlangan" deb
+              // yozilardi va moderatsiyadagi kompaniya ham tasdiqlangandek
+              // ko'rinardi. Bosh sahifadagi chip bilan bir manba.
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(100),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.verified, color: Colors.white, size: 12),
-                    SizedBox(width: 3),
+                    Icon(
+                      widget.isEmployer && employer?.isVerified != true
+                          ? Icons.hourglass_bottom_rounded
+                          : Icons.verified,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 3),
                     Text(
-                      'Tasdiqlangan',
-                      style: TextStyle(
+                      widget.isEmployer
+                          ? (employer?.lifecycleLabel ?? 'Yangi')
+                          : 'Tasdiqlangan',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -539,80 +550,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${buf.toString().split('').reversed.join()} so\'m';
   }
 
-  /// Tarif turi — faqat ko'rsatish uchun. Premium tariflar call-markaz
-  /// operatori orqali faollashtiriladi, ilovada sotib olinmaydi.
-  Widget _buildTariffCard(EmployerModel? employer) {
-    final p = context.jb;
-    final premium = employer?.isPremiumTier ?? false;
-    final label = employer?.tierLabel ?? '—';
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: premium ? p.gold : p.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: premium ? p.goldSoft : p.chipBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              premium
-                  ? Icons.workspace_premium
-                  : Icons.workspace_premium_outlined,
-              color: premium ? p.gold : p.gray,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Tarif',
-                      style: TextStyle(fontSize: 13, color: p.gray),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: premium ? p.goldSoft : p.chipBg,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: premium ? p.gold : p.gray,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Tarifni faollashtirish yoki o\'zgartirish call-markaz '
-                  'operatori orqali amalga oshiriladi.',
-                  style: TextStyle(fontSize: 12.5, color: p.gray, height: 1.35),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ⚠ TARIF KARTASI OLIB TASHLANDI (2026-09-17).
+  // Premium A/B/V / Mini paket — CRM tariflari, ularni FAQAT operator
+  // biriktiradi va ilovada ko'rsatilmaydi. Ish beruvchi ilovada faqat
+  // OTKLIK tarifini (obuna/paket) tanlaydi — "Otkliklar" ekrani.
 
   Widget _buildMenuSection(BuildContext context) {
     final List<_MenuItem> jobSeekerItems = [
@@ -642,17 +583,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
           MaterialPageRoute(builder: (_) => const EditEmployerScreen()),
         ),
       ),
+      // Tab indekslari [MainScreen] dagi ish beruvchi ro'yxatiga mos:
+      // 0=Bosh sahifa · 1=Vakansiyalar · 2=Nomzodlar · 3=Arizalar · 4=Profil.
       _MenuItem(
         icon: Icons.work_outline,
         label: 'Vakansiyalar',
         color: context.jb.cyan,
-        onTap: () => widget.onSelectTab?.call(0),
+        onTap: () => widget.onSelectTab?.call(1),
       ),
       _MenuItem(
         icon: Icons.people_outline,
         label: 'Nomzodlarni kuzatish',
         color: context.jb.violet,
-        onTap: () => widget.onSelectTab?.call(1),
+        onTap: () => widget.onSelectTab?.call(2),
+      ),
+      _MenuItem(
+        icon: Icons.event_note_outlined,
+        label: 'Suhbatlar',
+        color: context.jb.amber,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const EmployerInterviewsScreen(showBack: true),
+          ),
+        ),
       ),
     ];
 

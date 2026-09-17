@@ -98,15 +98,15 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
+    // ⚠ Maydonlar HAR DOIM yuboriladi (bo'sh bo'lsa ham): server bo'sh satrni
+    // `null` deb yozadi. Ilgari bo'sh maydon umuman yuborilmasdi — foydalanuvchi
+    // manzilni o'chirib saqlasa, serverdagi eskisi qaytib kelaverardi.
     final data = <String, dynamic>{
       'name': _nameController.text.trim(),
       'contact_person': _contactPersonController.text.trim(),
-      if (_phone2Controller.text.trim().isNotEmpty)
-        'phone2': _phone2Controller.text.trim(),
-      if (_tinController.text.trim().isNotEmpty)
-        'tin': _tinController.text.trim(),
-      if (_addressController.text.trim().isNotEmpty)
-        'address': _addressController.text.trim(),
+      'phone2': _phone2Controller.text.trim(),
+      'tin': _tinController.text.trim(),
+      'address': _addressController.text.trim(),
       if (_latitude != null && _longitude != null) ...{
         'latitude': _latitude,
         'longitude': _longitude,
@@ -132,19 +132,35 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
       initialLng: _longitude,
       title: 'Kompaniya manzili',
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() {
       _latitude = picked.latitude;
       _longitude = picked.longitude;
-      // Qo'lda yozilgan manzilni bosib ketmaymiz — faqat bo'sh bo'lsa
-      // xaritadan kelgan manzil bilan to'ldiramiz.
-      final resolved = picked.address;
-      if (resolved != null &&
-          resolved.isNotEmpty &&
-          _addressController.text.trim().isEmpty) {
-        _addressController.text = resolved;
-      }
     });
+    // Qo'lda yozilgan manzilni bosib ketmaymiz: bo'sh bo'lsa o'zi to'ladi,
+    // to'lgan bo'lsa almashtirishni TAKLIF qilamiz (foydalanuvchi hal qiladi).
+    _applyPickedAddress(picked.address);
+  }
+
+  /// Xaritadan topilgan manzilni manzil maydoniga qo'yadi yoki taklif qiladi.
+  void _applyPickedAddress(String? resolved) {
+    if (resolved == null || resolved.isEmpty) return;
+    final current = _addressController.text.trim();
+    if (current.isEmpty) {
+      setState(() => _addressController.text = resolved);
+      return;
+    }
+    if (current == resolved) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        duration: const Duration(seconds: 6),
+        content: Text('Xaritada: $resolved'),
+        action: SnackBarAction(
+          label: 'Qo\'yish',
+          onPressed: () => setState(() => _addressController.text = resolved),
+        ),
+      ));
   }
 
   /// Manzil koordinatasini xaritadan tanlash tugmasi.
@@ -460,6 +476,8 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                                   controller: _addressController,
                                   decoration: _inputDecoration('Manzil'),
                                   maxLines: 2,
+                                  // employers.address — VARCHAR(255)
+                                  maxLength: 255,
                                 ),
                                 const SizedBox(height: 12),
                                 _buildMapPickerTile(),

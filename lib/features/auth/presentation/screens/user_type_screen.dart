@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/utils/utils.dart';
 import 'employer_registration_screen.dart';
 import 'job_seeker_registration_screen.dart';
 import 'login_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
+import '../../../../core/theme/jb_ui.dart';
 
 class UserTypeScreen extends StatelessWidget {
   final String language;
@@ -45,7 +45,7 @@ class UserTypeScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/images/logo.png', width: getScreenWidth(context), height: 120),
+                  const JBLogo(size: 120),
                   const SizedBox(height: 24),
                   Text(
                     isUz ? 'Kim siz?' : 'Кто вы?',

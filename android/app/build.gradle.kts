@@ -1,8 +1,29 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// ── Release imzo kaliti ─────────────────────────────────────────
+// `android/key.properties` bo'lsa — HAQIQIY kalit bilan imzolanadi.
+// Bo'lmasa — debug kalit (ilova telefonga o'rnatiladi, lekin: Play Store qabul
+// qilmaydi; har bir kompyuterning debug kaliti boshqacha, shuning uchun bir
+// mashinada yig'ilgan APK ikkinchisinikining ustiga yangilanmaydi; keyin
+// haqiqiy kalitga o'tilganda foydalanuvchi ilovani O'CHIRIB qayta o'rnatishga
+// majbur bo'ladi — ma'lumotlari bilan birga).
+// Kalit fayli va parollari git'da saqlanmaydi — tool/build.ps1 va
+// env/README.md ga qarang.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKey = keystorePropertiesFile.exists()
+val keystoreProperties = Properties()
+if (hasReleaseKey) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
+} else {
+    logger.warn("[jobUp24] android/key.properties yo'q — release build DEBUG kalit bilan imzolanadi.")
 }
 
 android {
@@ -40,11 +61,25 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKey) {
+                signingConfigs.getByName("release")
+            } else {
+                // Kalit berilmaguncha `flutter run --release` ishlab tursin.
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

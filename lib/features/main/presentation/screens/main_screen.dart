@@ -7,7 +7,7 @@ import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../chat/presentation/logic/chat_bloc.dart';
 import 'candidates_screen.dart';
 import 'employer_applications_screen.dart';
-import 'employer_interviews_screen.dart';
+import 'employer_home_screen.dart';
 import 'home_screen.dart';
 import 'jobs_screen.dart';
 import 'my_applications_screen.dart';
@@ -31,7 +31,17 @@ class _MainScreenState extends State<MainScreen> {
   late final List<Widget> _pages;
   late final List<_NavItem> _navItems;
 
-  void _selectTab(int index) => setState(() => _selectedIndex = index);
+  /// ⚠ TABLAR DANGASA QURILADI. `IndexedStack` odatda BARCHA bolalarni darhol
+  /// quradi — u holda ilova ochilishida beshta ekranning `initState` i birdan
+  /// so'rov yuboradi (bir xil ro'yxat ikki-uch marta). Shuning uchun faqat
+  /// ochilgan tab quriladi; bir marta ochilgach `IndexedStack` uni tirik
+  /// saqlaydi, ya'ni holat (skroll, filtr) yo'qolmaydi.
+  final Set<int> _built = {0};
+
+  void _selectTab(int index) => setState(() {
+        _selectedIndex = index;
+        _built.add(index);
+      });
 
   bool _chatConnected = false;
 
@@ -52,14 +62,24 @@ class _MainScreenState extends State<MainScreen> {
     _connectSupportChat();
 
     if (widget.isEmployer) {
+      // ⚠ TARTIB O'ZGARDI: 0-tab endi BOSH SAHIFA (kompaniya ma'lumotlari +
+      // statistika), vakansiyalar ro'yxati 1-tabga ko'chdi. "Suhbatlar"
+      // pastki menyudan olindi (o'rin 5 ta) — u bosh sahifadagi KPI karta va
+      // tezkor amal orqali ochiladi. Tab indekslariga tayangan joylar:
+      // [ProfileScreen] menyusi va [EmployerHomeScreen._goTab].
       _pages = [
+        EmployerHomeScreen(onSelectTab: _selectTab),
         JobsScreen(isEmployer: widget.isEmployer),
         const CandidatesScreen(),
         const EmployerApplicationsScreen(),
-        const EmployerInterviewsScreen(),
         ProfileScreen(isEmployer: widget.isEmployer, onSelectTab: _selectTab),
       ];
       _navItems = const [
+        _NavItem(
+          icon: Icons.dashboard_outlined,
+          activeIcon: Icons.dashboard_rounded,
+          label: 'Bosh sahifa',
+        ),
         _NavItem(
           icon: Icons.work_outline_rounded,
           activeIcon: Icons.work_rounded,
@@ -74,11 +94,6 @@ class _MainScreenState extends State<MainScreen> {
           icon: Icons.inbox_outlined,
           activeIcon: Icons.inbox_rounded,
           label: 'Arizalar',
-        ),
-        _NavItem(
-          icon: Icons.event_note_outlined,
-          activeIcon: Icons.event_note_rounded,
-          label: 'Suhbatlar',
         ),
         _NavItem(
           icon: Icons.person_outline_rounded,
@@ -135,7 +150,13 @@ class _MainScreenState extends State<MainScreen> {
         listener: (context, state) => _connectSupportChat(),
         child: Scaffold(
           backgroundColor: context.jb.bg,
-          body: IndexedStack(index: _selectedIndex, children: _pages),
+          body: IndexedStack(
+            index: _selectedIndex,
+            children: List.generate(
+              _pages.length,
+              (i) => _built.contains(i) ? _pages[i] : const SizedBox.shrink(),
+            ),
+          ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
               color: context.jb.card,

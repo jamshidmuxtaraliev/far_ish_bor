@@ -41,6 +41,7 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     on<CreateVacancyEvent>(_onCreateVacancy);
     on<UpdateVacancyEvent>(_onUpdateVacancy);
     on<DeleteVacancyEvent>(_onDeleteVacancy);
+    on<SetVacancyPausedEvent>(_onSetVacancyPaused);
     on<LoadCandidatesEvent>(_onLoadCandidates);
     on<LoadVacancyCandidatesEvent>(_onLoadVacancyCandidates);
     on<LoadMyApplicationsEvent>(_onLoadMyApplications);
@@ -110,8 +111,8 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   Future<void> _onCreateVacancy(CreateVacancyEvent event, Emitter<VacancyState> emit) async {
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.inProgress));
     final result = await dataSource.createOrUpdateVacancy(event.request);
-    result.fold(
-      (failure) => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success));
         final refresh = await dataSource.getEmployerVacancies();
@@ -124,8 +125,8 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   Future<void> _onUpdateVacancy(UpdateVacancyEvent event, Emitter<VacancyState> emit) async {
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.inProgress));
     final result = await dataSource.createOrUpdateVacancy(event.request);
-    result.fold(
-      (failure) => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success));
         final refresh = await dataSource.getEmployerVacancies();
@@ -169,8 +170,8 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   Future<void> _onUpdateApplicationStatus(UpdateApplicationStatusEvent event, Emitter<VacancyState> emit) async {
     emit(state.copyWith(updateAppStatus: FormzSubmissionStatus.inProgress));
     final result = await dataSource.updateApplicationStatus(event.applicationId, event.status);
-    result.fold(
-      (failure) => emit(state.copyWith(updateAppStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(updateAppStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(updateAppStatus: FormzSubmissionStatus.success));
         final refresh = await dataSource.getMyApplications();
@@ -188,6 +189,23 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
       (_) {
         final updated = state.employerVacancies.where((v) => v.id != event.id).toList();
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success, employerVacancies: updated));
+      },
+    );
+    emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.initial));
+  }
+
+  /// Play/Pause — vakansiyani vaqtincha to'xtatish yoki qayta yoqish.
+  /// Muvaffaqiyatdan keyin ro'yxat serverdan qayta o'qiladi (yaratish/tahrirlash
+  /// bilan bir xil naqsh) — status va boshqa maydonlar server bilan mos qolsin.
+  Future<void> _onSetVacancyPaused(SetVacancyPausedEvent event, Emitter<VacancyState> emit) async {
+    emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.setVacancyPaused(event.id, event.paused);
+    await result.fold(
+      (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
+        emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success));
+        final refresh = await dataSource.getEmployerVacancies();
+        refresh.fold((_) {}, (list) => emit(state.copyWith(employerVacancies: list)));
       },
     );
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.initial));
@@ -309,8 +327,15 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
           unlockedAnketaIds: newUnlocked,
           unlockedPhones: newPhones,
           unlockedCapabilities: caps,
-          contactAccess: unlockResult.balance != null
-              ? state.contactAccess?.copyWith(balance: unlockResult.balance)
+          // Balans YOKI otklik qoldig'i — qaysi yo'l bilan ochilgan bo'lsa
+          // o'shani darhol yangilaymiz (kartalar qayta so'rovsiz to'g'ri
+          // ko'rsatsin).
+          contactAccess: (unlockResult.balance != null ||
+                  unlockResult.otklikRemaining != null)
+              ? state.contactAccess?.copyWith(
+                  balance: unlockResult.balance,
+                  otklikAvailable: unlockResult.otklikRemaining,
+                )
               : null,
         ));
       },
@@ -487,14 +512,18 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
 
   Future<void> _onUpdateEmployerAppStatus(UpdateEmployerApplicationStatusEvent event, Emitter<VacancyState> emit) async {
     emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.inProgress));
+    // ⚠ `fold` ning muvaffaqiyat shoxi `async` — u AWAIT qilinmasa handler
+    // tugab, Emitter yopilgandan keyin `emit` chaqiriladi (bloc StateError
+    // beradi) va ro'yxat/statistika/vakansiya kartasidagi sonlar yangilanmay
+    // qoladi. Shuning uchun `await result.fold(...)`.
     final result = await dataSource.updateEmployerApplicationStatus(
       event.applicationId,
       event.status,
       interviewDatetime: event.interviewDatetime,
       type: event.type,
     );
-    result.fold(
-      (failure) => emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.failure, error: failure)),
+    await result.fold(
+      (failure) async => emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(updateEmpAppStatus: FormzSubmissionStatus.success));
         final refresh = await dataSource.getEmployerApplications();

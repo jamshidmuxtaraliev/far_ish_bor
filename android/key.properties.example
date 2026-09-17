@@ -1,0 +1,14 @@
+# Release imzo kaliti. Bu faylning NUSXASINI `key.properties` deb saqlang
+# va qiymatlarni to'ldiring. `key.properties` va `.jks` git'ga TUSHMAYDI.
+#
+# Kalit yasash (bir marta, butun ilova umri uchun — YO'QOTMANG):
+#   keytool -genkey -v -keystore D:/keys/jobup24-release.jks ^
+#           -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias jobup24
+#
+# ⚠ Kalit yo'qolsa Play Store'dagi ilovani BOSHQA hech qachon yangilab
+#   bo'lmaydi. Nusxasini va parollarini xavfsiz joyda saqlang.
+
+storeFile=D:/keys/jobup24-release.jks
+storePassword=
+keyAlias=jobup24
+keyPassword=

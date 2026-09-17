@@ -4,4 +4,11 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- FAQAT debug build uchun: lokal backend (http://192.168.x.x:5024)
+         bilan sinash imkonini beradi. Android 9 (API 28) dan boshlab ochiq
+         HTTP standart holatda bloklanadi va so'rov "Connection refused"
+         emas, jimgina CLEARTEXT xatosi bilan yiqiladi.
+         Release/profile build'ga TEGMAYDI — prod har doim https. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

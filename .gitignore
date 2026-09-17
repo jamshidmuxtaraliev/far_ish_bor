@@ -30,3 +30,13 @@ doc/api/
 
 # FVM Version Cache
 .fvm/
+
+# Muhit sozlamalari: lokal manzil har bir kompyuterda boshqacha (Wi-Fi IP),
+# uni `tool/run.ps1 local` avtomatik yozadi. prod/dev fayllari esa git'da.
+env/local.json
+
+# Release imzo kaliti - HECH QACHON git'ga tushmasin.
+# android/.gitignore key.properties va *.jks ni allaqachon qamraydi; bu esa
+# kalit adashib client/ ildiziga qo'yilgan holat uchun zaxira to'siq.
+*.jks
+*.keystore

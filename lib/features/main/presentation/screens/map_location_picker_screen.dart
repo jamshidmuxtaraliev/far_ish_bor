@@ -121,6 +121,8 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
       if (res.error == null && items != null && items.isNotEmpty) {
         final item = items.first;
         found = item.toponymMetadata?.address.formattedAddress ?? item.name;
+        // employers.address — VARCHAR(255): uzun manzil serverda xato bermasin
+        if (found != null && found.length > 250) found = found.substring(0, 250);
       }
     } catch (_) {
       found = null;
@@ -130,6 +132,20 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
       _geocoding = false;
       _address = found;
     });
+  }
+
+  /// Xarita bosilganda o'sha nuqta markazga keladi.
+  ///
+  /// ⚠ `CameraPosition(target: …)` da `zoom` STANDART 0 — zoom berilmasa xarita
+  /// bosilishi bilan butun dunyo ko'rinishiga uchib ketardi. Shuning uchun
+  /// joriy masshtab saqlanadi (juda uzoq bo'lsa 16 gacha yaqinlashtiramiz).
+  Future<void> _onMapTap(Point point) async {
+    final pos = await _controller?.getCameraPosition();
+    final zoom = pos == null ? 16.0 : (pos.zoom < 14 ? 16.0 : pos.zoom);
+    await _controller?.moveCamera(
+      CameraUpdate.newCameraPosition(CameraPosition(target: point, zoom: zoom)),
+      animation: const MapAnimation(type: MapAnimationType.smooth, duration: 0.25),
+    );
   }
 
   Future<void> _goToMyLocation() async {
@@ -210,11 +226,7 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
                 );
               },
               onCameraPositionChanged: _onCameraChanged,
-              onMapTap: (point) => _controller?.moveCamera(
-                CameraUpdate.newCameraPosition(CameraPosition(target: point)),
-                animation:
-                    const MapAnimation(type: MapAnimationType.smooth, duration: 0.25),
-              ),
+              onMapTap: _onMapTap,
             ),
 
             // Markazdagi pin — xarita suriladi, pin joyida qoladi.

@@ -1,4 +1,15 @@
-const String DOMAIN = 'https://api.jobup24.uz';
+/// API manzili. Standart — PROD; boshqa serverga ulanish uchun kodni
+/// tahrirlash SHART EMAS, buyruqqa `--dart-define` qo'shiladi:
+///
+///   fvm flutter run --dart-define=API_DOMAIN=http://192.168.x.x:5024
+///
+/// ⚠ Lokal backend `http://` bo'ladi — Android 9+ ochiq HTTP'ni bloklaydi.
+/// Shuning uchun `android/app/src/debug/AndroidManifest.xml` da (FAQAT debug)
+/// `usesCleartextTraffic=true` qo'yilgan; release build'ga ta'sir qilmaydi.
+const String DOMAIN = String.fromEnvironment(
+  'API_DOMAIN',
+  defaultValue: 'https://api.jobup24.uz',
+);
 const String BASE_URL = "$DOMAIN/api/v1/";
 const String BASE_IMAGE_URL = "$DOMAIN/api/v1/uploads/";
 

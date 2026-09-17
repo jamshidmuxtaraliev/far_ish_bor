@@ -124,9 +124,28 @@ class EmployerModel {
             .toList(),
       );
 
-  /// Tarif faqat call-markaz operatori tomonidan berilgani uchun mobil ilovada
-  /// bu qiymat faqat ko'rsatiladi — o'zgartirilmaydi.
+  /// ⚠ TARIF ILOVADA KO'RSATILMAYDI (2026-09-17): Premium A/B/V / Mini paket —
+  /// CRM tariflari, ularni faqat operator biriktiradi. Bu getterlar ichki
+  /// mantiq uchun qoldi (ekranda chizilmaydi); ish beruvchi ilovada faqat
+  /// OTKLIK tarifini (obuna/paket) tanlaydi.
   bool get isPremiumTier => tier.isNotEmpty && tier.toLowerCase() != 'free';
+
+  /// Kompaniya moderatsiyadan o'tganmi. ⚠ Ilovada "Tasdiqlangan" yorlig'i
+  /// FAQAT shu `true` bo'lganda chiziladi — aks holda hali tekshirilmagan
+  /// kompaniya ham tasdiqlangandek ko'rinadi.
+  bool get isVerified => lifecycleStatus == 'faol';
+
+  /// `lifecycle_status` ning mijozga ko'rinadigan matni.
+  /// Qiymatlar backend ENUM'i bilan bir xil: yangi · kutilmoqda · faol ·
+  /// rad_etildi · tugallangan · faol_emas.
+  String get lifecycleLabel => switch (lifecycleStatus) {
+        'faol' => 'Tasdiqlangan',
+        'kutilmoqda' => 'Tekshiruvda',
+        'rad_etildi' => 'Rad etilgan',
+        'tugallangan' => 'Tugallangan',
+        'faol_emas' => 'Faol emas',
+        _ => 'Yangi',
+      };
 
   /// `premium_a` → `Premium A`, `free` → `Bepul`. Tariflar ro'yxati CRM'da
   /// o'sib borgani uchun qat'iy jadval emas — formatlash.

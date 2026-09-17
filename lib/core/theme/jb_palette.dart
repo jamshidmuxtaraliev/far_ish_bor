@@ -166,6 +166,15 @@ class JbPalette extends ThemeExtension<JbPalette> {
   /// Rasm/xarita ustidagi oq panel kabi joylar uchun.
   Color get onImage => isDark ? ink : Colors.white;
 
+  /// Brend ekranlari (splash) foni — chap-tepadan o'ng-pastga.
+  ///
+  /// Ilgari `[blue, blueLight, blue]` edi: uchala nuqta ham bir xil
+  /// to'yinganlikdagi ko'k bo'lgani uchun fon yassi chiqardi va ustidagi
+  /// logotip unga "botib" ketardi. Endi gradient quyuqdan ochroqqa boradi,
+  /// logotip esa oq plashkada turadi (`JBLogo`).
+  List<Color> get brandGradient =>
+      isDark ? [bg, blueTint, blueDark] : [blueDark, blue, blueLight];
+
   @override
   JbPalette copyWith({
     Brightness? brightness,

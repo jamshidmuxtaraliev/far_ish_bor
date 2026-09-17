@@ -25,21 +25,52 @@ class ContactAccessModel {
   /// Nomzodlar bazasini ko'rish huquqi — odatda hammaga ochiq.
   final bool canSearchCandidates;
 
+  // ── 30 KUNLIK OTKLIK KVOTASI (obuna yoki bir martalik paket) ──────────────
+  // ⚠ Kontakt ochishda to'lov tartibi: 1) bepul → 2) KVOTA → 3) balansdan
+  // `fee`. Ya'ni kvotasi bor ish beruvchidan pul YECHILMAYDI va balansi
+  // bo'sh bo'lsa ham bloklanmasligi kerak.
+  final int otklikAvailable;
+  final int otklikTotal;
+  final int otklikUsed;
+  final String? otklikExpiresAt;
+
+  /// Server hisoblab beradi: `free` | `quota` | `balance`.
+  final String nextCharge;
+
   const ContactAccessModel({
     required this.freeContacts,
     required this.mode,
     required this.fee,
     this.balance,
     this.canSearchCandidates = true,
+    this.otklikAvailable = 0,
+    this.otklikTotal = 0,
+    this.otklikUsed = 0,
+    this.otklikExpiresAt,
+    this.nextCharge = 'balance',
   });
 
   /// Qulf UI'si (yopiq karta + "Ochish" tugmasi) ko'rsatiladimi.
   bool get isOtklik => !freeContacts && mode != AccessMode.tarifli;
 
-  bool canAfford(int price) => balance == null || balance! >= price;
+  /// Keyingi ochish kvotadan yechiladimi — shunda balans tekshirilmaydi.
+  ///
+  /// ⚠ `nextCharge` server javobi olingan PAYTDAGI holat: oxirgi kvota
+  /// ishlatilgach u hamon `quota` bo'lib qoladi. Shuning uchun kvota sonlari
+  /// ma'lum bo'lsa QOLDIQ hal qiladi; `otklik_*` yubormaydigan eski backendda
+  /// esa `next_charge` ga tushamiz.
+  bool get paysFromQuota =>
+      hasQuotaPlan ? otklikAvailable > 0 : nextCharge == 'quota';
+
+  /// Kvota (paket/obuna) umuman sotib olinganmi.
+  bool get hasQuotaPlan => otklikTotal > 0;
+
+  bool canAfford(int price) =>
+      freeContacts || paysFromQuota || balance == null || balance! >= price;
 
   factory ContactAccessModel.fromJson(Map<String, dynamic> json) {
     final free = json['free_contacts'] as bool? ?? false;
+    final available = (json['otklik_available'] as num?)?.toInt() ?? 0;
     return ContactAccessModel(
       freeContacts: free,
       mode: json['mode'] != null
@@ -48,16 +79,35 @@ class ContactAccessModel {
       fee: (json['fee'] as num?)?.toInt() ?? 30000,
       balance: (json['balance'] as num?)?.toInt(),
       canSearchCandidates: json['can_search_candidates'] as bool? ?? true,
+      otklikAvailable: available,
+      otklikTotal: (json['otklik_total'] as num?)?.toInt() ?? 0,
+      otklikUsed: (json['otklik_used'] as num?)?.toInt() ?? 0,
+      otklikExpiresAt: json['otklik_expires_at'] as String?,
+      // Eski backend `next_charge` yubormasa mavjud sonlardan tiklanadi.
+      nextCharge: json['next_charge'] as String? ??
+          (free ? 'free' : (available > 0 ? 'quota' : 'balance')),
     );
   }
 
-  ContactAccessModel copyWith({int? balance}) => ContactAccessModel(
-        freeContacts: freeContacts,
-        mode: mode,
-        fee: fee,
-        balance: balance ?? this.balance,
-        canSearchCandidates: canSearchCandidates,
-      );
+  ContactAccessModel copyWith({int? balance, int? otklikAvailable}) {
+    final available = otklikAvailable ?? this.otklikAvailable;
+    return ContactAccessModel(
+      freeContacts: freeContacts,
+      mode: mode,
+      fee: fee,
+      balance: balance ?? this.balance,
+      canSearchCandidates: canSearchCandidates,
+      otklikAvailable: available,
+      otklikTotal: otklikTotal,
+      otklikUsed: otklikUsed,
+      otklikExpiresAt: otklikExpiresAt,
+      // Kvota yechilgach "keyingi ochish" ham o'zgaradi — eski qiymat
+      // qolib ketsa mijozga "otklikdan" deb ko'rsatib, so'ng 402 qaytardi.
+      nextCharge: freeContacts
+          ? 'free'
+          : (hasQuotaPlan ? (available > 0 ? 'quota' : 'balance') : nextCharge),
+    );
+  }
 }
 
 /// §6 — nomzod ochilgach ochiladigan uchta imkoniyat.
@@ -97,6 +147,12 @@ class ContactUnlockResultModel {
   final String? additionalContact;
   final ContactCapabilitiesModel? capabilities;
 
+  /// Kvotadan yechildimi (`pay_source='wallet'`) — pul yechilmagan.
+  final bool quotaCharged;
+
+  /// Yechilgandan keyingi otklik qoldig'i (faqat kvota yo'lida keladi).
+  final int? otklikRemaining;
+
   const ContactUnlockResultModel({
     this.anketaId = 0,
     required this.charged,
@@ -106,6 +162,8 @@ class ContactUnlockResultModel {
     required this.phone,
     this.additionalContact,
     this.capabilities,
+    this.quotaCharged = false,
+    this.otklikRemaining,
   });
 
   factory ContactUnlockResultModel.fromJson(Map<String, dynamic> json) {
@@ -122,6 +180,9 @@ class ContactUnlockResultModel {
       balance: (json['balance'] as num?)?.toInt(),
       phone: phone,
       additionalContact: json['additional_contact'] as String?,
+      quotaCharged: json['quota_charged'] as bool? ??
+          json['pay_source'] == 'wallet',
+      otklikRemaining: (json['otklik_remaining'] as num?)?.toInt(),
       capabilities: caps is Map
           ? ContactCapabilitiesModel.fromJson(Map<String, dynamic>.from(caps))
           : (phone.isNotEmpty

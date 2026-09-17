@@ -417,20 +417,28 @@ class _EmployerVacancyCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: (vacancy.isActive ? context.jb.green : context.jb.gray).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  vacancy.isActive ? 'Faol' : 'Nofaol',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: vacancy.isActive ? context.jb.green : context.jb.gray,
-                  ),
-                ),
+              Builder(
+                builder: (context) {
+                  // To'xtatilgan vakansiya "Nofaol" emas — alohida holat:
+                  // ish beruvchi uni bir bosishda qayta yoqa oladi.
+                  final color = vacancy.isPaused
+                      ? context.jb.amber
+                      : (vacancy.isActive ? context.jb.green : context.jb.gray);
+                  final label = vacancy.isPaused
+                      ? "To'xtatilgan"
+                      : (vacancy.isActive ? 'Faol' : 'Nofaol');
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      label,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -492,6 +500,36 @@ class _EmployerVacancyCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
+              // ── Play / Pause — vaqtincha to'xtatib turish ──
+              // O'chirishdan farqi: vakansiya va unga kelgan otkliklar joyida
+              // qoladi, faqat sayt/ilovada ko'rinmay turadi. Mavsumiy ish
+              // beruvchi har safar qaytadan e'lon yozmasin.
+              // Ikonka-tugma (matnsiz): uchta matnli tugma tor ekranda
+              // (360dp) qatorga sig'may, "Tahrirlash" ni siqib yuborardi.
+              if (vacancy.canTogglePause)
+                Tooltip(
+                  message: vacancy.isPaused
+                      ? 'Vakansiyani qayta yoqish'
+                      : "Vakansiyani vaqtincha to'xtatish",
+                  child: GestureDetector(
+                    onTap: () => context
+                        .read<VacancyBloc>()
+                        .add(SetVacancyPausedEvent(vacancy.id, !vacancy.isPaused)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: vacancy.isPaused ? context.jb.greenBg : context.jb.amberBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        vacancy.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                        color: vacancy.isPaused ? context.jb.green : context.jb.amber,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              if (vacancy.canTogglePause) const SizedBox(width: 10),
               GestureDetector(
                 onTap: () => _confirmDelete(context),
                 child: Container(

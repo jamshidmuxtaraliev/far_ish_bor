@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jobUp24/core/utils/utils.dart';
 import 'stats_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
+import '../../../../core/theme/jb_ui.dart';
 
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
@@ -24,7 +24,9 @@ class LanguageScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/images/logo.png', width: getScreenWidth(context), height: 180),
+                  // Tungi rejimda qora "JOB" grafit kartada yo'qolmasin —
+                  // `JBLogo` o'zi oq plashka qo'yadi.
+                  const JBLogo(size: 180),
                   const SizedBox(height: 24),
                   Text('Choose Language / Tilni tanlang', style: TextStyle(fontSize: 14, color: context.jb.gray), textAlign: TextAlign.center),
                   const SizedBox(height: 48),

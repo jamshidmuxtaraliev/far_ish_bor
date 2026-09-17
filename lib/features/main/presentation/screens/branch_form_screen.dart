@@ -90,18 +90,34 @@ class _BranchFormScreenState extends State<BranchFormScreen> {
       initialLng: _longitude,
       title: 'Filial manzili',
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() {
       _latitude = picked.latitude;
       _longitude = picked.longitude;
-      final resolved = picked.address;
-      // Qo'lda yozilgan manzilni bosib ketmaymiz.
-      if (resolved != null &&
-          resolved.isNotEmpty &&
-          _addressController.text.trim().isEmpty) {
-        _addressController.text = resolved;
-      }
     });
+    _applyPickedAddress(picked.address);
+  }
+
+  /// Xaritadan topilgan manzil: bo'sh maydon o'zi to'ladi, to'lganini
+  /// almashtirishni TAKLIF qilamiz (qo'lda yozilganini bosib ketmaymiz).
+  void _applyPickedAddress(String? resolved) {
+    if (resolved == null || resolved.isEmpty) return;
+    final current = _addressController.text.trim();
+    if (current.isEmpty) {
+      setState(() => _addressController.text = resolved);
+      return;
+    }
+    if (current == resolved) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        duration: const Duration(seconds: 6),
+        content: Text('Xaritada: $resolved'),
+        action: SnackBarAction(
+          label: 'Qo\'yish',
+          onPressed: () => setState(() => _addressController.text = resolved),
+        ),
+      ));
   }
 
   void _submit() {

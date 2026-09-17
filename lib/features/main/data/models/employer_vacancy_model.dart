@@ -10,6 +10,8 @@ class EmployerVacancyModel {
   final int? minAge;
   final int? maxAge;
   final String? status;
+  /// `status == 'paused'` bo'lgan payt — "qachondan beri to'xtatilgan".
+  final String? pausedAt;
   final String? comment;
   final String? createdAt;
   final int? applicationsCount;
@@ -29,6 +31,7 @@ class EmployerVacancyModel {
     this.minAge,
     this.maxAge,
     this.status,
+    this.pausedAt,
     this.comment,
     this.createdAt,
     this.applicationsCount,
@@ -52,8 +55,11 @@ class EmployerVacancyModel {
       minAge: json['min_age'] as int?,
       maxAge: json['max_age'] as int?,
       status: json['status'] as String?,
+      pausedAt: json['paused_at'] as String?,
       comment: json['comment'] as String?,
-      createdAt: json['created_at'] as String?,
+      // Sequelize `createdAt` deb yuboradi (model `underscored` emas) —
+      // faqat `created_at` o'qilsa kartadagi "N kun oldin" hech qachon chiqmaydi.
+      createdAt: json['created_at'] as String? ?? json['createdAt'] as String?,
       applicationsCount: json['applications_count'] as int?,
       applications: ApplicationStatsModel.fromVacancyJson(json),
       mosCount: json['mos_count'] as int? ?? 0,
@@ -69,4 +75,12 @@ class EmployerVacancyModel {
   }
 
   bool get isActive => status == 'active';
+
+  /// Ish beruvchi vakansiyani vaqtincha to'xtatib turgan — sayt/ilovada
+  /// ko'rinmaydi va yangi otklik qabul qilinmaydi (yozuvi saqlanadi).
+  bool get isPaused => status == 'paused';
+
+  /// Play/Pause tugmasi faqat shu holatlarda ma'noli — to'ldirilgan yoki
+  /// bekor qilingan vakansiyani to'xtatib bo'lmaydi (backend 409 qaytaradi).
+  bool get canTogglePause => status == 'active' || status == 'paused';
 }

@@ -6,6 +6,7 @@ import '../../../auth/data/datasource/local/user_local_data_source.dart';
 import '../../../main/presentation/screens/main_screen.dart';
 import 'language_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
+import '../../../../core/theme/jb_ui.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -56,11 +57,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       child: Scaffold(
         body: Container(
           width: double.infinity,
+          height: double.infinity,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [context.jb.blue, context.jb.blueLight, context.jb.blue],
+              colors: context.jb.brandGradient,
             ),
           ),
           child: Column(
@@ -70,13 +72,23 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 scale: _scaleAnim,
                 child: FadeTransition(
                   opacity: _fadeAnim,
-                  child: Image.asset('assets/images/logo.png', color: Colors.white, width: 200, height: 200),
+                  // Logotip TABIIY rangda, oq plashka ustida — ko'k fonda ham,
+                  // tungi rejimda ham to'liq o'qiladi (`JBLogo` izohiga qarang).
+                  child: const JBLogo(size: 156, onDarkBackground: true, radius: 36),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 28),
               FadeTransition(
                 opacity: _fadeAnim,
-                child: const Text("Ish topishning yangi usuli", style: TextStyle(color: Colors.white, fontSize: 16)),
+                child: Text(
+                  "Ish topishning yangi usuli",
+                  style: TextStyle(
+                    color: context.jb.onBrand,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ),
               const SizedBox(height: 48),
               const _PulsingDots(),
@@ -125,7 +137,10 @@ class _PulsingDotsState extends State<_PulsingDots> with SingleTickerProviderSta
               margin: const EdgeInsets.symmetric(horizontal: 4),
               width: 8,
               height: 8,
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: opacity), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: context.jb.onBrand.withValues(alpha: opacity),
+                shape: BoxShape.circle,
+              ),
             );
           },
         );

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Native launch (OS chizadigan birinchi ekran) foni.
+  Flutter splash'ining chap-tepa burchagi bilan bir xil bo'lishi kerak
+  (`JbPalette.brandGradient` → light: blueDark) — aks holda ilova ochilganda
+  oq ekran chaqnab, keyin ko'k splash chiqadi.
+-->
+<resources>
+    <color name="jb_launch_bg">#1846D6</color>
+</resources>

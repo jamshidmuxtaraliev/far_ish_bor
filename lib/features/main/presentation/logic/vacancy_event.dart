@@ -32,6 +32,13 @@ class DeleteVacancyEvent extends VacancyEvent {
   DeleteVacancyEvent(this.id);
 }
 
+/// Vakansiyani vaqtincha to'xtatish / qayta yoqish (play-pause tugmasi).
+class SetVacancyPausedEvent extends VacancyEvent {
+  final int id;
+  final bool paused;
+  SetVacancyPausedEvent(this.id, this.paused);
+}
+
 class LoadCandidatesEvent extends VacancyEvent {}
 
 // Vakansiya-markazli oqim: bitta vakansiya ichidagi tavsiya + mos nomzodlar

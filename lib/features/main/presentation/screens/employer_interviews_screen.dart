@@ -6,19 +6,41 @@ import 'package:formz/formz.dart';
 import '../../../../core/theme/jb_ui.dart';
 import '../../data/models/interview_model.dart';
 import '../logic/interview_bloc.dart';
+import '../logic/vacancy_bloc.dart';
 import 'employer_track_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
 
 /// Employer — "Suhbatlar" ro'yxati (Jobup24 dizayni).
+///
+/// Ro'yxat "Nomzodlar" ekranidagi kabi IKKI guruhga bo'linadi:
+///   • Tavsiya etilgan — kontakti ochilgan / operator tavsiya qilgan nomzodlar
+///     (manba: `/mobile/employer/recommended` — Nomzodlar ekranining 2-tabi)
+///   • Mos nomzodlar   — qolgan suhbatlar (vakansiyaga mos nomzodlar)
+///
+/// ⚠️ Backend suhbat yozuvida "manba" maydonini BERMAYDI — guruh mahalliy
+/// hisoblanadi: anketa `recommendedCandidates` ro'yxatida bo'lsa "Tavsiya",
+/// aks holda "Mos". Shu sababli hech bir suhbat ro'yxatdan tushib qolmaydi
+/// (tavsiya ro'yxati hali yuklanmagan bo'lsa hammasi "Mos"da ko'rinadi va
+/// ro'yxat kelgach o'z guruhiga o'tadi).
 class EmployerInterviewsScreen extends StatefulWidget {
-  const EmployerInterviewsScreen({super.key});
+  /// Ekran alohida marshrut sifatida ochilganda (bosh sahifadagi "Suhbatlar"
+  /// kartasi) sarlavhada orqaga qaytish tugmasi kerak. Pastki menyu tabi
+  /// bo'lib turgan holatda `false` — qaytadigan joy yo'q.
+  final bool showBack;
+
+  const EmployerInterviewsScreen({super.key, this.showBack = false});
 
   @override
   State<EmployerInterviewsScreen> createState() =>
       _EmployerInterviewsScreenState();
 }
 
+/// Suhbat guruhi — nomzod qaysi manbadan kelgan.
+enum _Group { tavsiya, mos }
+
 class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
+  _Group _group = _Group.tavsiya;
+
   @override
   void initState() {
     super.initState();
@@ -26,10 +48,14 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
     bloc.add(const LoadEmployerInterviewsEvent());
     // Jonli holatlarni eshitish uchun socketni ulaymiz.
     bloc.add(const ConnectSocketEvent());
+    // Guruhlash uchun "Tavsiya etilgan" nomzodlar ro'yxati kerak.
+    context.read<VacancyBloc>().add(LoadRecommendedCandidatesEvent());
   }
 
-  void _load() =>
-      context.read<InterviewBloc>().add(const LoadEmployerInterviewsEvent());
+  void _load() {
+    context.read<InterviewBloc>().add(const LoadEmployerInterviewsEvent());
+    context.read<VacancyBloc>().add(LoadRecommendedCandidatesEvent());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,76 +63,102 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
       value: context.jb.overlay,
       child: Scaffold(
         backgroundColor: context.jb.bg,
-        body: Column(
-          children: [
-            _header(context),
-            Expanded(
-              child: BlocBuilder<InterviewBloc, InterviewState>(
-                buildWhen: (p, c) =>
-                    p.employerInterviews != c.employerInterviews ||
-                    p.employerStatus != c.employerStatus ||
-                    p.travelById != c.travelById,
-                builder: (context, state) {
-                  if (state.employerStatus.isInProgress &&
-                      state.employerInterviews.isEmpty) {
-                    return Center(
-                        child: CircularProgressIndicator(color: context.jb.blue));
+        body: BlocBuilder<VacancyBloc, VacancyState>(
+          buildWhen: (p, c) =>
+              p.recommendedCandidates != c.recommendedCandidates,
+          builder: (context, vacancy) {
+            final recommendedIds = {
+              for (final c in vacancy.recommendedCandidates) c.id
+            };
+            return BlocBuilder<InterviewBloc, InterviewState>(
+              buildWhen: (p, c) =>
+                  p.employerInterviews != c.employerInterviews ||
+                  p.employerStatus != c.employerStatus ||
+                  p.travelById != c.travelById,
+              builder: (context, state) {
+                final tavsiya = <InterviewModel>[];
+                final mos = <InterviewModel>[];
+                for (final i in state.employerInterviews) {
+                  if (recommendedIds.contains(i.anketa?.id)) {
+                    tavsiya.add(i);
+                  } else {
+                    mos.add(i);
                   }
-                  if (state.employerStatus == FormzSubmissionStatus.failure &&
-                      state.employerInterviews.isEmpty) {
-                    return _JbErrorView(
-                      message: state.error?.errorMessage ?? 'Xato yuz berdi',
-                      onRetry: _load,
-                    );
-                  }
-                  if (state.employerInterviews.isEmpty) {
-                    return const _JbEmptyView(
-                      icon: Icons.event_busy_outlined,
-                      message: 'Hozircha rejalashtirilgan suhbat yo\'q',
-                      subtitle:
-                          'Operator yoki siz vaqt belgilaganda shu yerda ko\'rinadi',
-                    );
-                  }
-                  // Yo'ldagilar tepada.
-                  final list = [...state.employerInterviews]..sort((a, b) {
-                      final aw = state.travelOf(a) == 'on_way' ? 0 : 1;
-                      final bw = state.travelOf(b) == 'on_way' ? 0 : 1;
-                      return aw.compareTo(bw);
-                    });
-                  final onWayCount = list
-                      .where((i) => state.travelOf(i) == 'on_way')
-                      .length;
-                  return RefreshIndicator(
-                    color: context.jb.blue,
-                    onRefresh: () async => _load(),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-                      itemCount: list.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (_, i) {
-                        if (i == 0) {
-                          return _countRow(list.length, onWayCount);
-                        }
-                        final interview = list[i - 1];
-                        return _EmployerInterviewCard(
-                          interview: interview,
-                          travelStatus: state.travelOf(interview),
-                          onTrack: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  EmployerTrackScreen(interview: interview),
-                            ),
-                          ),
-                        );
-                      },
+                }
+                return Column(
+                  children: [
+                    _header(context),
+                    _groupTabs(tavsiya.length, mos.length),
+                    Expanded(
+                      child: _body(
+                        state,
+                        _group == _Group.tavsiya ? tavsiya : mos,
+                      ),
                     ),
-                  );
-                },
+                  ],
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Tanlangan guruh ro'yxati — yuklanish / xato / bo'sh holatlari bilan.
+  Widget _body(InterviewState state, List<InterviewModel> list) {
+    if (state.employerStatus.isInProgress && state.employerInterviews.isEmpty) {
+      return Center(child: CircularProgressIndicator(color: context.jb.blue));
+    }
+    if (state.employerStatus == FormzSubmissionStatus.failure &&
+        state.employerInterviews.isEmpty) {
+      return _JbErrorView(
+        message: state.error?.errorMessage ?? 'Xato yuz berdi',
+        onRetry: _load,
+      );
+    }
+    if (list.isEmpty) {
+      return _JbEmptyView(
+        icon: Icons.event_busy_outlined,
+        message: _group == _Group.tavsiya
+            ? 'Tavsiya etilgan nomzod bilan suhbat yo\'q'
+            : 'Mos nomzod bilan suhbat yo\'q',
+        subtitle: _group == _Group.tavsiya
+            ? 'Kontakti ochilgan nomzod bilan vaqt belgilansa shu yerda ko\'rinadi'
+            : 'Vakansiyangizga mos nomzodni suhbatga chaqirsangiz shu yerda ko\'rinadi',
+      );
+    }
+
+    // Yo'ldagilar tepada.
+    final sorted = [...list]..sort((a, b) {
+        final aw = state.travelOf(a) == 'on_way' ? 0 : 1;
+        final bw = state.travelOf(b) == 'on_way' ? 0 : 1;
+        return aw.compareTo(bw);
+      });
+    final onWayCount =
+        sorted.where((i) => state.travelOf(i) == 'on_way').length;
+
+    return RefreshIndicator(
+      color: context.jb.blue,
+      onRefresh: () async => _load(),
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        itemCount: sorted.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (_, i) {
+          if (i == 0) return _countRow(sorted.length, onWayCount);
+          final interview = sorted[i - 1];
+          return _EmployerInterviewCard(
+            interview: interview,
+            travelStatus: state.travelOf(interview),
+            onTrack: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EmployerTrackScreen(interview: interview),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -140,11 +192,14 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
         top: MediaQuery.of(context).padding.top + 18,
         left: 20,
         right: 20,
-        bottom: 18,
+        bottom: 12,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          if (widget.showBack) ...[
+            JBCircleButton(onTap: () => Navigator.of(context).maybePop()),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,50 +209,63 @@ class _EmployerInterviewsScreenState extends State<EmployerInterviewsScreen> {
                         color: context.jb.ink,
                         fontSize: 22,
                         fontWeight: FontWeight.w800)),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text('Rejalashtirilgan suhbatlar',
                     style: TextStyle(color: context.jb.gray, fontSize: 13)),
               ],
             ),
           ),
-          BlocBuilder<InterviewBloc, InterviewState>(
-            buildWhen: (p, c) => p.socketConnected != c.socketConnected,
-            builder: (context, state) => _LiveBadge(online: state.socketConnected),
-          ),
         ],
       ),
     );
   }
-}
 
-/// Header'dagi "Jonli / Oflayn" socket holati indikatori.
-class _LiveBadge extends StatelessWidget {
-  final bool online;
-  const _LiveBadge({required this.online});
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = online ? context.jb.green : context.jb.grayLight;
-    final bg = online ? context.jb.greenBg : context.jb.chipBg;
+  /// Ikki guruh segmenti — "Nomzodlar" ekranidagi tab uslubi bilan bir xil.
+  Widget _groupTabs(int tavsiyaCount, int mosCount) {
+    const labels = {
+      _Group.tavsiya: 'Tavsiya etilgan',
+      _Group.mos: 'Mos nomzodlar',
+    };
+    final counts = {_Group.tavsiya: tavsiyaCount, _Group.mos: mosCount};
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(online ? 'Jonli' : 'Oflayn',
-              style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
-        ],
+      color: context.jb.card,
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: context.jb.chipBg,
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Row(
+          children: _Group.values.map((g) {
+            final active = _group == g;
+            return Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _group = g),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: active ? context.jb.blue : Colors.transparent,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    '${labels[g]!} (${counts[g]})',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: active ? Colors.white : context.jb.gray,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

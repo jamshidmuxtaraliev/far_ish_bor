@@ -47,17 +47,25 @@ Future<void> startUnlock(
     return;
   }
 
-  // Balansni bilamiz va yetmayapti → to'g'ridan-to'g'ri to'lovga (§4.2).
-  // `contact-access.balance` eng yangi manba; nomzod javobidagi
-  // `can_pay_from_balance` esa zaxira (eskirgan bo'lishi mumkin).
-  final liveBalance = state.contactAccess?.balance;
-  final canPay = liveBalance != null
-      ? liveBalance >= fee
-      : (candidate.canPayFromBalance ?? true);
-  if (!canPay) {
-    await topUpThenUnlock(context,
-        candidate: candidate, vacancyId: vacancyId, fee: fee);
-    return;
+  // ⚠ 30 KUNLIK OTKLIK KVOTASI BALANSDAN OLDIN ISHLAYDI (contactUnlock.service:
+  // bepul → kvota → balans). Kvotasi bor ish beruvchidan pul yechilmaydi,
+  // shuning uchun balansi bo'sh bo'lsa ham to'lov ekraniga YUBORILMAYDI.
+  final access = state.contactAccess;
+  final fromQuota = access?.paysFromQuota ?? false;
+
+  if (!fromQuota) {
+    // Balansni bilamiz va yetmayapti → to'g'ridan-to'g'ri to'lovga (§4.2).
+    // `contact-access.balance` eng yangi manba; nomzod javobidagi
+    // `can_pay_from_balance` esa zaxira (eskirgan bo'lishi mumkin).
+    final liveBalance = access?.balance;
+    final canPay = liveBalance != null
+        ? liveBalance >= fee
+        : (candidate.canPayFromBalance ?? true);
+    if (!canPay) {
+      await topUpThenUnlock(context,
+          candidate: candidate, vacancyId: vacancyId, fee: fee);
+      return;
+    }
   }
 
   final confirmed = await showDialog<bool>(
@@ -67,8 +75,12 @@ Future<void> startUnlock(
       title: Text('Nomzodni ochish',
           style: TextStyle(fontWeight: FontWeight.w800, color: context.jb.ink)),
       content: Text(
-        "${formatAmount(fee)} so'm hisobingizdan yechiladi.\n"
-        'Nomzodning telefoni, chati va suhbat imkoniyati ochiladi.',
+        fromQuota
+            ? 'Otklik paketingizdan 1 ta yechiladi '
+                '(qoldiq: ${access?.otklikAvailable ?? 0}).'
+                '\nNomzodning telefoni, chati va suhbat imkoniyati ochiladi.'
+            : "${formatAmount(fee)} so'm hisobingizdan yechiladi.\n"
+                'Nomzodning telefoni, chati va suhbat imkoniyati ochiladi.',
         style: TextStyle(color: context.jb.gray, height: 1.4),
       ),
       actions: [
@@ -84,7 +96,7 @@ Future<void> startUnlock(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Text("To'lab ochish"),
+          child: Text(fromQuota ? 'Ochish' : "To'lab ochish"),
         ),
       ],
     ),

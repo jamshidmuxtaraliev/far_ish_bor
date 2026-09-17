@@ -347,14 +347,96 @@ class JBSegmented extends StatelessWidget {
   }
 }
 
-/// Horizontal Jobup24 wordmark (black "JOB" + blue "up24").
-class JBWordmark extends StatelessWidget {
-  final double height;
-  const JBWordmark({super.key, this.height = 22});
+/// Jobup24 logotipi — HAR QANDAY fonda o'qiladigan holda.
+///
+/// `assets/images/logo.png` ko'p rangli: ko'k belgi + QORA "JOB" + oq matnli
+/// ko'k "up24" plashkasi. Shu sababli ikki xato oson yuz beradi:
+///
+///   * `Image.asset(..., color: Colors.white)` — `srcIn` butun rasmni bitta oq
+///     dog'ga aylantiradi ("up24" matni plashkaga qo'shilib yo'qoladi, belgi
+///     ichidagi oq halqa ham yopiladi);
+///   * quyuq fonga (brend gradienti, tungi rejim kartasi) tabiiy rangda
+///     qo'yish — qora "JOB" ko'rinmay qoladi.
+///
+/// Shuning uchun logotip HAR DOIM tabiiy rangda chiziladi, quyuq fon ustida
+/// esa oq plashka bilan o'raladi.
+class JBLogo extends StatelessWidget {
+  /// Logotip tomoni (plashka hisobga olinmagan o'lcham).
+  final double size;
+
+  /// Fon quyuqmi? `null` bo'lsa joriy rejimdan olinadi (tungi rejim = quyuq).
+  /// Brend gradienti ustida `true` beriladi — yorug' rejimda ham fon ko'k.
+  final bool? onDarkBackground;
+
+  /// Plashka burchak radiusi.
+  final double radius;
+
+  const JBLogo({
+    super.key,
+    this.size = 120,
+    this.onDarkBackground,
+    this.radius = 28,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset('assets/images/logo_text.png', height: height, fit: BoxFit.contain);
+    final logo = Image.asset(
+      'assets/images/logo.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+    );
+    final onDark = onDarkBackground ?? context.isDarkMode;
+    if (!onDark) return logo;
+
+    return Container(
+      padding: EdgeInsets.all(size * 0.11),
+      decoration: BoxDecoration(
+        color: context.jb.onBrand,
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: context.jb.shadow,
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: logo,
+    );
+  }
+}
+
+/// Horizontal Jobup24 wordmark (qora "JOB" + ko'k "up24").
+///
+/// [JBLogo] bilan bir xil qoida: qora matn quyuq fonda yo'qolmasligi uchun
+/// tungi rejimda/brend fonida oq plashkaga solinadi.
+class JBWordmark extends StatelessWidget {
+  final double height;
+  final bool? onDarkBackground;
+  const JBWordmark({super.key, this.height = 22, this.onDarkBackground});
+
+  @override
+  Widget build(BuildContext context) {
+    final mark = Image.asset(
+      'assets/images/logo_text.png',
+      height: height,
+      fit: BoxFit.contain,
+    );
+    final onDark = onDarkBackground ?? context.isDarkMode;
+    if (!onDark) return mark;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: height * 0.4,
+        vertical: height * 0.28,
+      ),
+      decoration: BoxDecoration(
+        color: context.jb.onBrand,
+        borderRadius: BorderRadius.circular(height * 0.5),
+      ),
+      child: mark,
+    );
   }
 }
 

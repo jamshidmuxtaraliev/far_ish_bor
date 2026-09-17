@@ -30,6 +30,11 @@ abstract class VacancyRemoteDataSource {
   Future<Either<ErrorModel, List<EmployerVacancyModel>>> getEmployerVacancies();
   Future<Either<ErrorModel, bool>> createOrUpdateVacancy(CreateVacancyRequest request);
   Future<Either<ErrorModel, bool>> deleteVacancy(int id);
+
+  /// Vakansiyani vaqtincha to'xtatish (`paused`) yoki qayta yoqish (`active`).
+  /// To'xtatilgani sayt/ilovada ko'rinmaydi va yangi otklik qabul qilmaydi,
+  /// lekin yozuv va kelgan otkliklar saqlanib qoladi.
+  Future<Either<ErrorModel, bool>> setVacancyPaused(int id, bool paused);
   Future<Either<ErrorModel, List<CandidateModel>>> getCandidates();
   Future<Either<ErrorModel, VacancyCandidatesModel>> getVacancyCandidates(int vacancyId);
   /// §3.7 — server `vacancy_id` va `status` filtrlarini ham qabul qiladi;
@@ -126,6 +131,15 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
   Future<Either<ErrorModel, bool>> deleteVacancy(int id) {
     return dioClient.dio.wrapResponse<bool>(
       () => dioClient.dio.delete('mobile/employer/vacancies/$id'),
+      (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> setVacancyPaused(int id, bool paused) {
+    final action = paused ? 'pause' : 'resume';
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.post('mobile/employer/vacancies/$id/$action'),
       (_) => true,
     );
   }

@@ -109,9 +109,16 @@ class VacancyState extends Equatable {
       unlockedAnketaIds.contains(c.id) ||
       (c.phoneRaw ?? '').isNotEmpty;
 
-  /// Bepul ochiladigan holatlar (§4.1): tarifli yoki operator tavsiyasi.
-  bool isFreeUnlock(CandidateModel c) =>
-      !isOtklikMode || c.recommended || c.assignment != null;
+  /// Bepul ochiladigan YAGONA holat — OPERATOR TAVSIYASI (`recommended`).
+  ///
+  /// ⚠ 2026-09-17: tarif (Premium A/B/V, Mini paket) endi kontaktni bepul
+  /// ochmaydi — server har doim `free_contacts: false` yuboradi va telefonni
+  /// faqat otklik qilingan nomzodda beradi. Ish beruvchining O'ZI kanbanga
+  /// qo'shgan biriktirish ham bepul EMAS (aks holda nomzodni biriktirib
+  /// otlikni chetlab o'tish mumkin bo'lardi), shuning uchun `c.assignment`
+  /// bu yerda hisobga olinmaydi — server `recommended` bayrog'ini o'zi qo'yadi
+  /// (faqat operator biriktirgan nomzodga).
+  bool isFreeUnlock(CandidateModel c) => !isOtklikMode || c.recommended;
 
   String? phoneOf(CandidateModel c) =>
       c.phoneRaw ?? unlockedPhones[c.id] ?? unlockedCapabilities[c.id]?.phone;

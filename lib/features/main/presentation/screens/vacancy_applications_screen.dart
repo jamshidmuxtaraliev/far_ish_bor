@@ -528,9 +528,9 @@ class _ApplicationCard extends StatelessWidget {
     final openedNow = candidate != null &&
         context.select<VacancyBloc, bool>(
             (b) => b.state.unlockedAnketaIds.contains(candidate.id));
-    final contactOpen = item.contactOpen ||
-        (contactPolicy?.freeContacts ?? false) ||
-        openedNow;
+    // ⚠ Tarif kontaktni OCHMAYDI (2026-09-17) — `free_contacts` bu yerda
+    // hisobga olinmaydi. Telefon faqat otklik qilingan nomzodda ochiladi.
+    final contactOpen = item.contactOpen || openedNow;
 
     return Container(
       padding: const EdgeInsets.all(16),
