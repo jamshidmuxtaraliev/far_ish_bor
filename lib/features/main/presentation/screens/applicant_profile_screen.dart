@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
+import '../../../chat/presentation/screens/direct_chat_screen.dart';
 import '../../data/models/application_access.dart';
 import '../../data/models/employer_application_model.dart';
 import '../logic/vacancy_bloc.dart';
@@ -56,10 +57,28 @@ class ApplicantProfileScreen extends StatelessWidget {
     }
   }
 
+  /// Chat tugmasi — iloji bo'lsa AYNAN shu nomzod bilan suhbatni ochadi.
+  ///
+  /// Ilgari bu yer butun "Xabarlar" ro'yxatini `push` qilardi: ro'yxat endi
+  /// pastki menyuda tab bo'lgani uchun bu shunchaki tabning ikkinchi nusxasini
+  /// ustiga qo'yardi. Suhbat kaliti faqat kontakt ochilgach keladi, shuning
+  /// uchun u hali yo'q bo'lsa ro'yxatga (orqaga tugmasi bilan) tushamiz.
   void _openChat(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MessagesScreen()));
+    final anketaId = app.anketaId;
+    final key = anketaId == null
+        ? null
+        : context.read<VacancyBloc>().state.capabilitiesOf(anketaId)?.chatSessionKey;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => key == null || key.isEmpty
+            ? const MessagesScreen(showBack: true)
+            : DirectChatScreen(
+                sessionKey: key,
+                peerName: app.anketaFullname ?? 'Nomzod',
+              ),
+      ),
+    );
   }
 
   void _showStatusDialog(BuildContext ctx) {

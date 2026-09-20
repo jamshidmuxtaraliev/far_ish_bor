@@ -49,6 +49,12 @@ class UpdateAnketaEvent extends AuthEvent {
   UpdateAnketaEvent(this.data);
 }
 
+/// [force] — pull-to-refresh; aks holda keshdagi raqamlar qayta so'ralmaydi.
+class LoadPublicStatsEvent extends AuthEvent {
+  final bool force;
+  LoadPublicStatsEvent({this.force = false});
+}
+
 class LoadRegionsEvent extends AuthEvent {}
 
 class LoadJobTypesEvent extends AuthEvent {

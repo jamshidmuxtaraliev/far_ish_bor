@@ -39,29 +39,19 @@ $ErrorActionPreference = 'Stop'
 $clientDir = Split-Path -Parent $PSScriptRoot
 Set-Location $clientDir
 
-# ── 1. Flutter buyrug'ini topamiz: FVM bo'lsa u, bo'lmasa global flutter ──
-# Loyiha .fvmrc da versiyaga qadalgan (3.44.0), shuning uchun FVM afzal.
-$fvm = Get-Command fvm -ErrorAction SilentlyContinue
-$flutter = Get-Command flutter -ErrorAction SilentlyContinue
-if ($fvm) {
-    $exe = $fvm.Source
-    $pre = @('flutter')
-} elseif ($flutter) {
-    $exe = $flutter.Source
-    $pre = @()
-    Write-Host "! fvm topilmadi - global flutter ishlatilyapti (.fvmrc: 3.44.0 emas bo'lishi mumkin)" -ForegroundColor Yellow
-} elseif ($EnvOnly) {
+# ── 1. Flutter buyrug'ini topamiz ──
+# Qidiruv mantig'i tool/_sdk.ps1 da (FVM → PATH → ma'lum o'rnatish joylari),
+# shuning uchun PATH ni qo'lda to'ldirish shart emas.
+. "$PSScriptRoot/_sdk.ps1"
+
+if ($EnvOnly) {
     # -EnvOnly faqat env faylini yozadi; SDK bu bosqichda kerak emas.
     $exe = $null
     $pre = @()
 } else {
-    Write-Host ""
-    Write-Host "Flutter SDK topilmadi." -ForegroundColor Red
-    Write-Host "  dart pub global activate fvm"
-    Write-Host "  fvm install ; fvm use 3.44.0"
-    Write-Host "keyin 'fvm flutter doctor' hamma qatorda ✓ berishi kerak."
-    Write-Host ""
-    exit 1
+    $f = Get-FlutterCommandOrExit
+    $exe = $f.Exe
+    $pre = $f.Pre
 }
 
 # ── 2. Lokal muhit: Wi-Fi IP sini aniqlab env/local.json ni yangilaymiz ──

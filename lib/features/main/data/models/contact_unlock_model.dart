@@ -37,6 +37,11 @@ class ContactAccessModel {
   /// Server hisoblab beradi: `free` | `quota` | `balance`.
   final String nextCharge;
 
+  /// Joriy tarif/paket — bosh sahifadagi karta uchun.
+  /// ⚠ Ish beruvchiga PUL QOLDIG'I ko'rsatilmaydi (balans kartasi olib
+  /// tashlandi) — o'rniga aynan shu blok chiqadi.
+  final EmployerPlan plan;
+
   const ContactAccessModel({
     required this.freeContacts,
     required this.mode,
@@ -48,6 +53,7 @@ class ContactAccessModel {
     this.otklikUsed = 0,
     this.otklikExpiresAt,
     this.nextCharge = 'balance',
+    this.plan = const EmployerPlan(),
   });
 
   /// Qulf UI'si (yopiq karta + "Ochish" tugmasi) ko'rsatiladimi.
@@ -86,6 +92,7 @@ class ContactAccessModel {
       // Eski backend `next_charge` yubormasa mavjud sonlardan tiklanadi.
       nextCharge: json['next_charge'] as String? ??
           (free ? 'free' : (available > 0 ? 'quota' : 'balance')),
+      plan: EmployerPlan.fromJson(json['plan'] as Map<String, dynamic>?),
     );
   }
 
@@ -101,11 +108,66 @@ class ContactAccessModel {
       otklikTotal: otklikTotal,
       otklikUsed: otklikUsed,
       otklikExpiresAt: otklikExpiresAt,
+      plan: plan,
       // Kvota yechilgach "keyingi ochish" ham o'zgaradi — eski qiymat
       // qolib ketsa mijozga "otklikdan" deb ko'rsatib, so'ng 402 qaytardi.
       nextCharge: freeContacts
           ? 'free'
           : (hasQuotaPlan ? (available > 0 ? 'quota' : 'balance') : nextCharge),
+    );
+  }
+}
+
+/// Ish beruvchining JORIY TARIFI — `contact-access` javobidagi `plan` bloki.
+///
+/// ⚠ Ikki muddat ARALASHTIRILMASIN:
+///   • [expiresAt]      — butun obuna/paket muddati (12 oylik ham bo'ladi);
+///   • [cycleEndsAt]    — joriy 30 kunlik KALIT oynasi (qoldiq keyingi oyga
+///     o'tmaydi, shuning uchun kalit qoldig'i yonida aynan shu ko'rsatiladi).
+class EmployerPlan {
+  /// `subscription` — obuna tarifi · `package` — bir martalik kalit paketi.
+  final String? kind;
+
+  /// Obuna nomi (masalan "Premium"). Paketda server nom yubormaydi —
+  /// hamyon jadvalida nom ustuni yo'q, shuning uchun [label] uni o'zi qo'yadi.
+  final String? name;
+  final String? code;
+  final String? expiresAt;
+  final int? daysLeft;
+  final String? cycleEndsAt;
+  final int? cycleDaysLeft;
+  final int? periodMonths;
+
+  const EmployerPlan({
+    this.kind,
+    this.name,
+    this.code,
+    this.expiresAt,
+    this.daysLeft,
+    this.cycleEndsAt,
+    this.cycleDaysLeft,
+    this.periodMonths,
+  });
+
+  bool get hasPlan => kind != null;
+  bool get isSubscription => kind == 'subscription';
+
+  /// Kartada ko'rinadigan nom.
+  String get label => (name?.isNotEmpty ?? false)
+      ? name!
+      : (kind == 'package' ? 'Kalit paketi' : 'Tarif tanlanmagan');
+
+  factory EmployerPlan.fromJson(Map<String, dynamic>? json) {
+    if (json == null || json['has_plan'] != true) return const EmployerPlan();
+    return EmployerPlan(
+      kind: json['kind'] as String?,
+      name: json['name'] as String?,
+      code: json['code'] as String?,
+      expiresAt: json['expires_at'] as String?,
+      daysLeft: (json['days_left'] as num?)?.toInt(),
+      cycleEndsAt: json['cycle_ends_at'] as String?,
+      cycleDaysLeft: (json['cycle_days_left'] as num?)?.toInt(),
+      periodMonths: (json['period_months'] as num?)?.toInt(),
     );
   }
 }

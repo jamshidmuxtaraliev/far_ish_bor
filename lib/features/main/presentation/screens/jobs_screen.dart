@@ -218,9 +218,98 @@ class _SeekerJobsViewState extends State<_SeekerJobsView> {
 
 // ── Employer view ──────────────────────────────────────────────────────────────
 
-class _EmployerJobsView extends StatelessWidget {
+/// Vakansiya ro'yxatining tab (filtr) turlari.
+///
+/// Filtrlash MIJOZ tomonida: `GET /mobile/employer/vacancies` bitta
+/// kompaniyaning hamma vakansiyasini bir so'rovda qaytaradi, shuning uchun
+/// har bir tab uchun serverga qayta murojaat qilish shart emas (son yorliqlari
+/// ham shu ro'yxatdan hisoblanadi).
+enum _VacancyFilter { all, active, paused, expired, filled, cancelled, pending }
+
+extension _VacancyFilterX on _VacancyFilter {
+  String get label {
+    switch (this) {
+      case _VacancyFilter.all:
+        return 'Barchasi';
+      case _VacancyFilter.active:
+        return 'Faol';
+      case _VacancyFilter.paused:
+        return "To'xtatilgan";
+      case _VacancyFilter.expired:
+        return "Muddati o'tgan";
+      case _VacancyFilter.filled:
+        return "To'ldirilgan";
+      case _VacancyFilter.cancelled:
+        return 'Bekor qilingan';
+      case _VacancyFilter.pending:
+        return 'Kutilmoqda';
+    }
+  }
+
+  /// "Faol" — muddati o'tmagan faol e'lonlar. Muddati o'tgani (holatidan qat'i
+  /// nazar) alohida tabda ko'rinadi, aks holda ish beruvchi "Faol" ro'yxatda
+  /// aslida hech kimga ko'rinmayotgan e'lonni ko'rib turardi.
+  bool matches(EmployerVacancyModel v) {
+    switch (this) {
+      case _VacancyFilter.all:
+        return true;
+      case _VacancyFilter.active:
+        return v.isActive && !v.isExpired;
+      case _VacancyFilter.paused:
+        return v.isPaused;
+      case _VacancyFilter.expired:
+        return v.isExpired;
+      case _VacancyFilter.filled:
+        return v.isFilled;
+      case _VacancyFilter.cancelled:
+        return v.isCancelled;
+      case _VacancyFilter.pending:
+        return v.isPending;
+    }
+  }
+
+  /// Soni nolga teng bo'lsa ham doim ko'rinadigan tablar — ish beruvchi
+  /// "Faol / To'xtatilgan" juftligini har doim joyida topsin.
+  bool get alwaysVisible =>
+      this == _VacancyFilter.all ||
+      this == _VacancyFilter.active ||
+      this == _VacancyFilter.paused;
+}
+
+class _EmployerJobsView extends StatefulWidget {
   final VoidCallback onRefresh;
   const _EmployerJobsView({required this.onRefresh});
+
+  @override
+  State<_EmployerJobsView> createState() => _EmployerJobsViewState();
+}
+
+class _EmployerJobsViewState extends State<_EmployerJobsView> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+  _VacancyFilter _filter = _VacancyFilter.all;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _clearFilters() {
+    _searchCtrl.clear();
+    setState(() {
+      _query = '';
+      _filter = _VacancyFilter.all;
+    });
+  }
+
+  /// Nom bo'yicha qidiruv — kasb nomi va e'lon izohi.
+  bool _matchesQuery(EmployerVacancyModel v) {
+    if (_query.isEmpty) return true;
+    final title = (v.jobTypeName ?? '').toLowerCase();
+    final comment = (v.comment ?? '').toLowerCase();
+    return title.contains(_query) || comment.contains(_query);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,78 +325,170 @@ class _EmployerJobsView extends StatelessWidget {
               );
             }
           },
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                color: context.jb.card,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 18,
-                  left: 20,
-                  right: 20,
-                  bottom: 16,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          child: BlocBuilder<VacancyBloc, VacancyState>(
+            builder: (context, state) {
+              final all = state.employerVacancies;
+              // Qidiruv AVVAL qo'llanadi — tab sonlari qidiruv natijasi bo'yicha
+              // ko'rinadi ("oshpaz" deb qidirilganda "Faol: 2" aynan shu
+              // qidiruvdagi faollarni bildiradi).
+              final searched = all.where(_matchesQuery).toList();
+              final vacancies = searched.where(_filter.matches).toList();
+              final filtersOn = _query.isNotEmpty || _filter != _VacancyFilter.all;
+
+              return Column(
+                children: [
+                  // ── Header: sarlavha + qo'shish + qidiruv + tablar ──
+                  Container(
+                    width: double.infinity,
+                    color: context.jb.card,
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top + 18,
+                      bottom: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Vakansiyalarim',
+                                        style: TextStyle(color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
+                                    const SizedBox(height: 4),
+                                    Text("Kompaniya vakansiyalari",
+                                        style: TextStyle(color: context.jb.gray, fontSize: 13.5)),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => const CreateVacancyScreen()),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(colors: [context.jb.blue, context.jb.blueLight]),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.add, color: Colors.white, size: 18),
+                                      SizedBox(width: 4),
+                                      Text("Qo'shish",
+                                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // ── Nom bo'yicha qidiruv ──
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                          child: Container(
+                            height: 46,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(color: context.jb.chipBg, borderRadius: BorderRadius.circular(14)),
+                            child: Row(
+                              children: [
+                                Icon(Icons.search_rounded, color: context.jb.grayLight, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchCtrl,
+                                    onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                                    textInputAction: TextInputAction.search,
+                                    style: TextStyle(fontSize: 14, color: context.jb.ink),
+                                    decoration: InputDecoration(
+                                      isCollapsed: true,
+                                      hintText: 'Vakansiya nomi...',
+                                      hintStyle: TextStyle(color: context.jb.grayLight, fontSize: 14),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                                if (_query.isNotEmpty)
+                                  GestureDetector(
+                                    onTap: () {
+                                      _searchCtrl.clear();
+                                      setState(() => _query = '');
+                                    },
+                                    child: Icon(Icons.close_rounded, color: context.jb.gray, size: 18),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // ── Holat tablari ──
+                        _FilterTabs(
+                          selected: _filter,
+                          counts: {
+                            for (final f in _VacancyFilter.values) f: searched.where(f.matches).length,
+                          },
+                          onChanged: (f) => setState(() => _filter = f),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ── Natija soni + filtrni tozalash ──
+                  if (all.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                      child: Row(
                         children: [
-                          Text('Vakansiyalarim', style: TextStyle(color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
-                          SizedBox(height: 4),
-                          Text("Kompaniya vakansiyalari", style: TextStyle(color: context.jb.gray, fontSize: 13.5)),
+                          Text(
+                            '${vacancies.length} ta vakansiya',
+                            style: TextStyle(fontSize: 13, color: context.jb.gray),
+                          ),
+                          const Spacer(),
+                          if (filtersOn)
+                            GestureDetector(
+                              onTap: _clearFilters,
+                              child: Text(
+                                'Tozalash',
+                                style: TextStyle(fontSize: 13, color: context.jb.blue, fontWeight: FontWeight.w600),
+                              ),
+                            ),
                         ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CreateVacancyScreen()),
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [context.jb.blue, context.jb.blueLight]),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.add, color: Colors.white, size: 18),
-                            SizedBox(width: 4),
-                            Text("Qo'shish", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        if (state.vacanciesStatus.isInProgress && all.isEmpty) {
+                          return Center(child: CircularProgressIndicator(color: context.jb.blue));
+                        }
+                        if (state.vacanciesStatus == FormzSubmissionStatus.failure && all.isEmpty) {
+                          return _ErrorView(message: state.error?.errorMessage ?? 'Xato', onRetry: widget.onRefresh);
+                        }
+                        if (all.isEmpty) {
+                          return _EmptyView(message: "Hech qanday vakansiya yo'q", onRefresh: widget.onRefresh);
+                        }
+                        if (vacancies.isEmpty) {
+                          return _NoMatchView(onClear: _clearFilters);
+                        }
+                        return RefreshIndicator(
+                          color: context.jb.blue,
+                          onRefresh: () async => widget.onRefresh(),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                            itemCount: vacancies.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, index) => _EmployerVacancyCard(vacancy: vacancies[index]),
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: BlocBuilder<VacancyBloc, VacancyState>(
-                  builder: (context, state) {
-                    if (state.vacanciesStatus.isInProgress && state.employerVacancies.isEmpty) {
-                      return Center(child: CircularProgressIndicator(color: context.jb.blue));
-                    }
-                    if (state.vacanciesStatus == FormzSubmissionStatus.failure && state.employerVacancies.isEmpty) {
-                      return _ErrorView(message: state.error?.errorMessage ?? 'Xato', onRetry: onRefresh);
-                    }
-                    final vacancies = state.employerVacancies;
-                    if (vacancies.isEmpty) {
-                      return _EmptyView(message: "Hech qanday vakansiya yo'q", onRefresh: onRefresh);
-                    }
-                    return RefreshIndicator(
-                      color: context.jb.blue,
-                      onRefresh: () async => onRefresh(),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: vacancies.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) => _EmployerVacancyCard(vacancy: vacancies[index]),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -315,6 +496,84 @@ class _EmployerJobsView extends StatelessWidget {
   }
 }
 
+/// Holat tablari — gorizontal skrollanadigan qator.
+///
+/// `JBSegmented` emas: u tablarni `Expanded` bilan teng bo'lib tashlaydi va
+/// yettita yorliq 360dp ekranda o'qilmay qoladi. Soni 0 bo'lgan tab
+/// yashiriladi (Barchasi/Faol/To'xtatilgan bundan mustasno), lekin TANLANGAN
+/// tab har doim ko'rinadi — aks holda tanlov "yo'qolib" qolardi.
+class _FilterTabs extends StatelessWidget {
+  final _VacancyFilter selected;
+  final Map<_VacancyFilter, int> counts;
+  final ValueChanged<_VacancyFilter> onChanged;
+
+  const _FilterTabs({required this.selected, required this.counts, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.jb;
+    final visible = _VacancyFilter.values
+        .where((f) => f.alwaysVisible || f == selected || (counts[f] ?? 0) > 0)
+        .toList();
+
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: visible.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final f = visible[i];
+          final active = f == selected;
+          final count = counts[f] ?? 0;
+          return GestureDetector(
+            onTap: () => onChanged(f),
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: active ? p.blue : p.chipBg,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    f.label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: active ? p.onBrand : p.gray,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: active ? Colors.white.withValues(alpha: 0.22) : p.card,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      '$count',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: active ? p.onBrand : p.gray,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
 
 // ── Employer vacancy card ─────────────────────────────────────────────────────
 
@@ -421,12 +680,20 @@ class _EmployerVacancyCard extends StatelessWidget {
                 builder: (context) {
                   // To'xtatilgan vakansiya "Nofaol" emas — alohida holat:
                   // ish beruvchi uni bir bosishda qayta yoqa oladi.
-                  final color = vacancy.isPaused
-                      ? context.jb.amber
-                      : (vacancy.isActive ? context.jb.green : context.jb.gray);
-                  final label = vacancy.isPaused
-                      ? "To'xtatilgan"
-                      : (vacancy.isActive ? 'Faol' : 'Nofaol');
+                  // Muddati o'tgan faol e'lon hech kimga ko'rinmaydi —
+                  // shuning uchun "Faol" deb emas, qizil "Muddati o'tgan"
+                  // yorlig'i bilan ko'rsatiladi (filtrdagi tab bilan bir xil).
+                  final expiredActive = vacancy.isExpired && vacancy.isActive;
+                  final color = expiredActive
+                      ? context.jb.red
+                      : vacancy.isPaused
+                          ? context.jb.amber
+                          : (vacancy.isActive ? context.jb.green : context.jb.gray);
+                  final label = expiredActive
+                      ? "Muddati o'tgan"
+                      : vacancy.isPaused
+                          ? "To'xtatilgan"
+                          : (vacancy.isActive ? 'Faol' : 'Nofaol');
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -450,7 +717,13 @@ class _EmployerVacancyCard extends StatelessWidget {
             children: [
               _InfoRow(icon: Icons.attach_money_outlined, text: vacancy.salaryDisplay),
               if (vacancy.deadline != null)
-                _InfoRow(icon: Icons.calendar_today_outlined, text: 'Muddat: ${_formatDeadline(vacancy.deadline!)}'),
+                _InfoRow(
+                  icon: Icons.calendar_today_outlined,
+                  text: vacancy.isExpired
+                      ? "Muddati tugagan: ${_formatDeadline(vacancy.deadline!)}"
+                      : 'Muddat: ${_formatDeadline(vacancy.deadline!)}',
+                  color: vacancy.isExpired ? context.jb.red : null,
+                ),
               if (timeAgo.isNotEmpty)
                 _InfoRow(icon: Icons.access_time_outlined, text: timeAgo),
             ],
@@ -680,16 +953,22 @@ class _StatChip extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
-  const _InfoRow({required this.icon, required this.text});
+
+  /// Ogohlantiruvchi qator uchun (masalan muddati o'tgan e'lon) — berilmasa
+  /// odatdagi kul rang.
+  final Color? color;
+
+  const _InfoRow({required this.icon, required this.text, this.color});
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? context.jb.gray;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 15, color: context.jb.gray),
+        Icon(icon, size: 15, color: c),
         const SizedBox(width: 6),
-        Text(text, style: TextStyle(fontSize: 13, color: context.jb.gray, fontWeight: FontWeight.w500)),
+        Text(text, style: TextStyle(fontSize: 13, color: c, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -714,6 +993,39 @@ class _EmptyView extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(onPressed: onRefresh, child: Text('Yangilash', style: TextStyle(color: context.jb.blue))),
         ],
+      ),
+    );
+  }
+}
+
+/// Ro'yxat bo'sh EMAS, lekin qidiruv/tabga hech nima tushmadi — bu "vakansiya
+/// yo'q" degani emas, shuning uchun alohida matn va "Filtrni tozalash".
+class _NoMatchView extends StatelessWidget {
+  final VoidCallback onClear;
+  const _NoMatchView({required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off_rounded, size: 64, color: context.jb.gray),
+            const SizedBox(height: 16),
+            Text(
+              "Filtrga mos vakansiya topilmadi",
+              style: TextStyle(fontSize: 15, color: context.jb.gray),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: onClear,
+              child: Text('Filtrni tozalash', style: TextStyle(color: context.jb.blue)),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -15,6 +15,17 @@ class VacancyState extends Equatable {
   final FormzSubmissionStatus updateEmpAppStatus;
   final FormzSubmissionStatus vacancyApplicationsStatus;
   final FormzSubmissionStatus applicationHistoryStatus;
+  final FormzSubmissionStatus storiesStatus;
+
+  /// Bosh ekran tepasidagi story lentasi (`GET /story/public`).
+  final List<StoryModel> stories;
+
+  /// Shu sessiyada ko'rilgan storylar — doira rangi shunga qarab so'nadi.
+  final Set<int> viewedStoryIds;
+  final FormzSubmissionStatus adsStatus;
+
+  /// Bosh ekrandagi reklama lentasi (`GET /ad-campaign/public`).
+  final List<AdCampaignModel> ads;
   final List<VacancyModel> seekerVacancies;
   final List<EmployerVacancyModel> employerVacancies;
   final List<CandidateModel> candidates;
@@ -67,6 +78,11 @@ class VacancyState extends Equatable {
     this.updateEmpAppStatus = FormzSubmissionStatus.initial,
     this.vacancyApplicationsStatus = FormzSubmissionStatus.initial,
     this.applicationHistoryStatus = FormzSubmissionStatus.initial,
+    this.storiesStatus = FormzSubmissionStatus.initial,
+    this.stories = const [],
+    this.viewedStoryIds = const {},
+    this.adsStatus = FormzSubmissionStatus.initial,
+    this.ads = const [],
     this.seekerVacancies = const [],
     this.employerVacancies = const [],
     this.candidates = const [],
@@ -161,6 +177,11 @@ class VacancyState extends Equatable {
     FormzSubmissionStatus? updateEmpAppStatus,
     FormzSubmissionStatus? vacancyApplicationsStatus,
     FormzSubmissionStatus? applicationHistoryStatus,
+    FormzSubmissionStatus? storiesStatus,
+    List<StoryModel>? stories,
+    Set<int>? viewedStoryIds,
+    FormzSubmissionStatus? adsStatus,
+    List<AdCampaignModel>? ads,
     List<VacancyModel>? seekerVacancies,
     List<EmployerVacancyModel>? employerVacancies,
     List<CandidateModel>? candidates,
@@ -204,6 +225,11 @@ class VacancyState extends Equatable {
           vacancyApplicationsStatus ?? this.vacancyApplicationsStatus,
       applicationHistoryStatus:
           applicationHistoryStatus ?? this.applicationHistoryStatus,
+      storiesStatus: storiesStatus ?? this.storiesStatus,
+      stories: stories ?? this.stories,
+      viewedStoryIds: viewedStoryIds ?? this.viewedStoryIds,
+      adsStatus: adsStatus ?? this.adsStatus,
+      ads: ads ?? this.ads,
       seekerVacancies: seekerVacancies ?? this.seekerVacancies,
       employerVacancies: employerVacancies ?? this.employerVacancies,
       candidates: candidates ?? this.candidates,
@@ -241,6 +267,8 @@ class VacancyState extends Equatable {
         vacanciesStatus, candidatesStatus, vacancyCandidatesStatus, vacancyCandidates,
         applyStatus, manageVacancyStatus,
         applicationsStatus, updateAppStatus, savedStatus, employerAppsStatus, updateEmpAppStatus,
+        storiesStatus, stories, viewedStoryIds,
+        adsStatus, ads,
         seekerVacancies, employerVacancies, candidates, myApplications,
         savedVacancies, employerApplications,
         vacancyApplications, vacancyApplicationsStatus,

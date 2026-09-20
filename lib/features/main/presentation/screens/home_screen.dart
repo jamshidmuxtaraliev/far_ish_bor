@@ -5,7 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/theme/jb_ui.dart';
+import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../logic/vacancy_bloc.dart';
+import '../widgets/ad_banner_slider.dart';
+import '../widgets/story_ring_row.dart';
 import '../widgets/vacancy_job_card.dart';
 import 'job_detail_screen.dart';
 import 'seeker_interviews_screen.dart';
@@ -27,9 +30,28 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    if (!widget.isEmployer) {
-      context.read<VacancyBloc>().add(LoadSeekerVacanciesEvent());
-    }
+    if (!widget.isEmployer) _load(force: false);
+  }
+
+  /// [force] = pull-to-refresh. Aks holda keshdagi ro'yxatlar qayta
+  /// so'ralmaydi (boshqa tabdan qaytilganda ortiqcha so'rov ketmasin).
+  ///
+  /// ⚠ Story va reklamani `force` bilan so'rash SHART: admin panelda
+  /// qo'shilgan yangi story aks holda ilova qayta ochilmaguncha chiqmaydi.
+  void _load({required bool force}) {
+    final vacancy = context.read<VacancyBloc>();
+    vacancy.add(LoadSeekerVacanciesEvent());
+    vacancy.add(LoadStoriesEvent(force: force));
+    vacancy.add(LoadPublicAdsEvent(force: force));
+    // Bosh ekrandagi ikkita raqam — `GET /stats/public` dan (ilgari kodda
+    // qotirilgan "12,450" va "3,200" turardi).
+    context.read<AuthBloc>().add(LoadPublicStatsEvent(force: force));
+  }
+
+  /// Pull-to-refresh: so'rovlar ketgach indikator darhol yo'qolib qolmasin.
+  Future<void> _refresh() async {
+    _load(force: true);
+    await Future<void>.delayed(const Duration(milliseconds: 700));
   }
 
   void _goTab(int index) => widget.onSelectTab?.call(index);
@@ -40,8 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
       value: context.jb.overlay,
       child: Scaffold(
         backgroundColor: context.jb.bg,
-        body: CustomScrollView(
-          slivers: [
+        body: RefreshIndicator(
+          color: context.jb.blue,
+          onRefresh: _refresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
             // ---- White branded header ----
             SliverToBoxAdapter(
               child: Container(
@@ -68,6 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text('Orzuingizdagi ishni toping', style: TextStyle(fontSize: 15, color: context.jb.gray)),
                   ],
                 ),
+              ),
+            ),
+
+            // ---- Story lentasi ----
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: StoryRingRow(onSelectTab: widget.onSelectTab),
               ),
             ),
 
@@ -98,29 +132,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // ---- Stats grid ----
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          icon: Icons.work_outline_rounded,
-                          iconBg: context.jb.blueTint,
-                          iconFg: context.jb.blue,
-                          value: '12,450',
-                          label: "Ish o'rinlari",
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          icon: Icons.grid_view_rounded,
-                          iconBg: context.jb.violetBg,
-                          iconFg: context.jb.violet,
-                          value: '3,200',
-                          label: 'Kompaniyalar',
-                        ),
-                      ),
-                    ],
+                  // ---- Stats grid (jonli — /stats/public) ----
+                  BlocBuilder<AuthBloc, AuthState>(
+                    buildWhen: (a, b) => a.publicStats != b.publicStats,
+                    builder: (context, authState) {
+                      final stats = authState.publicStats;
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.work_outline_rounded,
+                              iconBg: context.jb.blueTint,
+                              iconFg: context.jb.blue,
+                              value: _statValue(stats?.vacancies),
+                              label: "Ish o'rinlari",
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _StatCard(
+                              icon: Icons.grid_view_rounded,
+                              iconBg: context.jb.violetBg,
+                              iconFg: context.jb.violet,
+                              value: _statValue(stats?.employers),
+                              label: 'Kompaniyalar',
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   // ---- Suhbatlar row ----
@@ -146,6 +186,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ]),
+              ),
+            ),
+
+            // ---- Reklama lentasi ----
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                child: AdBannerSlider(onSelectTab: widget.onSelectTab),
               ),
             ),
 
@@ -186,9 +234,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+          ),
       ),
     );
   }
+}
+
+/// Statistika hali kelmagan bo'lsa "—" ko'rsatiladi. ⚠ Bu yerga taxminiy
+/// raqam YOZILMAYDI: raqam faqat `GET /stats/public` dan keladi.
+String _statValue(int? n) {
+  if (n == null) return '—';
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
+    buf.write(s[i]);
+  }
+  return buf.toString();
 }
 
 /// Large action tile — either a blue gradient or a white card.

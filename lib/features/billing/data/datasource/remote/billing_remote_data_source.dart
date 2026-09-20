@@ -6,7 +6,9 @@ import '../../../../../core/network/dio_response_extension.dart';
 import '../../models/balance_model.dart';
 import '../../models/invoice_model.dart';
 import '../../models/online_payment_model.dart';
+import '../../models/otklik_shop_model.dart';
 import '../../models/payment_system_model.dart';
+import '../../models/subscription_tariff_model.dart';
 
 abstract class BillingRemoteDataSource {
   Future<Either<ErrorModel, BalanceModel>> getBalance({
@@ -35,6 +37,27 @@ abstract class BillingRemoteDataSource {
 
   /// Employer 50% invoices — pending + history.
   Future<Either<ErrorModel, InvoiceListResponse>> getEmployerInvoices();
+
+  /// Otklik do'koni: qoldiq kvota + sotib olish mumkin bo'lgan paketlar +
+  /// balans (hammasi bitta so'rovda — PROMPT_OTKLIK_ONLY §4).
+  Future<Either<ErrorModel, OtklikShopModel>> getOtklikShop();
+
+  /// Otklik OBUNA tariflari (`kind='subscription'`) + joriy obuna.
+  Future<Either<ErrorModel, SubscriptionTariffsModel>> getSubscriptionTariffs();
+
+  /// Bir martalik otklik paketini sotib olish.
+  /// `payMethod`: `link` (to'lov ilovasi) | `balance` (darhol faollashadi).
+  Future<Either<ErrorModel, PurchaseResult>> buyOtklikPackage({
+    required int packageId,
+    String payMethod = 'link',
+  });
+
+  /// Otklik obunasini sotib olish (tarif + oylar soni).
+  Future<Either<ErrorModel, PurchaseResult>> buySubscription({
+    required int tariffId,
+    required int months,
+    String payMethod = 'link',
+  });
 }
 
 class BillingRemoteDataSourceImpl implements BillingRemoteDataSource {
@@ -126,6 +149,55 @@ class BillingRemoteDataSourceImpl implements BillingRemoteDataSource {
     return dioClient.dio.wrapResponse<InvoiceListResponse>(
       () => dioClient.dio.get('mobile/employer/invoices'),
       (json) => InvoiceListResponse.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, OtklikShopModel>> getOtklikShop() {
+    return dioClient.dio.wrapResponse<OtklikShopModel>(
+      () => dioClient.dio.get('mobile/employer/otklik'),
+      (json) => OtklikShopModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, SubscriptionTariffsModel>> getSubscriptionTariffs() {
+    return dioClient.dio.wrapResponse<SubscriptionTariffsModel>(
+      () => dioClient.dio.get('mobile/employer/subscription'),
+      (json) => SubscriptionTariffsModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, PurchaseResult>> buyOtklikPackage({
+    required int packageId,
+    String payMethod = 'link',
+  }) {
+    return dioClient.dio.wrapResponse<PurchaseResult>(
+      () => dioClient.dio.post(
+        'mobile/employer/otklik/buy',
+        data: {'package_id': packageId, 'pay_method': payMethod},
+      ),
+      (json) => PurchaseResult.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, PurchaseResult>> buySubscription({
+    required int tariffId,
+    required int months,
+    String payMethod = 'link',
+  }) {
+    return dioClient.dio.wrapResponse<PurchaseResult>(
+      () => dioClient.dio.post(
+        'mobile/employer/subscription/buy',
+        data: {
+          'tariff_id': tariffId,
+          'months': months,
+          'pay_method': payMethod,
+        },
+      ),
+      (json) => PurchaseResult.fromJson(json as Map<String, dynamic>),
     );
   }
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/services/push_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
@@ -11,6 +13,7 @@ import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../auth/presentation/screens/anketa_screen.dart';
 import '../../../auth/presentation/screens/language_screen.dart';
+import '../../../billing/presentation/screens/otklik_shop_screen.dart';
 import '../../../billing/presentation/screens/topup_screen.dart';
 import '../../../chat/presentation/logic/chat_bloc.dart';
 import '../../../chat/presentation/screens/support_chat_screen.dart';
@@ -139,6 +142,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () async {
                   Navigator.pop(ctx);
                   getIt<ChatBloc>().add(const DisconnectChatEvent());
+                  // Push tokenini avval uzamiz — keyin auth token o'chadi va
+                  // `/push/unregister` 401 bo'lib qolardi.
+                  await PushService.instance.clear();
                   await getIt<UserLocalDatasource>().clearCache();
                   if (mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
@@ -584,10 +590,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       // Tab indekslari [MainScreen] dagi ish beruvchi ro'yxatiga mos:
-      // 0=Bosh sahifa · 1=Vakansiyalar · 2=Nomzodlar · 3=Arizalar · 4=Profil.
+      // 0=Asosiy · 1=E'lonlar · 2=Nomzodlar · 3=Xabarlar · 4=Profil.
       _MenuItem(
         icon: Icons.work_outline,
-        label: 'Vakansiyalar',
+        label: "E'lonlarim",
         color: context.jb.cyan,
         onTap: () => widget.onSelectTab?.call(1),
       ),
@@ -610,14 +616,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ];
 
     final List<_MenuItem> commonItems = [
+      // Ish beruvchi balansni to'ldirmaydi — u KALIT (paket yoki obuna)
+      // sotib oladi. Ish izlovchida balans oqimi o'z holicha qoladi.
       _MenuItem(
-        icon: Icons.account_balance_wallet_outlined,
-        label: 'Balans va to\'lov',
+        icon: widget.isEmployer
+            ? Icons.confirmation_number_outlined
+            : Icons.account_balance_wallet_outlined,
+        label: widget.isEmployer ? 'Kalit va tariflar' : 'Balans va to\'lov',
         color: context.jb.green,
         onTap:
             () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => TopUpScreen(isEmployer: widget.isEmployer),
+                builder: (_) => widget.isEmployer
+                    ? const OtklikShopScreen()
+                    : TopUpScreen(isEmployer: widget.isEmployer),
               ),
             ),
       ),

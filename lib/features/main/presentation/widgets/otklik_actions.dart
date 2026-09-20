@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../billing/presentation/logic/billing_bloc.dart';
-import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../billing/presentation/screens/otklik_shop_screen.dart';
 import '../../../chat/presentation/screens/direct_chat_screen.dart';
 import '../../data/models/candidate_model.dart';
 import '../../data/models/contact_unlock_model.dart';
@@ -12,7 +11,11 @@ import '../logic/vacancy_bloc.dart';
 import 'nomzod_cards.dart' show pickSchedule;
 import '../../../../core/theme/jb_palette.dart';
 
-/// PROMPT_OTKLIK_MOBILE.md — otklik oqimining umumiy amallari:
+/// PROMPT_OTKLIK_MOBILE.md — kontakt ochish oqimining umumiy amallari:
+/// ⚠ UI'da kontakt ochish krediti "KALIT" deb ataladi (kod/API'da
+/// hamon `otklik`). Nomzod yuborgan ARIZA ham "otklik" deyiladi —
+/// mijozga ko'rinadigan matnda ikkalasini chalkashtirmang.
+///
 /// ochish (§4) · to'lov (§5) · uchta imkoniyat: telefon · chat · suhbat (§6, §8).
 
 /// `30000` → `30 000` (uz-UZ, probel bilan; birliksiz).
@@ -62,8 +65,7 @@ Future<void> startUnlock(
         ? liveBalance >= fee
         : (candidate.canPayFromBalance ?? true);
     if (!canPay) {
-      await topUpThenUnlock(context,
-          candidate: candidate, vacancyId: vacancyId, fee: fee);
+      await openOtklikShop(context);
       return;
     }
   }
@@ -76,10 +78,11 @@ Future<void> startUnlock(
           style: TextStyle(fontWeight: FontWeight.w800, color: context.jb.ink)),
       content: Text(
         fromQuota
-            ? 'Otklik paketingizdan 1 ta yechiladi '
-                '(qoldiq: ${access?.otklikAvailable ?? 0}).'
+            ? '1 kalit sarflanadi '
+                '(qoldiq: ${access?.otklikAvailable ?? 0} kalit).'
                 '\nNomzodning telefoni, chati va suhbat imkoniyati ochiladi.'
-            : "${formatAmount(fee)} so'm hisobingizdan yechiladi.\n"
+            : "Kalitingiz qolmagan — bu kontakt ${formatAmount(fee)} so'm "
+                'evaziga ochiladi.\n'
                 'Nomzodning telefoni, chati va suhbat imkoniyati ochiladi.',
         style: TextStyle(color: context.jb.gray, height: 1.4),
       ),
@@ -96,7 +99,7 @@ Future<void> startUnlock(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: Text(fromQuota ? 'Ochish' : "To'lab ochish"),
+          child: Text(fromQuota ? 'Kalit sarflash' : "To'lab ochish"),
         ),
       ],
     ),
@@ -105,35 +108,24 @@ Future<void> startUnlock(
   bloc.add(UnlockContactEvent(anketaId: candidate.id, vacancyId: vacancyId));
 }
 
-/// §5 — balansni to'ldirish, so'ng to'landi bo'lsa nomzodni **avtomatik** ochish
-/// (foydalanuvchi tugmani qayta bosmasin).
-Future<void> topUpThenUnlock(
-  BuildContext context, {
-  required CandidateModel candidate,
-  int? vacancyId,
-  required int fee,
-}) async {
+/// Kalit do'koni (paket + obuna). Ish beruvchi balansni to'ldirmaydi —
+/// unga pul emas, kalit kerak.
+///
+/// ⚠ Nomzod bu yerdan qaytgach AVTOMATIK ochilmaydi: to'lov Payme/Click
+/// ilovasida bajariladi va kvota webhook orqali tushadi, ya'ni ekran yopilgan
+/// paytda hali to'lanmagan bo'lishi mumkin. Qaytishda faqat holat yangilanadi.
+Future<void> openOtklikShop(BuildContext context, {int initialTab = 0}) async {
   final bloc = context.read<VacancyBloc>();
-  final billing = context.read<BillingBloc>();
-  final paid = await Navigator.push<bool>(
+  await Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) => TopUpScreen(
-        isEmployer: true,
-        initialAmount: fee,
-        purpose: '"${candidate.fullname ?? 'Nomzod'}" ni ochish '
-            "— ${formatAmount(fee)} so'm",
-      ),
+      builder: (_) => OtklikShopScreen(initialTab: initialTab),
     ),
   );
-  billing.add(const LoadBalanceEvent(true));
   bloc.add(LoadContactAccessEvent());
-  if (paid == true) {
-    bloc.add(UnlockContactEvent(anketaId: candidate.id, vacancyId: vacancyId));
-  }
 }
 
-/// 402 — balans yetmadi (§10). To'ldirgach nomzod avtomatik ochiladi.
+/// 402 — kalit ham, hisobdagi mablag' ham yetmadi (§10) → kalit do'koni.
 void showInsufficientBalanceDialog(
   BuildContext context, {
   CandidateModel? candidate,
@@ -145,13 +137,14 @@ void showInsufficientBalanceDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text('Balans yetarli emas',
+      title: Text('Kalitlar tugagan',
           style: TextStyle(fontWeight: FontWeight.w800, color: context.jb.ink)),
       content: Text(
         price > 0
-            ? "Nomzodni ochish uchun ${formatAmount(price)} so'm kerak. "
-                "Hisobni to'ldiring."
-            : "Nomzodni ochish uchun hisobni to'ldiring.",
+            ? "Nomzod kontaktini ochish uchun kalit kerak. Paket oling yoki "
+                "tarif obunasini faollashtiring (kalitsiz bitta kontakt "
+                "${formatAmount(price)} so'm)."
+            : 'Nomzod kontaktini ochish uchun kalit paketi yoki tarif obunasini tanlang.',
         style: TextStyle(color: context.jb.gray, height: 1.4),
       ),
       actions: [
@@ -162,16 +155,7 @@ void showInsufficientBalanceDialog(
         ElevatedButton(
           onPressed: () {
             Navigator.pop(ctx);
-            if (candidate != null) {
-              topUpThenUnlock(context,
-                  candidate: candidate, vacancyId: vacancyId, fee: price);
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const TopUpScreen(isEmployer: true)),
-              );
-            }
+            openOtklikShop(context);
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: context.jb.blue,
@@ -179,7 +163,7 @@ void showInsufficientBalanceDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Text("Hisobni to'ldirish"),
+          child: const Text('Kalit olish'),
         ),
       ],
     ),
@@ -201,8 +185,8 @@ Future<void> callCandidate(BuildContext context, String? phone) async {
   }
 }
 
-/// Chat — faqat ochilgan nomzodda (§7.5). Kalit `capabilities.chat.session_key`
-/// dan keladi; bo'lmasa suhbat hali tayyor emas.
+/// Chat — faqat ochilgan nomzodda (§7.5). Sessiya kaliti
+/// `capabilities.chat.session_key` dan keladi; bo'lmasa suhbat hali tayyor emas.
 void openCandidateChat(
   BuildContext context, {
   required CandidateModel candidate,
@@ -211,7 +195,7 @@ void openCandidateChat(
   final key = capabilities?.chatSessionKey ??
       context.read<VacancyBloc>().state.capabilitiesOf(candidate.id)?.chatSessionKey;
   if (key == null || key.isEmpty) {
-    _snack(context, 'Suhbat kaliti topilmadi — sahifani yangilang');
+    _snack(context, 'Suhbat hali tayyor emas — sahifani yangilang');
     return;
   }
   Navigator.push(

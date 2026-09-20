@@ -8,6 +8,7 @@ import '../../data/models/auth_flow_models.dart';
 import '../../data/models/auth_response_model.dart';
 import '../../data/models/branch_model.dart';
 import '../../data/models/employer_model.dart';
+import '../../data/models/public_stats_model.dart';
 import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
 
@@ -19,6 +20,18 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<ErrorModel, CheckPhoneModel>> checkPhone(String phone) =>
       remoteDataSource.checkPhone(phone);
+
+  @override
+  Future<Either<ErrorModel, PublicStatsModel>> getPublicStats() =>
+      remoteDataSource.getPublicStats();
+
+  @override
+  Future<Either<ErrorModel, bool>> registerPushToken(String token, String platform) =>
+      remoteDataSource.registerPushToken(token, platform);
+
+  @override
+  Future<Either<ErrorModel, bool>> unregisterPushToken() =>
+      remoteDataSource.unregisterPushToken();
 
   @override
   Future<Either<ErrorModel, SendCodeModel>> sendCode(String phone, {String? channel}) =>

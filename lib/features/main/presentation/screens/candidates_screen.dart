@@ -1,12 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 
 import '../../../../core/theme/jb_ui.dart';
-import '../../../billing/data/models/balance_model.dart' show formatSom;
-import '../../../billing/presentation/logic/billing_bloc.dart';
-import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../billing/presentation/screens/otklik_shop_screen.dart';
 import '../../data/models/employer_application_model.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../../data/models/pipeline_model.dart';
@@ -29,17 +28,37 @@ import '../../../../core/theme/jb_palette.dart';
 /// manba bir marta yuklanadi, filtr va sanoq **mahalliy** hisoblanadi. Vakansiya
 /// yoki segment o'zgarganda qayta so'rov YO'Q, faqat `setState`.
 class CandidatesScreen extends StatefulWidget {
-  const CandidatesScreen({super.key});
+  /// [MainScreen] dan "qaysi ichki tab ochilsin" so'rovi.
+  ///
+  /// ⚠ Konstruktor parametri bilan boshqarib BO'LMAYDI: `IndexedStack` bu
+  /// ekranni bir marta qurib tirik saqlaydi, ya'ni bosh sahifadagi "Yangi
+  /// otklik" bannerini ikkinchi marta bosganda `build` qayta chaqirilsa ham
+  /// yangi parametr yetib kelmaydi. Shuning uchun tirik kanal — notifier.
+  final ValueListenable<CandidatesTabRequest?>? tabRequest;
+
+  const CandidatesScreen({super.key, this.tabRequest});
 
   @override
   State<CandidatesScreen> createState() => _CandidatesScreenState();
 }
 
 /// Asosiy tablar (§0).
-enum _MainTab { applications, recommended, matched }
+enum CandidatesTab { applications, recommended, matched }
+
+/// Bitta "shu tabni och" so'rovi.
+///
+/// Har safar YANGI nusxa yaratiladi va `==` qayta belgilanmagan — shu sababli
+/// ayni tab ketma-ket ikki marta so'ralsa ham `ValueNotifier` xabar beradi
+/// (aks holda foydalanuvchi ichki tabni qo'lda almashtirgach banner ishlamay
+/// qolardi).
+class CandidatesTabRequest {
+  final CandidatesTab tab;
+
+  CandidatesTabRequest(this.tab);
+}
 
 class _CandidatesScreenState extends State<CandidatesScreen> {
-  _MainTab _tab = _MainTab.applications;
+  CandidatesTab _tab = CandidatesTab.applications;
 
   /// Tanlangan vakansiya (`employer_requirement_id`); `null` = Barcha vakansiyalar.
   int? _selectedReqId;
@@ -54,6 +73,26 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   void initState() {
     super.initState();
     _loadAll();
+    widget.tabRequest?.addListener(_applyTabRequest);
+  }
+
+  @override
+  void dispose() {
+    widget.tabRequest?.removeListener(_applyTabRequest);
+    super.dispose();
+  }
+
+  /// Tashqaridan so'ralgan ichki tabga o'tadi (arxiv rejimi ham tashlanadi —
+  /// aks holda "Yangi otklik" bannerini bosgan odam arxivdagi bo'sh ro'yxatni
+  /// ko'rib qolardi).
+  void _applyTabRequest() {
+    final req = widget.tabRequest?.value;
+    if (req == null || !mounted) return;
+    setState(() {
+      _tab = req.tab;
+      _archive = false;
+      _bucket = Bucket.yangi;
+    });
   }
 
   void _loadAll() {
@@ -64,7 +103,6 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     vacancy.add(LoadEmployerVacanciesEvent()); // vakansiya dropdown
     vacancy.add(LoadContactAccessEvent());
     vacancy.add(LoadUnlockHistoryEvent());
-    context.read<BillingBloc>().add(const LoadBalanceEvent(true));
   }
 
   Bucket get _activeBucket => _archive ? Bucket.arxiv : _bucket;
@@ -161,17 +199,17 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   Map<Bucket, int> _counts(VacancyState s) {
     final counts = {for (final b in Bucket.values) b: 0};
     switch (_tab) {
-      case _MainTab.applications:
+      case CandidatesTab.applications:
         for (final a in _applications(s)) {
           counts[bucketFromApplication(a.status)] =
               counts[bucketFromApplication(a.status)]! + 1;
         }
-      case _MainTab.recommended:
+      case CandidatesTab.recommended:
         for (final r in _recommendedRows(s)) {
           final b = bucketFromAssignment(r.assignmentStatus);
           counts[b] = counts[b]! + 1;
         }
-      case _MainTab.matched:
+      case CandidatesTab.matched:
         for (final r in _matchedRows(s)) {
           final b = bucketFromAssignment(r.assignmentStatus);
           counts[b] = counts[b]! + 1;
@@ -181,21 +219,21 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   }
 
   bool _loadingCurrentTab(VacancyState s) => switch (_tab) {
-        _MainTab.applications =>
+        CandidatesTab.applications =>
           s.employerAppsStatus.isInProgress && s.employerApplications.isEmpty,
-        _MainTab.recommended =>
+        CandidatesTab.recommended =>
           s.recommendedStatus.isInProgress && s.recommendedCandidates.isEmpty,
-        _MainTab.matched => s.pipelineStatus.isInProgress && s.pipeline == null,
+        CandidatesTab.matched => s.pipelineStatus.isInProgress && s.pipeline == null,
       };
 
   bool _failedCurrentTab(VacancyState s) => switch (_tab) {
-        _MainTab.applications =>
+        CandidatesTab.applications =>
           s.employerAppsStatus == FormzSubmissionStatus.failure &&
               s.employerApplications.isEmpty,
-        _MainTab.recommended =>
+        CandidatesTab.recommended =>
           s.recommendedStatus == FormzSubmissionStatus.failure &&
               s.recommendedCandidates.isEmpty,
-        _MainTab.matched => s.pipelineStatus == FormzSubmissionStatus.failure &&
+        CandidatesTab.matched => s.pipelineStatus == FormzSubmissionStatus.failure &&
             s.pipeline == null,
       };
 
@@ -219,12 +257,14 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
               listenWhen: (p, c) => p.updateEmpAppStatus != c.updateEmpAppStatus,
               listener: _onApplicationStatusChanged,
             ),
-            // Kontakt ochilgach balansni yangilaymiz.
+            // Kontakt ochilgach kalit qoldig'ini serverdan tasdiqlaymiz.
+            // (Bloc uni javobdagi `otklik_remaining` bilan darhol
+            // kamaytiradi — bu so'rov faqat sinxronlik uchun.)
             BlocListener<VacancyBloc, VacancyState>(
               listenWhen: (p, c) => p.unlockStatus != c.unlockStatus,
               listener: (context, state) {
                 if (state.unlockStatus.isSuccess) {
-                  context.read<BillingBloc>().add(const LoadBalanceEvent(true));
+                  context.read<VacancyBloc>().add(LoadContactAccessEvent());
                 }
               },
             ),
@@ -297,7 +337,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
                 style: TextStyle(
                     color: context.jb.ink, fontSize: 22, fontWeight: FontWeight.w800)),
           ),
-          _balanceChip(context),
+          _keysChip(context),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () => Navigator.push(context,
@@ -316,8 +356,12 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     );
   }
 
-  /// Tarifli bo'lsa → "Premium" (otklik yo'q, §9.1), aks holda balans chipi.
-  Widget _balanceChip(BuildContext context) {
+  /// Sarlavhadagi chip — KALIT QOLDIG'I.
+  ///
+  /// ⚠ Ilgari bu yerda BALANS (pul) turardi. Ish beruvchiga pul qoldig'i
+  /// ko'rsatilmaydi: unga kerak bo'lgan narsa — nechta kaliti qolgani.
+  /// Kaliti tugagan bo'lsa chip "Kalit olish"ga aylanadi va do'konga olib boradi.
+  Widget _keysChip(BuildContext context) {
     return BlocBuilder<VacancyBloc, VacancyState>(
       buildWhen: (p, c) => p.contactAccess != c.contactAccess,
       builder: (context, vacState) {
@@ -330,11 +374,14 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           );
         }
+        final access = vacState.contactAccess;
+        final loading = access == null;
+        final available = access?.otklikAvailable ?? 0;
+        final hasQuota = access?.hasQuotaPlan == true;
         return GestureDetector(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (_) => const TopUpScreen(isEmployer: true)),
+            MaterialPageRoute(builder: (_) => const OtklikShopScreen()),
           ),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -342,37 +389,26 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
               color: context.jb.blueTint,
               borderRadius: BorderRadius.circular(100),
             ),
-            child: BlocBuilder<BillingBloc, BillingState>(
-              buildWhen: (p, c) =>
-                  p.balance != c.balance || p.balanceStatus != c.balanceStatus,
-              builder: (context, billing) {
-                final balance = billing.balance;
-                final loading =
-                    balance == null && billing.balanceStatus.isInProgress;
-                // Balans `contact-access` javobida ham keladi (§2) — biri
-                // yetib kelmasa ikkinchisini ko'rsatamiz.
-                final fallback = vacState.contactAccess?.balance;
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      loading
-                          ? '...'
-                          : (balance?.balanceDisplay ??
-                              (fallback != null
-                                  ? formatSom(fallback)
-                                  : "0 so'm")),
-                      style: TextStyle(
-                          color: context.jb.blue,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(width: 5),
-                    Icon(Icons.add_circle_outline,
-                        color: context.jb.blue, size: 16),
-                  ],
-                );
-              },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.vpn_key_rounded, color: context.jb.blue, size: 14),
+                const SizedBox(width: 5),
+                Text(
+                  loading
+                      ? '...'
+                      : (hasQuota && available > 0
+                          ? '$available kalit'
+                          : 'Kalit olish'),
+                  style: TextStyle(
+                      color: context.jb.blue,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(width: 5),
+                Icon(Icons.add_circle_outline,
+                    color: context.jb.blue, size: 16),
+              ],
             ),
           ),
         );
@@ -384,9 +420,9 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
 
   Widget _mainTabs() {
     const labels = {
-      _MainTab.applications: 'Ishga topshirgan',
-      _MainTab.recommended: 'Tavsiya etilgan',
-      _MainTab.matched: 'Mos nomzodlar',
+      CandidatesTab.applications: 'Ishga topshirgan',
+      CandidatesTab.recommended: 'Tavsiya etilgan',
+      CandidatesTab.matched: 'Mos nomzodlar',
     };
     return Container(
       color: jb.card,
@@ -398,7 +434,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
           borderRadius: BorderRadius.circular(100),
         ),
         child: Row(
-          children: _MainTab.values.map((t) {
+          children: CandidatesTab.values.map((t) {
             final active = _tab == t;
             return Expanded(
               child: GestureDetector(
@@ -526,9 +562,9 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
       List<EmployerVacancyModel> vacancies, VacancyState state) async {
     // Sheet'dagi sanoq — joriy tab bo'yicha, o'sha vakansiyaga tegishli yozuvlar.
     int countFor(int? reqId) => switch (_tab) {
-          _MainTab.applications => _applications(state, reqId: reqId).length,
-          _MainTab.recommended => _recommendedRows(state, reqId: reqId).length,
-          _MainTab.matched => _matchedRows(state, reqId: reqId).length,
+          CandidatesTab.applications => _applications(state, reqId: reqId).length,
+          CandidatesTab.recommended => _recommendedRows(state, reqId: reqId).length,
+          CandidatesTab.matched => _matchedRows(state, reqId: reqId).length,
         };
 
     final picked = await showModalBottomSheet<int>(
@@ -622,7 +658,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   Widget _body(VacancyState state) {
     // §2 — operator nomzod bazasini yopgan bo'lsa mos nomzodlar ko'rsatilmaydi.
     final access = state.contactAccess;
-    if (_tab == _MainTab.matched && access != null && !access.canSearchCandidates) {
+    if (_tab == CandidatesTab.matched && access != null && !access.canSearchCandidates) {
       return EmptyView(
         icon: Icons.lock_outline_rounded,
         message: 'Nomzodlar bazasi yopiq',
@@ -641,18 +677,18 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
 
     final bucket = _activeBucket;
     final children = switch (_tab) {
-      _MainTab.applications => _applications(state)
+      CandidatesTab.applications => _applications(state)
           .where((a) => bucketFromApplication(a.status) == bucket)
           .map<Widget>((a) => ApplicationNomzodCard(
                 app: a,
                 onChangeStatus: () => _openStatusSheet(a),
               ))
           .toList(),
-      _MainTab.recommended => _recommendedRows(state)
+      CandidatesTab.recommended => _recommendedRows(state)
           .where((r) => bucketFromAssignment(r.assignmentStatus) == bucket)
           .map<Widget>((r) => NomzodCard(row: r, state: state))
           .toList(),
-      _MainTab.matched => _matchedRows(state)
+      CandidatesTab.matched => _matchedRows(state)
           .where((r) => bucketFromAssignment(r.assignmentStatus) == bucket)
           .map<Widget>((r) =>
               NomzodCard(row: r, state: state, showMatch: true))

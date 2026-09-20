@@ -141,9 +141,34 @@ endpointlardan mijoz tomonda yig'iladi (`_EmployerStats` in
 | Faol/to'xtatilgan vakansiya, otklik varonkasi, "kerakli xodim" | `GET /mobile/employer/vacancies` → har bir yozuvdagi `applications` (`by_status`) va `anketa_count` |
 | So'nggi otkliklar | `GET /mobile/employer/applications` |
 | Suhbatlar | `GET /mobile/employer/interviews` (`cancelled`/`done` sanalmaydi) |
-| Balans | `GET /mobile/employer/balance` |
-| Otklik kvotasi va kontakt narxi | `GET /mobile/employer/contact-access` |
+| Joriy tarif, muddati, qolgan kun | `GET /mobile/employer/contact-access` → `plan` |
+| Kalit (otklik) kvotasi va kontakt narxi | `GET /mobile/employer/contact-access` |
 | Ochilgan kontaktlar | `GET /mobile/employer/contact-unlock` |
+
+### ⚠ "KALIT" — UI atamasi (kod/API'da hamon `otklik`)
+
+Ish beruvchiga ko'rinadigan matnda kontakt ochish krediti **"kalit"** deyiladi:
+"Kalit olish", "Kalit qoldig'i 60/60", "1 kalit sarflanadi". Sabab — "otklik"
+so'zi ilovada IKKI xil narsani anglatardi: (a) nomzod yuborgan **ariza**
+(`mobile_applications`, bepul) va (b) ish beruvchi sarflaydigan **kredit**
+(`contact_unlocks`). Endi ariza — "otklik", kredit — "kalit".
+
+**Qamrov:** faqat `client/` dagi MATN. API maydonlari (`otklik_available`,
+`otklik_quota`, …), klass/funksiya nomlari (`OtklikShopScreen`,
+`openOtklikShop`) va public sayt/CRM **o'zgarmagan** — shartnoma buzilmasin.
+Yangi matn yozganda: kredit → "kalit", ariza → "otklik".
+
+### ⚠ Ish beruvchiga BALANS KO'RSATILMAYDI
+
+Bosh sahifadagi karta (`_PlanCard`) pul qoldig'ini emas, **sotib olingan
+tarifni** ko'rsatadi: nom · amal qilish muddati · qolgan kun · kalit qoldig'i.
+Manba — `contact-access` javobidagi `plan` bloki (`has_plan`, `kind`, `name`,
+`expires_at`, `days_left`, `cycle_ends_at`). "Nomzodlar" sarlavhasidagi chip
+ham pul emas, **qolgan kalit** sonini beradi.
+
+⚠ `LoadBalanceEvent(true)` ish beruvchi ekranlarida **chaqirilmaydi** — yangi
+joyga qo'shmang. Do'kondagi "Balansdan to'lash" tugmasi qoldi: u faqat ESKI
+qoldiq narxni qoplasa chiqadi, aks holda o'sha pul behuda qolib ketardi.
 
 Yangi son kerak bo'lsa **avval shu javoblarda bor-yo'qligini** tekshiring —
 qo'shimcha so'rov qo'shishdan oldin. `by_status` bo'lmagan eski backendda

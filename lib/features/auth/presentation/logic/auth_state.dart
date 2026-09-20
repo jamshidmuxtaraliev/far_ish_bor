@@ -10,6 +10,7 @@ class AuthState extends Equatable {
   final FormzSubmissionStatus getMeStatus;
   final FormzSubmissionStatus anketaStatus;
   final FormzSubmissionStatus updateAnketaStatus;
+  final FormzSubmissionStatus publicStatsStatus;
   final FormzSubmissionStatus regionsStatus;
   final FormzSubmissionStatus jobTypesStatus;
   final FormzSubmissionStatus languagesStatus;
@@ -27,6 +28,7 @@ class AuthState extends Equatable {
   final AnketaModel? anketa;
   final EmployerModel? employer;
   final List<BranchModel> branches;
+  final PublicStatsModel? publicStats;
   final List<RegionModel> regions;
   final List<JobTypeModel> jobTypes;
   final List<LanguageModel> languages;
@@ -62,6 +64,7 @@ class AuthState extends Equatable {
     this.getMeStatus = FormzSubmissionStatus.initial,
     this.anketaStatus = FormzSubmissionStatus.initial,
     this.updateAnketaStatus = FormzSubmissionStatus.initial,
+    this.publicStatsStatus = FormzSubmissionStatus.initial,
     this.regionsStatus = FormzSubmissionStatus.initial,
     this.jobTypesStatus = FormzSubmissionStatus.initial,
     this.languagesStatus = FormzSubmissionStatus.initial,
@@ -79,6 +82,7 @@ class AuthState extends Equatable {
     this.anketa,
     this.employer,
     this.branches = const [],
+    this.publicStats,
     this.regions = const [],
     this.jobTypes = const [],
     this.languages = const [],
@@ -101,6 +105,7 @@ class AuthState extends Equatable {
     FormzSubmissionStatus? getMeStatus,
     FormzSubmissionStatus? anketaStatus,
     FormzSubmissionStatus? updateAnketaStatus,
+    FormzSubmissionStatus? publicStatsStatus,
     FormzSubmissionStatus? regionsStatus,
     FormzSubmissionStatus? jobTypesStatus,
     FormzSubmissionStatus? languagesStatus,
@@ -118,6 +123,7 @@ class AuthState extends Equatable {
     AnketaModel? anketa,
     EmployerModel? employer,
     List<BranchModel>? branches,
+    PublicStatsModel? publicStats,
     List<RegionModel>? regions,
     List<JobTypeModel>? jobTypes,
     List<LanguageModel>? languages,
@@ -143,6 +149,7 @@ class AuthState extends Equatable {
       getMeStatus: getMeStatus ?? this.getMeStatus,
       anketaStatus: anketaStatus ?? this.anketaStatus,
       updateAnketaStatus: updateAnketaStatus ?? this.updateAnketaStatus,
+      publicStatsStatus: publicStatsStatus ?? this.publicStatsStatus,
       regionsStatus: regionsStatus ?? this.regionsStatus,
       jobTypesStatus: jobTypesStatus ?? this.jobTypesStatus,
       languagesStatus: languagesStatus ?? this.languagesStatus,
@@ -160,6 +167,7 @@ class AuthState extends Equatable {
       anketa: anketa ?? this.anketa,
       employer: employer ?? this.employer,
       branches: branches ?? this.branches,
+      publicStats: publicStats ?? this.publicStats,
       regions: regions ?? this.regions,
       jobTypes: jobTypes ?? this.jobTypes,
       languages: languages ?? this.languages,
@@ -179,11 +187,11 @@ class AuthState extends Equatable {
   List<Object?> get props => [
         checkPhoneStatus, sendCodeStatus, verifyCodeStatus,
         registerStatus, loginStatus, getMeStatus,
-        anketaStatus, updateAnketaStatus, regionsStatus, jobTypesStatus, languagesStatus,
+        anketaStatus, updateAnketaStatus, publicStatsStatus, regionsStatus, jobTypesStatus, languagesStatus,
         employerStatus, updateEmployerStatus, uploadLogoStatus, uploadPhotoStatus,
         branchesStatus, saveBranchStatus, deleteBranchStatus,
         resumeInfoStatus, downloadResumeStatus,
-        error, user, anketa, employer, branches, regions, jobTypes, languages,
+        error, user, anketa, employer, branches, publicStats, regions, jobTypes, languages,
         resume, checkPhone, sendCodeInfo, regToken, regTokenExpiresAt,
         resumeProgress, resumeFilePath, anketaMissing,
       ];

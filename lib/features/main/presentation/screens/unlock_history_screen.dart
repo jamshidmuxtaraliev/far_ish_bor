@@ -36,7 +36,7 @@ class _UnlockHistoryScreenState extends State<UnlockHistoryScreen> {
               foregroundColor: context.jb.ink,
               elevation: 0,
               scrolledUnderElevation: 0.5,
-              title: const Text('Otklik tarixi',
+              title: const Text('Ochilgan kontaktlar',
                   style:
                       TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
               leading: IconButton(

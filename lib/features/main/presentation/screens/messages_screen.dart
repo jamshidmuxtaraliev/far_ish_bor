@@ -13,7 +13,14 @@ import '../../../../core/theme/jb_palette.dart';
 /// "Xabarlar" — umumiy muloqot bo'limi (PROMPT_OTKLIK_MOBILE.md §7.1):
 /// operator suhbati doim birinchi, so'ng otklik bilan ochilgan nomzodlar.
 class MessagesScreen extends StatefulWidget {
-  const MessagesScreen({super.key});
+  /// Ekran `push` bilan ochilganda `true` — sarlavhada orqaga tugmasi chiqadi.
+  ///
+  /// ⚠ Pastki menyuda tab sifatida tursa `false` bo'lishi SHART: tabda orqaga
+  /// tugmasi ma'nosiz. Aksincha, push qilinganda u bo'lmasa foydalanuvchi
+  /// faqat tizim "orqaga" tugmasi bilan chiqa oladi.
+  final bool showBack;
+
+  const MessagesScreen({super.key, this.showBack = false});
 
   @override
   State<MessagesScreen> createState() => _MessagesScreenState();
@@ -148,10 +155,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Xabarlar',
-            style: TextStyle(
-                color: jb.ink, fontSize: 22, fontWeight: FontWeight.w800),
+          Row(
+            children: [
+              if (widget.showBack)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).maybePop(),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(Icons.arrow_back_rounded,
+                          color: jb.ink, size: 22),
+                    ),
+                  ),
+                ),
+              Text(
+                'Xabarlar',
+                style: TextStyle(
+                    color: jb.ink, fontSize: 22, fontWeight: FontWeight.w800),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           Container(

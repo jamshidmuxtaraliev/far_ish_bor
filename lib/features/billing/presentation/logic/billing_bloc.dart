@@ -7,7 +7,9 @@ import '../../data/datasource/remote/billing_remote_data_source.dart';
 import '../../data/models/balance_model.dart';
 import '../../data/models/invoice_model.dart';
 import '../../data/models/online_payment_model.dart';
+import '../../data/models/otklik_shop_model.dart';
 import '../../data/models/payment_system_model.dart';
+import '../../data/models/subscription_tariff_model.dart';
 
 part 'billing_event.dart';
 part 'billing_state.dart';
@@ -25,6 +27,112 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<PayBlacklistEvent>(_onPayBlacklist);
     on<ResetCheckoutEvent>(_onResetCheckout);
     on<LoadEmployerInvoicesEvent>(_onLoadEmployerInvoices);
+    on<LoadOtklikShopEvent>(_onLoadOtklikShop);
+    on<LoadSubscriptionTariffsEvent>(_onLoadSubscriptionTariffs);
+    on<BuyOtklikPackageEvent>(_onBuyOtklikPackage);
+    on<BuySubscriptionEvent>(_onBuySubscription);
+    on<ResetPurchaseEvent>(_onResetPurchase);
+  }
+
+  // ══ Otklik do'koni (paket + obuna) ══════════════════════════════════════
+
+  Future<void> _onLoadOtklikShop(
+    LoadOtklikShopEvent event,
+    Emitter<BillingState> emit,
+  ) async {
+    emit(state.copyWith(otklikStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getOtklikShop();
+    result.fold(
+      (failure) => emit(state.copyWith(
+        otklikStatus: FormzSubmissionStatus.failure,
+        error: failure,
+      )),
+      (shop) => emit(state.copyWith(
+        otklikStatus: FormzSubmissionStatus.success,
+        otklik: shop,
+      )),
+    );
+  }
+
+  Future<void> _onLoadSubscriptionTariffs(
+    LoadSubscriptionTariffsEvent event,
+    Emitter<BillingState> emit,
+  ) async {
+    emit(state.copyWith(tariffsStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getSubscriptionTariffs();
+    result.fold(
+      (failure) => emit(state.copyWith(
+        tariffsStatus: FormzSubmissionStatus.failure,
+        error: failure,
+      )),
+      (data) => emit(state.copyWith(
+        tariffsStatus: FormzSubmissionStatus.success,
+        tariffs: data,
+      )),
+    );
+  }
+
+  Future<void> _onBuyOtklikPackage(
+    BuyOtklikPackageEvent event,
+    Emitter<BillingState> emit,
+  ) async {
+    emit(state.copyWith(
+      purchaseStatus: FormzSubmissionStatus.inProgress,
+      clearPurchase: true,
+    ));
+    final result = await dataSource.buyOtklikPackage(
+      packageId: event.packageId,
+      payMethod: event.payMethod,
+    );
+    result.fold(
+      (failure) => emit(state.copyWith(
+        purchaseStatus: FormzSubmissionStatus.failure,
+        error: failure,
+      )),
+      (purchase) => emit(state.copyWith(
+        purchaseStatus: FormzSubmissionStatus.success,
+        purchase: purchase,
+      )),
+    );
+    // Status BloCListener uchun bir martalik signal bo'lsin — aks holda
+    // ekran qayta chizilganda to'lov havolasi ikkinchi marta ochiladi.
+    emit(state.copyWith(purchaseStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onBuySubscription(
+    BuySubscriptionEvent event,
+    Emitter<BillingState> emit,
+  ) async {
+    emit(state.copyWith(
+      purchaseStatus: FormzSubmissionStatus.inProgress,
+      clearPurchase: true,
+    ));
+    final result = await dataSource.buySubscription(
+      tariffId: event.tariffId,
+      months: event.months,
+      payMethod: event.payMethod,
+    );
+    result.fold(
+      (failure) => emit(state.copyWith(
+        purchaseStatus: FormzSubmissionStatus.failure,
+        error: failure,
+      )),
+      (purchase) => emit(state.copyWith(
+        purchaseStatus: FormzSubmissionStatus.success,
+        purchase: purchase,
+      )),
+    );
+    emit(state.copyWith(purchaseStatus: FormzSubmissionStatus.initial));
+  }
+
+  Future<void> _onResetPurchase(
+    ResetPurchaseEvent event,
+    Emitter<BillingState> emit,
+  ) async {
+    emit(state.copyWith(
+      clearPurchase: true,
+      purchaseStatus: FormzSubmissionStatus.initial,
+    ));
   }
 
   Future<void> _onLoadBalance(

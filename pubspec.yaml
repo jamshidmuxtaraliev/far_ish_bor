@@ -72,6 +72,40 @@ dependencies:
   cupertino_icons: ^1.0.8
   yandex_mapkit: ^4.2.1
 
+  # Push bildirishnomalar (FCM). Backend tomoni zero-dep HTTP v1 —
+  # `services/notifier/channels/fcm.channel.js`, kalit `backend/jobup24.json`.
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
+  # Ilova OCHIQ turganda Android push'ni O'ZI ko'rsatmaydi — banner shu paket
+  # bilan chiziladi (va Android 8+ uchun kanallar shu yerda yaratiladi).
+  flutter_local_notifications: ^18.0.1
+
+# ─────────────────────────────────────────────────────────────────────
+# dependency_overrides — TRANZITIV paketlarni Flutter 3.44.0 ga moslash.
+#
+# Bu uchtasi bevosita bog'liqlik EMAS, boshqa paketlar orqali keladi
+# (cached_network_image, shimmer, flutter_html ...). Ular pinlanmasa pub eng
+# oxirgi versiyani oladi va build Dart kompilyatsiyasida yiqiladi.
+#
+#   material_ui / cupertino_ui:
+#     1.3.0 va 1.1.0 (2026-09-15) `@awaitNotRequired` ni ishlatadi. U `meta`
+#     paketida bor, LEKIN Flutter 3.44.0 ning `foundation.dart` si meta'ni aniq
+#     `show ...` ro'yxati bilan eksport qiladi va unda `awaitNotRequired` YO'Q.
+#     Natija: "Error: Undefined name 'awaitNotRequired'" (~10 ta fayl).
+#     Paketlar `flutter: ">=3.44.0"` deb da'vo qiladi, aslida undan yangirog'i kerak.
+#
+#   html:
+#     flutter_html 3.0.0 `package:html/src/query_selector.dart` (ICHKI fayl) dan
+#     `matches()` ni chaqiradi. html 0.15.7 da o'sha funksiya olib tashlangan →
+#     "Error: Method not found: 'matches'". 0.15.6 da bor.
+#
+# Flutter versiyasi ko'tarilganda (`.fvmrc`) bu pinlarni qayta ko'rib chiqing.
+# ─────────────────────────────────────────────────────────────────────
+dependency_overrides:
+  material_ui: 1.2.0
+  cupertino_ui: 1.0.2
+  html: 0.15.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

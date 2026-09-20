@@ -5,7 +5,7 @@ import 'package:formz/formz.dart';
 
 import '../../../auth/data/models/anketa_models.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
-import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../billing/presentation/screens/otklik_shop_screen.dart';
 import '../../data/models/create_vacancy_request.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../logic/vacancy_bloc.dart';
@@ -108,11 +108,13 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
           children: [
             Icon(Icons.account_balance_wallet_outlined, color: jb.blue, size: 22),
             SizedBox(width: 10),
-            Text('Balans / Tarif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: jb.ink)),
+            Text('Tarif kerak', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: jb.ink)),
           ],
         ),
         content: Text(
-          message ?? 'Balans yetarli emas. Davom etish uchun balansni to\'ldiring yoki tarifni faollashtiring.',
+          // Serverdan kelgan matn aniqroq (masalan "Obunasiz eng ko'pi 5 ta
+          // vakansiya mumkin") — shuning uchun u ustun.
+          message ?? "Davom etish uchun tarif obunasini faollashtiring.",
           style: TextStyle(fontSize: 14, color: jb.gray, height: 1.4),
         ),
         actions: [
@@ -126,10 +128,13 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             onPressed: () {
               Navigator.pop(dCtx);
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TopUpScreen(isEmployer: true)),
+                // Vakansiya limitini ochadigan narsa — OBUNA, shuning uchun
+                // darhol "Obuna tariflari" tabi ochiladi.
+                MaterialPageRoute(
+                    builder: (_) => const OtklikShopScreen(initialTab: 1)),
               );
             },
-            child: const Text('Balansni to\'ldirish'),
+            child: const Text('Tariflarni ko\'rish'),
           ),
         ],
       ),

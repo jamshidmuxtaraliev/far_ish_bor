@@ -13,6 +13,7 @@ import '../../data/models/anketa_models.dart';
 import '../../data/models/auth_flow_models.dart';
 import '../../data/models/branch_model.dart';
 import '../../data/models/employer_model.dart';
+import '../../data/models/public_stats_model.dart';
 import '../../data/models/resume_model.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/auth_repository/auth_repository.dart';
@@ -35,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GetMeEvent>(_onGetMe);
     on<LoadAnketaEvent>(_onLoadAnketa);
     on<UpdateAnketaEvent>(_onUpdateAnketa);
+    on<LoadPublicStatsEvent>(_onLoadPublicStats);
     on<LoadRegionsEvent>(_onLoadRegions);
     on<LoadJobTypesEvent>(_onLoadJobTypes);
     on<LoadLanguagesEvent>(_onLoadLanguages);
@@ -174,6 +176,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
     );
     emit(state.copyWith(updateAnketaStatus: FormzSubmissionStatus.initial));
+  }
+
+  /// Kirish ekranidagi ishonch raqamlari. Bezak element bo'lgani uchun
+  /// xatolik `state.error` ga YOZILMAYDI — aks holda tarmoq uzilishi
+  /// ro'yxatdan o'tish ekranida keraksiz xato oynasini ochib yuborardi.
+  /// Yuklanmasa blok shunchaki ko'rsatilmaydi.
+  Future<void> _onLoadPublicStats(LoadPublicStatsEvent event, Emitter<AuthState> emit) async {
+    if (!event.force && state.publicStats != null) return;
+    emit(state.copyWith(publicStatsStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.getPublicStats();
+    result.fold(
+      (_) => emit(state.copyWith(publicStatsStatus: FormzSubmissionStatus.failure)),
+      (stats) => emit(state.copyWith(publicStatsStatus: FormzSubmissionStatus.success, publicStats: stats)),
+    );
   }
 
   Future<void> _onLoadRegions(LoadRegionsEvent event, Emitter<AuthState> emit) async {

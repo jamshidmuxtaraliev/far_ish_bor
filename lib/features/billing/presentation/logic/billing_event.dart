@@ -70,3 +70,44 @@ class ResetCheckoutEvent extends BillingEvent {
 class LoadEmployerInvoicesEvent extends BillingEvent {
   const LoadEmployerInvoicesEvent();
 }
+
+/// `GET /mobile/employer/otklik` — kvota + paketlar + balans.
+class LoadOtklikShopEvent extends BillingEvent {
+  const LoadOtklikShopEvent();
+}
+
+/// `GET /mobile/employer/subscription` — otklik obuna tariflari.
+class LoadSubscriptionTariffsEvent extends BillingEvent {
+  const LoadSubscriptionTariffsEvent();
+}
+
+class BuyOtklikPackageEvent extends BillingEvent {
+  final int packageId;
+
+  /// `link` — to'lov ilovasi (standart) · `balance` — hisobdan yechiladi.
+  final String payMethod;
+
+  const BuyOtklikPackageEvent(this.packageId, {this.payMethod = 'link'});
+
+  @override
+  List<Object?> get props => [packageId, payMethod];
+}
+
+class BuySubscriptionEvent extends BillingEvent {
+  final int tariffId;
+  final int months;
+  final String payMethod;
+
+  const BuySubscriptionEvent({
+    required this.tariffId,
+    required this.months,
+    this.payMethod = 'link',
+  });
+
+  @override
+  List<Object?> get props => [tariffId, months, payMethod];
+}
+
+class ResetPurchaseEvent extends BillingEvent {
+  const ResetPurchaseEvent();
+}

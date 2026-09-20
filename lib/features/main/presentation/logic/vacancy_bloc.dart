@@ -8,6 +8,7 @@ import 'package:meta/meta.dart';
 import '../../../../core/error/error_model.dart';
 import '../../../chat/data/datasource/chat_realtime_datasource.dart';
 import '../../data/datasource/remote/vacancy_remote_data_source.dart';
+import '../../data/models/ad_campaign_model.dart';
 import '../../data/models/application_history_model.dart';
 import '../../data/models/application_model.dart';
 import '../../data/models/candidate_model.dart';
@@ -17,6 +18,7 @@ import '../../data/models/employer_application_model.dart';
 import '../../data/models/employer_vacancy_model.dart';
 import '../../data/models/pipeline_model.dart';
 import '../../data/models/saved_vacancy_model.dart';
+import '../../data/models/story_model.dart';
 import '../../data/models/vacancy_applications_model.dart';
 import '../../data/models/vacancy_candidates_model.dart';
 import '../../data/models/vacancy_model.dart';
@@ -35,6 +37,9 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   StreamSubscription<int>? _unlockedSub;
 
   VacancyBloc(this.dataSource, this.realtime) : super(const VacancyState()) {
+    on<LoadStoriesEvent>(_onLoadStories);
+    on<MarkStoryViewedEvent>(_onMarkStoryViewed);
+    on<LoadPublicAdsEvent>(_onLoadPublicAds);
     on<LoadSeekerVacanciesEvent>(_onLoadSeekerVacancies);
     on<LoadEmployerVacanciesEvent>(_onLoadEmployerVacancies);
     on<ApplyVacancyEvent>(_onApply);
@@ -78,6 +83,40 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     await _balanceSub?.cancel();
     await _unlockedSub?.cancel();
     return super.close();
+  }
+
+  /// Story lentasi. Reklama bilan bir xil qoida — xatolik `state.error` ga
+  /// yozilmaydi, lenta shunchaki chizilmaydi.
+  Future<void> _onLoadStories(LoadStoriesEvent event, Emitter<VacancyState> emit) async {
+    if (!event.force && state.stories.isNotEmpty) return;
+    emit(state.copyWith(storiesStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getStories();
+    result.fold(
+      (_) => emit(state.copyWith(storiesStatus: FormzSubmissionStatus.failure)),
+      (list) => emit(state.copyWith(storiesStatus: FormzSubmissionStatus.success, stories: list)),
+    );
+  }
+
+  /// Ko'rilgan storylar — server hisoblagichi + ilovada doira rangi.
+  /// ⚠ Faqat shu sessiya uchun: qayta ochilganda hammasi yana "yangi"
+  /// bo'ladi (mahalliy saqlash hozircha qo'shilmagan).
+  Future<void> _onMarkStoryViewed(MarkStoryViewedEvent event, Emitter<VacancyState> emit) async {
+    if (state.viewedStoryIds.contains(event.id)) return;
+    emit(state.copyWith(viewedStoryIds: {...state.viewedStoryIds, event.id}));
+    await dataSource.markStoryViewed(event.id);
+  }
+
+  /// Bosh ekrandagi reklama lentasi. Bezak bo'lgani uchun xatolik
+  /// `state.error` ga YOZILMAYDI — reklama kelmagani foydalanuvchiga
+  /// ko'rsatiladigan xato emas, blok shunchaki chizilmaydi.
+  Future<void> _onLoadPublicAds(LoadPublicAdsEvent event, Emitter<VacancyState> emit) async {
+    if (!event.force && state.ads.isNotEmpty) return;
+    emit(state.copyWith(adsStatus: FormzSubmissionStatus.inProgress));
+    final result = await dataSource.getPublicAds();
+    result.fold(
+      (_) => emit(state.copyWith(adsStatus: FormzSubmissionStatus.failure)),
+      (list) => emit(state.copyWith(adsStatus: FormzSubmissionStatus.success, ads: list)),
+    );
   }
 
   Future<void> _onLoadSeekerVacancies(LoadSeekerVacanciesEvent event, Emitter<VacancyState> emit) async {

@@ -12,6 +12,7 @@ import '../../models/auth_flow_models.dart';
 import '../../models/auth_response_model.dart';
 import '../../models/branch_model.dart';
 import '../../models/employer_model.dart';
+import '../../models/public_stats_model.dart';
 import '../../models/resume_model.dart';
 import '../../models/user_model.dart';
 
@@ -36,6 +37,15 @@ abstract class AuthRemoteDataSource {
   Future<Either<ErrorModel, String>> uploadLogo(String filePath);
   Future<Either<ErrorModel, String>> uploadPhoto(String filePath);
   Future<Either<ErrorModel, ResumeInfoModel>> getResumeInfo();
+  Future<Either<ErrorModel, PublicStatsModel>> getPublicStats();
+
+  /// FCM token — qurilmani push uchun ro'yxatga oladi (`mobile_users.fcm_token`).
+  /// Mobil auth talab qiladi: token faqat kirgan foydalanuvchiga biriktiriladi.
+  Future<Either<ErrorModel, bool>> registerPushToken(String token, String platform);
+
+  /// Chiqishda token o'chiriladi — aks holda push boshqa odamning
+  /// telefonida chiqib qolardi.
+  Future<Either<ErrorModel, bool>> unregisterPushToken();
   Future<Either<ErrorModel, String>> downloadResume(
     String url,
     String savePath, {
@@ -59,6 +69,30 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return dioClient.dio.wrapResponse<CheckPhoneModel>(
       () => dioClient.dio.post('mobile/check-phone', data: {'phone': phone}),
       (json) => CheckPhoneModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> registerPushToken(String token, String platform) {
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.post('push/register', data: {'token': token, 'platform': platform}),
+      (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> unregisterPushToken() {
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.post('push/unregister'),
+      (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, PublicStatsModel>> getPublicStats() {
+    return dioClient.dio.wrapResponse<PublicStatsModel>(
+      () => dioClient.dio.get('stats/public'),
+      (json) => PublicStatsModel.fromJson(json as Map<String, dynamic>),
     );
   }
 

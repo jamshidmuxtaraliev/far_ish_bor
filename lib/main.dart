@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/locale/locale_cubit.dart';
 import 'core/services/connection_service.dart';
 import 'core/services/get_it.dart';
+import 'core/services/push_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/jb_palette.dart';
 import 'core/theme/theme_cubit.dart';
@@ -28,6 +31,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await setupDI(alice: MyApp.alice);
+
+  // FCM push. Firebase ishga tushmasa (masalan google-services.json yo'q
+  // bo'lsa) ILOVA TO'XTAMASLIGI kerak — push bezak, kirish emas.
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
+    await PushService.instance.init();
+    // Kirgan foydalanuvchi bo'lsa token darhol serverga ketadi.
+    await PushService.instance.syncToken();
+  } catch (e) {
+    debugPrint('[push] Firebase ishga tushmadi: $e');
+  }
   WidgetsBinding.instance.addPostFrameCallback((_) {
     getIt<InternetCheckerService>().start();
   });

@@ -6,6 +6,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // FCM push — android/app/google-services.json (paket: uz.jobUp24.jobUp24)
+    id("com.google.gms.google-services")
 }
 
 // ── Release imzo kaliti ─────────────────────────────────────────

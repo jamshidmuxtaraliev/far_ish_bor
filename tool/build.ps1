@@ -44,18 +44,11 @@ $ErrorActionPreference = 'Stop'
 $clientDir = Split-Path -Parent $PSScriptRoot
 Set-Location $clientDir
 
-# ── 1. Flutter buyrug'i ──
-$fvm = Get-Command fvm -ErrorAction SilentlyContinue
-$flutterCmd = Get-Command flutter -ErrorAction SilentlyContinue
-if ($fvm) {
-    $exe = $fvm.Source; $pre = @('flutter')
-} elseif ($flutterCmd) {
-    $exe = $flutterCmd.Source; $pre = @()
-    Write-Host "! fvm topilmadi - global flutter ishlatilyapti" -ForegroundColor Yellow
-} else {
-    Write-Host "Flutter SDK topilmadi. Avval o'rnating (client/CLAUDE.md)." -ForegroundColor Red
-    exit 1
-}
+# ── 1. Flutter buyrug'i (qidiruv: tool/_sdk.ps1) ──
+. "$PSScriptRoot/_sdk.ps1"
+$f = Get-FlutterCommandOrExit
+$exe = $f.Exe
+$pre = $f.Pre
 
 # ── 2. Muhit fayli ──
 if ($Env -eq 'local') {
@@ -155,11 +148,7 @@ if ($Install) {
         Write-Host "! .aab telefonga to'g'ridan-to'g'ri o'rnatilmaydi (u faqat Play Store uchun)." -ForegroundColor Yellow
         exit 0
     }
-    $adb = Get-Command adb -ErrorAction SilentlyContinue
-    if (-not $adb -and $env:ANDROID_HOME) {
-        $candidate = Join-Path $env:ANDROID_HOME 'platform-tools/adb.exe'
-        if (Test-Path $candidate) { $adb = Get-Item $candidate }
-    }
+    $adb = Resolve-AdbPath
     if (-not $adb) {
         Write-Host "! adb topilmadi - faylni telefonga qo'lda tashlab o'rnating." -ForegroundColor Yellow
         exit 0
@@ -168,5 +157,5 @@ if ($Install) {
     $apk = $made | Where-Object { $_ -like '*arm64*' } | Select-Object -First 1
     if (-not $apk) { $apk = $made[0] }
     Write-Host "O'rnatilmoqda: $apk" -ForegroundColor Cyan
-    & $adb.Source install -r $apk
+    & $adb install -r $apk
 }

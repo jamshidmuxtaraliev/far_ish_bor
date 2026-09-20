@@ -8,8 +8,7 @@ import '../../../../core/theme/jb_ui.dart';
 import '../../../auth/data/models/employer_model.dart';
 import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../billing/data/models/balance_model.dart';
-import '../../../billing/presentation/logic/billing_bloc.dart';
-import '../../../billing/presentation/screens/topup_screen.dart';
+import '../../../billing/presentation/screens/otklik_shop_screen.dart';
 import '../../../notifications/presentation/logic/notification_bloc.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../data/models/contact_unlock_model.dart';
@@ -18,7 +17,9 @@ import '../../data/models/employer_vacancy_model.dart';
 import '../logic/application_status.dart';
 import '../logic/interview_bloc.dart';
 import '../logic/vacancy_bloc.dart';
+import '../widgets/story_ring_row.dart';
 import 'applicant_profile_screen.dart';
+import 'candidates_screen.dart';
 import 'create_vacancy_screen.dart';
 import 'edit_employer_screen.dart';
 import 'employer_interviews_screen.dart';
@@ -29,7 +30,8 @@ import 'vacancy_applications_screen.dart';
 ///
 /// Vakansiyalar ro'yxati bu ekrandan 2-tabga ko'chirildi ([JobsScreen]);
 /// bu yerda ish beruvchi ertalab ochganda ko'rishi kerak bo'lgan narsalar:
-/// kompaniya holati, balans/otklik, otklik varonkasi va so'nggi harakatlar.
+/// kompaniya holati, TARIF + KALIT kartasi (balans EMAS), otklik varonkasi
+/// va so'nggi harakatlar.
 ///
 /// ⚠ Serverda alohida "dashboard" endpointi YO'Q — barcha sonlar mavjud
 /// endpointlardan MIJOZ TOMONDA yig'iladi ([_EmployerStats]):
@@ -40,11 +42,23 @@ import 'vacancy_applications_screen.dart';
 /// Yangi son kerak bo'lsa avval shu manbalarda bor-yo'qligini tekshiring —
 /// qo'shimcha so'rov qo'shishdan oldin.
 class EmployerHomeScreen extends StatefulWidget {
-  /// Pastki menyu tabini almashtiradi (0=Bosh sahifa, 1=Vakansiyalar,
-  /// 2=Nomzodlar, 3=Arizalar, 4=Profil).
+  /// Pastki menyu tabini almashtiradi
+  /// (0=Asosiy, 1=E'lonlar, 2=Nomzodlar, 3=Xabarlar, 4=Profil).
   final ValueChanged<int>? onSelectTab;
 
-  const EmployerHomeScreen({super.key, this.onSelectTab});
+  /// "Nomzodlar" tabini KERAKLI ichki bo'lim bilan ochadi.
+  ///
+  /// Alohida "Arizalar" tabi bo'lmagani uchun otkliklar shu ekranning
+  /// `applications` ichki tabida yashaydi — `onSelectTab(2)` ni to'g'ridan
+  /// to'g'ri chaqirsak, foydalanuvchi ilgari "Mos nomzodlar"ga o'tib qo'ygan
+  /// bo'lsa banner noto'g'ri ro'yxatga tushirardi.
+  final void Function(CandidatesTab tab)? onOpenCandidates;
+
+  const EmployerHomeScreen({
+    super.key,
+    this.onSelectTab,
+    this.onOpenCandidates,
+  });
 
   @override
   State<EmployerHomeScreen> createState() => _EmployerHomeScreenState();
@@ -76,13 +90,15 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
     }
     if (force || vs.contactAccess == null) vacancy.add(LoadContactAccessEvent());
     if (force || vs.unlockHistory.isEmpty) vacancy.add(LoadUnlockHistoryEvent());
+    // Story lentasi ish beruvchiga ham ko'rinadi — admin qo'ygan e'lon
+    // ikkala rolga ham yetib borishi kerak. `force` bo'lmasa kesh to'sadi.
+    vacancy.add(LoadStoriesEvent(force: force));
 
     final interview = context.read<InterviewBloc>();
     if (force || interview.state.employerInterviews.isEmpty) {
       interview.add(const LoadEmployerInterviewsEvent());
     }
 
-    context.read<BillingBloc>().add(const LoadBalanceEvent(true));
     context.read<NotificationBloc>().add(const LoadUnreadCountEvent());
   }
 
@@ -104,6 +120,13 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
   }
 
   void _goTab(int index) => widget.onSelectTab?.call(index);
+
+  /// Otkliklar ro'yxati — "Nomzodlar" tabining `applications` ichki bo'limi.
+  void _goApplications() =>
+      widget.onOpenCandidates?.call(CandidatesTab.applications);
+
+  /// Mos nomzodlar ro'yxati — ayni tabning `matched` ichki bo'limi.
+  void _goCandidates() => widget.onOpenCandidates?.call(CandidatesTab.matched);
 
   Future<void> _open(Widget screen) {
     return Navigator.of(context)
@@ -149,7 +172,9 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
                     p.vacanciesStatus != c.vacanciesStatus ||
                     p.employerAppsStatus != c.employerAppsStatus ||
                     p.contactAccess != c.contactAccess ||
-                    p.unlockHistory != c.unlockHistory,
+                    p.unlockHistory != c.unlockHistory ||
+                    p.stories != c.stories ||
+                    p.viewedStoryIds != c.viewedStoryIds,
                 builder: (context, vs) {
                   return BlocBuilder<InterviewBloc, InterviewState>(
                     buildWhen: (p, c) =>
@@ -180,27 +205,35 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
-          child: _Header(
-            employer: employer,
-            fallbackName: auth.user?.displayName,
-            onNotifications: () => _open(const NotificationsScreen()),
-            onEdit: () => _openAndRefresh(const EditEmployerScreen()),
-          ),
-        ),
-        SliverToBoxAdapter(
-          // Hamyon kartasi sarlavha gradientining ustiga chiqib turadi.
-          child: Transform.translate(
-            offset: const Offset(0, -26),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _WalletCard(
-                access: vs.contactAccess,
-                unlockedContacts: vs.unlockHistory.length,
-                onTopUp: () =>
-                    _openAndRefresh(const TopUpScreen(isEmployer: true)),
-                onHistory: () => _open(const UnlockHistoryScreen()),
+          // ⚠ Sarlavha va tarif kartasi BITTA sliverda bo'lishi SHART.
+          // Viewport sliverlarni teskari tartibda chizadi (birinchi sliver eng
+          // USTIDA), shuning uchun alohida sliverda -26px surilgan karta
+          // gradient TAGIDA qolib ketardi — karta matni ko'rinmasdi.
+          // Bitta Column ichida esa karta sarlavhadan KEYIN chiziladi.
+          child: Column(
+            children: [
+              _Header(
+                employer: employer,
+                fallbackName: auth.user?.displayName,
+                onNotifications: () => _open(const NotificationsScreen()),
+                onEdit: () => _openAndRefresh(const EditEmployerScreen()),
               ),
-            ),
+              // Karta gradient ustiga chiqadi (Transform faqat chizishga
+              // ta'sir qiladi — joy sarlavhaning `bottom: 46` paddingidan).
+              Transform.translate(
+                offset: const Offset(0, -26),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _PlanCard(
+                    access: vs.contactAccess,
+                    unlockedContacts: vs.unlockHistory.length,
+                    onBuyKeys: () =>
+                        _openAndRefresh(const OtklikShopScreen()),
+                    onHistory: () => _open(const UnlockHistoryScreen()),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         SliverPadding(
@@ -213,21 +246,28 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
                 stats: stats,
                 loading: loading,
                 onVacancies: () => _goTab(1),
-                onApplications: () => _goTab(3),
+                onApplications: _goApplications,
                 onInterviews: () =>
                     _open(const EmployerInterviewsScreen(showBack: true)),
               ),
               const SizedBox(height: 14),
-              _FunnelCard(stats: stats, loading: loading, onOpen: () => _goTab(3)),
+              _FunnelCard(stats: stats, loading: loading, onOpen: _goApplications),
               const SizedBox(height: 14),
               _QuickActions(
                 onCreate: () => _openAndRefresh(const CreateVacancyScreen()),
-                onCandidates: () => _goTab(2),
+                onCandidates: _goCandidates,
                 onInterviews: () =>
                     _open(const EmployerInterviewsScreen(showBack: true)),
                 onUnlockHistory: () => _open(const UnlockHistoryScreen()),
               ),
             ]),
+          ),
+        ),
+        // ---- Story lentasi ----
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 12),
+            child: StoryRingRow(onSelectTab: widget.onSelectTab),
           ),
         ),
         _recentApplications(vs),
@@ -296,7 +336,7 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
         title: '${stats.newApplications} ta yangi otklik kutmoqda',
         message: "Ko'rib chiqilmagan nomzodlar sizning javobingizni kutyapti",
         actionLabel: "Ko'rish",
-        onAction: () => _goTab(3),
+        onAction: _goApplications,
       ));
       items.add(const SizedBox(height: 12));
     }
@@ -316,7 +356,7 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
           JBSectionHeader(
             title: "So'nggi otkliklar",
             actionLabel: "Barchasi",
-            onAction: () => _goTab(3),
+            onAction: _goApplications,
             padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
           ),
           ...items.map(
@@ -828,158 +868,205 @@ class _BellButton extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Balans + otklik kartasi
-// ═══════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// Tarif + kalit kartasi
+// ════════════════════════════════════════════════════════════════════════════
 
-class _WalletCard extends StatelessWidget {
+/// Bosh sahifadagi asosiy karta.
+///
+/// ⚠ **BALANS (pul qoldig'i) KO'RSATILMAYDI.** Ish beruvchiga pul emas,
+/// KALIT kerak (nomzod kontaktini ochish huquqi) — pul raqami "to'ldirdim,
+/// lekin nomzod ochilmadi" chalkashligini keltirib chiqarardi. O'rniga:
+/// sotib olingan tarif nomi · muddati · necha kun qolgani · kalit qoldig'i.
+/// Manba — `GET /mobile/employer/contact-access` javobidagi `plan` bloki.
+class _PlanCard extends StatelessWidget {
   final ContactAccessModel? access;
   final int unlockedContacts;
-  final VoidCallback onTopUp;
+
+  /// ⚠ Balansni TO'LDIRISH tugmasi yo'q — tugma kalit paketi/obunasi
+  /// ekraniga olib boradi.
+  final VoidCallback onBuyKeys;
   final VoidCallback onHistory;
 
-  const _WalletCard({
+  const _PlanCard({
     required this.access,
     required this.unlockedContacts,
-    required this.onTopUp,
+    required this.onBuyKeys,
     required this.onHistory,
   });
 
   @override
   Widget build(BuildContext context) {
     final p = context.jb;
-    return BlocBuilder<BillingBloc, BillingState>(
-      buildWhen: (a, b) =>
-          a.balance != b.balance || a.balanceStatus != b.balanceStatus,
-      builder: (context, billing) {
-        final BalanceModel? balance = billing.balance;
-        final free = access?.freeContacts == true;
-        final fee = access?.fee ?? 0;
-        final quota = access?.paysFromQuota == true;
-        final hasPlan = access?.hasQuotaPlan == true;
-        final available = access?.otklikAvailable ?? 0;
-        final total = access?.otklikTotal ?? 0;
-        final expires = _fmtDate(access?.otklikExpiresAt);
+    final free = access?.freeContacts == true;
+    final fee = access?.fee ?? 0;
+    final quota = access?.paysFromQuota == true;
+    final hasQuota = access?.hasQuotaPlan == true;
+    final available = access?.otklikAvailable ?? 0;
+    final total = access?.otklikTotal ?? 0;
+    final plan = access?.plan ?? const EmployerPlan();
 
-        return JBCard(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-          child: Column(
+    // ⚠ Ikki muddat ARALASHTIRILMASIN:
+    //   `planExpires`  — butun tarif/paket muddati (12 oylik ham bo'ladi);
+    //   `quotaExpires` — joriy 30 kunlik KALIT oynasi (qoldiq keyingi oyga
+    //                     o'tmaydi, shuning uchun alohida qator bilan aytiladi).
+    final planExpires = _fmtDate(plan.expiresAt);
+    final quotaExpires = _fmtDate(access?.otklikExpiresAt);
+    final daysLeft = plan.daysLeft;
+
+    return JBCard(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  JBIconTile(
-                    icon: Icons.account_balance_wallet_outlined,
-                    bg: p.greenBg,
-                    fg: p.green,
-                    size: 42,
-                    iconSize: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Balans',
-                            style: TextStyle(fontSize: 12.5, color: p.gray)),
-                        const SizedBox(height: 2),
-                        Text(
-                          balance?.balanceDisplay ?? '—',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: p.ink,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  JBPillButton(
-                    label: "To'ldirish",
-                    leadingIcon: Icons.add_rounded,
-                    onTap: onTopUp,
-                    vPadding: 10,
-                    fontSize: 13,
-                  ),
-                ],
+              JBIconTile(
+                icon: plan.hasPlan
+                    ? Icons.vpn_key_rounded
+                    : Icons.vpn_key_outlined,
+                bg: plan.hasPlan ? p.greenBg : p.chipBg,
+                fg: plan.hasPlan ? p.green : p.gray,
+                size: 42,
+                iconSize: 20,
               ),
-              const SizedBox(height: 14),
-              Divider(height: 1, color: p.divider),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _MiniFact(
-                      icon: free
-                          ? Icons.lock_open_rounded
-                          : (quota
-                              ? Icons.confirmation_number_outlined
-                              : Icons.toll_outlined),
-                      label: 'Keyingi ochish',
-                      // ⚠ Tartib: bepul → 30 kunlik kvota → balansdan `fee`.
-                      // Kvotasi borida narx ko'rsatilsa mijoz adashadi.
-                      value: free
-                          ? 'Bepul'
-                          : (quota ? 'Otklikdan' : formatSom(fee)),
-                    ),
-                  ),
-                  Container(width: 1, height: 30, color: p.divider),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: onHistory,
-                      behavior: HitTestBehavior.opaque,
-                      child: _MiniFact(
-                        icon: Icons.how_to_reg_outlined,
-                        label: 'Ochilgan kontakt',
-                        // ⚠ `/contact-unlock` sahifalangan (cap 300) — undan
-                        // katta son "300+" bo'lib ko'rsatiladi, aks holda
-                        // hisoblagich jim turib qolgandek tuyuladi.
-                        value: unlockedContacts >= _unlockHistoryCap
-                            ? '${_fmt(_unlockHistoryCap)}+'
-                            : _fmt(unlockedContacts),
-                        chevron: true,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (hasPlan) ...[
-                const SizedBox(height: 14),
-                Row(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(plan.hasPlan ? 'Tarifingiz' : 'Tarif',
+                        style: TextStyle(fontSize: 12.5, color: p.gray)),
+                    const SizedBox(height: 2),
                     Text(
-                      "Otklik qoldig'i",
-                      style: TextStyle(fontSize: 12, color: p.gray),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${_fmt(available)} / ${_fmt(total)}',
+                      plan.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 19,
                         fontWeight: FontWeight.w800,
-                        color: p.ink,
+                        color: plan.hasPlan ? p.ink : p.gray,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 7),
-                _MagnitudeBar(
-                  fraction: total == 0 ? 0.0 : available / total,
-                  color: available > 0 ? p.blue : p.red,
-                  track: p.blueTint,
-                ),
-                if (expires != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    // 30 kunlik oyna: qoldiq keyingi oyga O'TMAYDI.
-                    '$expires gacha amal qiladi',
-                    style: TextStyle(fontSize: 11.5, color: p.gray),
-                  ),
-                ],
-              ],
+              ),
+              const SizedBox(width: 8),
+              JBPillButton(
+                label: plan.hasPlan ? 'Kalit olish' : 'Tanlash',
+                leadingIcon: Icons.add_rounded,
+                onTap: onBuyKeys,
+                vPadding: 10,
+                fontSize: 13,
+              ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          Divider(height: 1, color: p.divider),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: plan.hasPlan && daysLeft != null
+                    ? _MiniFact(
+                        icon: Icons.event_available_outlined,
+                        label: 'Amal qiladi',
+                        value: daysLeft > 0 ? '$daysLeft kun' : 'Bugun tugaydi',
+                      )
+                    : _MiniFact(
+                        // Tarifi yo'qqa kalit NARXINI aytamiz — pul qoldig'ini emas.
+                        icon: free
+                            ? Icons.lock_open_rounded
+                            : (quota
+                                ? Icons.vpn_key_outlined
+                                : Icons.sell_outlined),
+                        label: 'Bitta kontakt',
+                        // ⚠ Tartib: bepul → kalit kvotasi → narx.
+                        value: free
+                            ? 'Bepul'
+                            : (quota ? '1 kalit' : formatSom(fee)),
+                      ),
+              ),
+              Container(width: 1, height: 30, color: p.divider),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onHistory,
+                  behavior: HitTestBehavior.opaque,
+                  child: _MiniFact(
+                    icon: Icons.how_to_reg_outlined,
+                    label: 'Ochilgan kontakt',
+                    // ⚠ `/contact-unlock` sahifalangan (cap 300) — undan
+                    // katta son "300+" bo'lib ko'rsatiladi, aks holda
+                    // hisoblagich jim turib qolgandek tuyuladi.
+                    value: unlockedContacts >= _unlockHistoryCap
+                        ? '${_fmt(_unlockHistoryCap)}+'
+                        : _fmt(unlockedContacts),
+                    chevron: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (hasQuota) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Text(
+                  "Kalit qoldig'i",
+                  style: TextStyle(fontSize: 12, color: p.gray),
+                ),
+                const Spacer(),
+                Text(
+                  '${_fmt(available)} / ${_fmt(total)}',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: p.ink,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            _MagnitudeBar(
+              fraction: total == 0 ? 0.0 : available / total,
+              color: available > 0 ? p.blue : p.red,
+              track: p.blueTint,
+            ),
+            if (planExpires != null || quotaExpires != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${planExpires ?? quotaExpires} gacha amal qiladi',
+                style: TextStyle(fontSize: 11.5, color: p.gray),
+              ),
+            ],
+            // 12 oylik obunada kalit har 30 kunda yangilanadi — shuni aytamiz.
+            if (quotaExpires != null &&
+                planExpires != null &&
+                quotaExpires != planExpires) ...[
+              const SizedBox(height: 3),
+              Text(
+                'Kalitlar $quotaExpires da yangilanadi',
+                style: TextStyle(fontSize: 11.5, color: p.gray),
+              ),
+            ],
+          ] else ...[
+            // Kalitlar tugaganda hamyon "active" bo'lmay qoladi, ya'ni
+            // `total` ham 0 ga tushadi — shuning uchun bu yerda tarif BOR
+            // holatini alohida aytamiz, aks holda obunachi "tarif tanlang"
+            // degan matnni ko'rib chalkashardi.
+            const SizedBox(height: 12),
+            Text(
+              plan.hasPlan
+                  ? (_fmtDate(plan.cycleEndsAt) != null
+                      ? 'Kalitlar tugadi — yangi kvota '
+                          '${_fmtDate(plan.cycleEndsAt)} da ochiladi.'
+                      : 'Kalitlar tugadi — yangi paket oling.')
+                  : "Nomzod kontaktini ochish uchun kalit kerak — "
+                      'tarif yoki paket tanlang.',
+              style: TextStyle(fontSize: 11.5, color: p.gray),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -83,4 +83,34 @@ class EmployerVacancyModel {
   /// Play/Pause tugmasi faqat shu holatlarda ma'noli — to'ldirilgan yoki
   /// bekor qilingan vakansiyani to'xtatib bo'lmaydi (backend 409 qaytaradi).
   bool get canTogglePause => status == 'active' || status == 'paused';
+
+  /// Kerakli xodim topilgan (backend: `status == 'filled'`).
+  bool get isFilled => status == 'filled';
+
+  /// Bekor qilingan.
+  bool get isCancelled => status == 'cancelled';
+
+  /// Moderatsiya/tasdiq kutayotgan.
+  bool get isPending => status == 'pending';
+
+  /// `deadline` — Sequelize DATEONLY, ya'ni odatda 'YYYY-MM-DD' matni; ba'zi
+  /// javoblarda to'liq ISO ham kelishi mumkin. Shuning uchun UTC bo'lsa
+  /// mahalliy vaqtga o'tkazamiz va FAQAT sana qismini olamiz — aks holda
+  /// +05:00 mintaqada muddat bir kun oldin "o'tib ketgan" bo'lib ko'rinadi.
+  DateTime? get deadlineDate {
+    final raw = deadline;
+    if (raw == null || raw.isEmpty) return null;
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return null;
+    final local = parsed.isUtc ? parsed.toLocal() : parsed;
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  /// Muddati o'tgan — `deadline` bugundan OLDIN. Bugungi sana hali o'tmagan.
+  bool get isExpired {
+    final d = deadlineDate;
+    if (d == null) return false;
+    final now = DateTime.now();
+    return d.isBefore(DateTime(now.year, now.month, now.day));
+  }
 }

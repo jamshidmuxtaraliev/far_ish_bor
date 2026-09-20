@@ -3,6 +3,25 @@ part of 'vacancy_bloc.dart';
 @immutable
 abstract class VacancyEvent {}
 
+/// [force] — pull-to-refresh. Aks holda keshdagi ro'yxat qayta so'ralmaydi.
+/// ⚠ `force` bo'lmasa admin panelda qo'shilgan YANGI reklama ilova qayta
+/// ochilmaguncha ko'rinmaydi — shuning uchun yangilashda har doim `true`.
+class LoadPublicAdsEvent extends VacancyEvent {
+  final bool force;
+  LoadPublicAdsEvent({this.force = false});
+}
+
+/// [force] — yuqoridagi bilan bir xil sabab (yangi story darhol chiqsin).
+class LoadStoriesEvent extends VacancyEvent {
+  final bool force;
+  LoadStoriesEvent({this.force = false});
+}
+
+class MarkStoryViewedEvent extends VacancyEvent {
+  final int id;
+  MarkStoryViewedEvent(this.id);
+}
+
 class LoadSeekerVacanciesEvent extends VacancyEvent {
   final int? jobTypeId;
   final int? regionId;

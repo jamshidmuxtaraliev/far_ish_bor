@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'stats_screen.dart';
+import 'user_type_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
 import '../../../../core/theme/jb_ui.dart';
 
@@ -8,7 +8,10 @@ class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
 
   void _select(BuildContext context, String lang) {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => StatsScreen(language: lang)));
+    // Til tanlangach to'g'ridan-to'g'ri rol tanlashga: oradagi "Statistika"
+    // ekrani foydalanuvchiga hech narsa bermas, faqat login yo'lini
+    // uzaytirardi. Raqamlar endi rol tanlash ekranining pastida (jonli).
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => UserTypeScreen(language: lang)));
   }
 
   @override

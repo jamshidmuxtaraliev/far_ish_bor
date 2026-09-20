@@ -38,7 +38,10 @@ class TopUpScreen extends StatefulWidget {
 }
 
 class _TopUpScreenState extends State<TopUpScreen> {
-  static const _presets = [50000, 100000, 200000, 500000, 1000000];
+  // ⚠ Katta summalar (500 000 / 1 000 000) OLIB TASHLANDI: ish beruvchi
+  // balansni to'ldirmaydi — u otklik paketi yoki tarif obunasini oladi
+  // (OtklikShopScreen). Bu ekran endi faqat ish izlovchi uchun.
+  static const _presets = [50000, 100000, 200000];
   // Poll roughly every 3s; give up after ~5 minutes.
   static const _maxPollTicks = 100;
 

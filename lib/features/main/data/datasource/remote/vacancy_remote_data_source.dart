@@ -3,6 +3,7 @@ import 'package:jobUp24/core/network/dio_response_extension.dart';
 
 import '../../../../../core/error/error_model.dart';
 import '../../../../../core/network/dio_client.dart';
+import '../../models/ad_campaign_model.dart';
 import '../../models/application_history_model.dart';
 import '../../models/application_model.dart';
 import '../../models/candidate_model.dart';
@@ -12,11 +13,21 @@ import '../../models/employer_application_model.dart';
 import '../../models/employer_vacancy_model.dart';
 import '../../models/pipeline_model.dart';
 import '../../models/saved_vacancy_model.dart';
+import '../../models/story_model.dart';
 import '../../models/vacancy_applications_model.dart';
 import '../../models/vacancy_candidates_model.dart';
 import '../../models/vacancy_model.dart';
 
 abstract class VacancyRemoteDataSource {
+  /// Bosh ekrandagi reklama slayderi — PUBLIC, token talab qilmaydi.
+  Future<Either<ErrorModel, List<AdCampaignModel>>> getPublicAds();
+
+  /// Bosh ekran tepasidagi story lentasi — PUBLIC.
+  Future<Either<ErrorModel, List<StoryModel>>> getStories();
+
+  /// Story ko'rilganini belgilaydi (hisoblagich). Natijasi kutilmaydi.
+  Future<Either<ErrorModel, bool>> markStoryViewed(int id);
+
   // Seeker
   Future<Either<ErrorModel, List<VacancyModel>>> getSeekerVacancies({int? jobTypeId, int? regionId});
   Future<Either<ErrorModel, bool>> applyVacancy(int vacancyId, {String? coverMessage});
@@ -89,6 +100,36 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
   final DioClient dioClient;
 
   VacancyRemoteDataSourceImpl(this.dioClient);
+
+  @override
+  Future<Either<ErrorModel, List<StoryModel>>> getStories() {
+    return dioClient.dio.wrapResponse<List<StoryModel>>(
+      () => dioClient.dio.get('story/public'),
+      (json) => (json as List)
+          .map((e) => StoryModel.fromJson(e as Map<String, dynamic>))
+          .where((e) => e.isRenderable)
+          .toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, bool>> markStoryViewed(int id) {
+    return dioClient.dio.wrapResponse<bool>(
+      () => dioClient.dio.post('story/$id/view'),
+      (_) => true,
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, List<AdCampaignModel>>> getPublicAds() {
+    return dioClient.dio.wrapResponse<List<AdCampaignModel>>(
+      () => dioClient.dio.get('ad-campaign/public'),
+      (json) => (json as List)
+          .map((e) => AdCampaignModel.fromJson(e as Map<String, dynamic>))
+          .where((e) => e.isRenderable)
+          .toList(),
+    );
+  }
 
   @override
   Future<Either<ErrorModel, List<VacancyModel>>> getSeekerVacancies({int? jobTypeId, int? regionId}) {

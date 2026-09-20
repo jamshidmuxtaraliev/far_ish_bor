@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/services/push_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -313,6 +315,9 @@ class _ChatViewState extends State<ChatView> {
 
   void _onAuthFailed() {
     _bloc.add(const DisconnectChatEvent());
+    // Token yaroqsiz — server tomondagi `/push/unregister` baribir 401
+    // qaytaradi, shuning uchun bu yerda faqat qurilmadagi token o'chadi.
+    PushService.instance.clear();
     getIt<UserLocalDatasource>().clearCache();
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LanguageScreen()),
