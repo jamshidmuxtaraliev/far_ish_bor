@@ -40,3 +40,6 @@ env/local.json
 # kalit adashib client/ ildiziga qo'yilgan holat uchun zaxira to'siq.
 *.jks
 *.keystore
+
+# Kotlin incremental build chiqindisi (git'ga tushmasin)
+android/.kotlin/
