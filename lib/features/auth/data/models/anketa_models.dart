@@ -1,4 +1,5 @@
 import '../../../../core/constants/constants.dart';
+import '../../../../core/utils/json_num.dart';
 
 class RegionModel {
   final int id;
@@ -64,7 +65,9 @@ class AnketaModel {
   final String? regionName;
   final int? districtId;
   final String? districtName;
-  final int? experienceYear;
+  /// `anketas.experience_year` — `decimal(4,1)`: `0.5` (yarim yil) normal
+  /// qiymat. ⚠ `int` QILMANG — JSON'dan `double` kelib parsing yiqiladi.
+  final double? experienceYear;
   final int? expectedSalary;
   final int? lastSalary;
   final String? workStatus;
@@ -112,16 +115,16 @@ class AnketaModel {
         photo: json['photo'] as String?,
         gender: json['gender'] as String?,
         birthday: json['birthday'] as String?,
-        jobTypeId: json['job_type_id'] as int?,
+        jobTypeId: asInt(json['job_type_id']),
         jobTypeName: json['job_type_name'] as String?,
         professionText: json['profession_text'] as String?,
-        regionId: json['region_id'] as int?,
+        regionId: asInt(json['region_id']),
         regionName: json['region_name'] as String?,
-        districtId: json['district_id'] as int?,
+        districtId: asInt(json['district_id']),
         districtName: json['district_name'] as String?,
-        experienceYear: json['experience_year'] as int?,
-        expectedSalary: json['expected_salary'] as int?,
-        lastSalary: json['last_salary'] as int?,
+        experienceYear: asDouble(json['experience_year']),
+        expectedSalary: asInt(json['expected_salary']),
+        lastSalary: asInt(json['last_salary']),
         workStatus: json['work_status'] as String?,
         workSchedule: json['work_schedule'] as String?,
         languages: (json['languages'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),

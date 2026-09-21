@@ -568,7 +568,8 @@ class _InfoGrid extends StatelessWidget {
       ('HUDUD', hudud.isEmpty ? '—' : hudud),
       ('YOSH', detail.age != null ? '${detail.age} yosh' : '—'),
       ('JINSI', _orDash(detail.genderLabel)),
-      ('TAJRIBA', experience != null ? '$experience yil' : '—'),
+      ('TAJRIBA',
+          experience != null ? '${detail.experienceDisplay} yil' : '—'),
       ('KUTILAYOTGAN OYLIK',
           detail.expectedSalary != null ? _money(detail.expectedSalary!) : '—'),
       ('OXIRGI OYLIK',
@@ -666,7 +667,7 @@ class _ProfessionsSection extends StatelessWidget {
                         border:
                             Border.all(color: context.jb.violet.withValues(alpha: 0.35)),
                       ),
-                      child: Text('${p.name} · ${p.experienceYear} yil',
+                      child: Text('${p.name} · ${p.experienceDisplay} yil',
                           style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w500,

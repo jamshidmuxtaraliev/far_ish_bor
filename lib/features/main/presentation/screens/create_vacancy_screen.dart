@@ -8,6 +8,7 @@ import '../../../auth/presentation/logic/auth_bloc.dart';
 import '../../../billing/presentation/screens/otklik_shop_screen.dart';
 import '../../data/models/create_vacancy_request.dart';
 import '../../data/models/employer_vacancy_model.dart';
+import '../../data/models/vacancy_access_model.dart';
 import '../logic/vacancy_bloc.dart';
 import '../../../../core/theme/jb_palette.dart';
 
@@ -32,11 +33,38 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
 
   bool get _isEdit => widget.existing != null;
 
+  // ── E'LON BERISH RUXSATI ────────────────────────────────────────────────
+  // Kompaniya operator tomonidan TASDIQLANMAGUNCHA yangi e'lon berilmaydi,
+  // tasdiqlangach esa `limit` tagacha (backend: employerVacancy.service).
+  //
+  // ⚠️ Tekshiruv shu YAGONA ekranda: unga to'rtta joydan kiriladi (ish beruvchi
+  // bosh ekrani × 2, "Ishlarim" ro'yxati, bo'sh holat tugmasi) — har bir
+  // tugmani alohida yopish bilan biri esdan chiqib ketardi.
+  //
+  // TAHRIRLASHGA tegmaydi: yangi qoida joriy etilganda allaqachon e'loni bor,
+  // lekin hali tasdiqlanmagan kompaniyalar bor edi — ularning e'lonlari
+  // ishlashda davom etadi.
+  VacancyAccessModel? _access;
+  bool _accessLoading = false;
+
   @override
   void initState() {
     super.initState();
     context.read<AuthBloc>().add(LoadJobTypesEvent());
     _prefill();
+    if (!_isEdit) _loadAccess();
+  }
+
+  Future<void> _loadAccess() async {
+    setState(() => _accessLoading = true);
+    final result = await context.read<VacancyBloc>().dataSource.getVacancyAccess();
+    if (!mounted) return;
+    setState(() {
+      // Xato bo'lsa (eski backend / tarmoq) tugma ochiq qoladi — haqiqiy
+      // to'siq baribir saqlashda (POST) ishlaydi.
+      _access = result.fold((_) => VacancyAccessModel.unknown, (a) => a);
+      _accessLoading = false;
+    });
   }
 
   void _prefill() {
@@ -158,6 +186,27 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Ruxsat hali yuklanmoqda yoki e'lon berish yopiq — formani umuman
+    // ko'rsatmaymiz (odam to'ldirib bo'lgach xato olmasin).
+    if (!_isEdit && (_accessLoading || (_access != null && !_access!.canCreate))) {
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: context.jb.overlay,
+        child: Scaffold(
+          backgroundColor: context.jb.bg,
+          body: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: _accessLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildLockedBody(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return BlocListener<VacancyBloc, VacancyState>(
       listenWhen: (p, c) => p.manageVacancyStatus != c.manageVacancyStatus,
       listener: (context, state) {
@@ -218,6 +267,96 @@ class _CreateVacancyScreenState extends State<CreateVacancyScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// E'lon berish yopiq — sababi va keyingi qadam.
+  ///
+  /// Matn SERVERDAN keladi (`reason`) — ilovada takrorlanmasin, operator uni
+  /// bir joydan o'zgartiradi. Bu yerda faqat sarlavha, ikonka va rang.
+  Widget _buildLockedBody() {
+    final a = _access!;
+    final rejected = a.reasonCode == 'rejected';
+    final limitReached = a.reasonCode == 'limit_reached';
+
+    final (IconData icon, Color tone, String title) = switch (a.reasonCode) {
+      'rejected' => (Icons.block_rounded, jb.red, "Ma'lumotlar tasdiqlanmadi"),
+      'limit_reached' => (Icons.inventory_2_outlined, jb.amber, "E'lon limiti to'ldi"),
+      'tariff_inactive' => (Icons.lock_outline_rounded, jb.amber, 'Tarif faollashtirilmagan'),
+      'no_employer' => (Icons.business_outlined, jb.gray, 'Kompaniya topilmadi'),
+      _ => (Icons.hourglass_top_rounded, jb.amber, 'Kompaniya tekshiruvda'),
+    };
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 24),
+          Container(
+            width: 72,
+            height: 72,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: tone, size: 34),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: jb.ink, fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            a.reason ?? "Hozircha e'lon bera olmaysiz.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: jb.gray, fontSize: 14, height: 1.45),
+          ),
+          if (limitReached && a.limit != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: jb.chipBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "Ishlatilgan: ${a.used} / ${a.limit}",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: jb.ink, fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+          if (!rejected && !limitReached) ...[
+            const SizedBox(height: 14),
+            Text(
+              "Operator ma'lumotlaringizni tekshirib chiqadi. Tasdiqlangach "
+              "bu yerda e'lon bera boshlaysiz — qo'shimcha hech narsa qilish shart emas.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: jb.gray, fontSize: 12.5, height: 1.45),
+            ),
+          ],
+          const SizedBox(height: 26),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: jb.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: _loadAccess,
+            child: const Text('Yangilash', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Ortga', style: TextStyle(color: jb.gray, fontWeight: FontWeight.w600)),
+          ),
+        ],
       ),
     );
   }

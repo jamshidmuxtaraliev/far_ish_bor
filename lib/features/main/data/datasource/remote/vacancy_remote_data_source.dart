@@ -14,6 +14,7 @@ import '../../models/employer_vacancy_model.dart';
 import '../../models/pipeline_model.dart';
 import '../../models/saved_vacancy_model.dart';
 import '../../models/story_model.dart';
+import '../../models/vacancy_access_model.dart';
 import '../../models/vacancy_applications_model.dart';
 import '../../models/vacancy_candidates_model.dart';
 import '../../models/vacancy_model.dart';
@@ -39,6 +40,9 @@ abstract class VacancyRemoteDataSource {
   Future<Either<ErrorModel, bool>> unsaveVacancy(int mobileUserId, int vacancyId);
   // Employer
   Future<Either<ErrorModel, List<EmployerVacancyModel>>> getEmployerVacancies();
+  /// E'lon berish ruxsati: operator kompaniyani tasdiqlaganmi va yana
+  /// nechta e'lon bera oladi. Tugmani ochish/yopish uchun.
+  Future<Either<ErrorModel, VacancyAccessModel>> getVacancyAccess();
   Future<Either<ErrorModel, bool>> createOrUpdateVacancy(CreateVacancyRequest request);
   Future<Either<ErrorModel, bool>> deleteVacancy(int id);
 
@@ -157,6 +161,14 @@ class VacancyRemoteDataSourceImpl implements VacancyRemoteDataSource {
     return dioClient.dio.wrapResponse<List<EmployerVacancyModel>>(
       () => dioClient.dio.get('mobile/employer/vacancies'),
       (json) => (json as List).map((e) => EmployerVacancyModel.fromJson(e as Map<String, dynamic>)).toList(),
+    );
+  }
+
+  @override
+  Future<Either<ErrorModel, VacancyAccessModel>> getVacancyAccess() {
+    return dioClient.dio.wrapResponse<VacancyAccessModel>(
+      () => dioClient.dio.get('mobile/employer/vacancy-access'),
+      (json) => VacancyAccessModel.fromJson(json as Map<String, dynamic>),
     );
   }
 

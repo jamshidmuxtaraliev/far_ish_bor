@@ -232,7 +232,7 @@ class CandidateCard extends StatelessWidget {
                                 fontSize: 12.5, color: context.jb.gray)),
                         if (experience != null && experience > 0) ...[
                           const SizedBox(height: 3),
-                          Text('Tajriba: $experience yil',
+                          Text('Tajriba: ${candidate.experienceDisplay} yil',
                               style: TextStyle(
                                   fontSize: 12.5, color: context.jb.gray)),
                         ],

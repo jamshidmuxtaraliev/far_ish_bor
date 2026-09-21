@@ -114,4 +114,44 @@ void main() {
     expect(c.computerLiteracy, isTrue);
     expect(c.physicalWorkOk, isTrue);
   });
+
+  // ⚠ REGRESSIYA (2026-09-20): `anketas.experience_year` bazada `decimal(4,1)`,
+  // ya'ni `0.5` (yarim yil) normal qiymat. Model uni `int?` deb o'qigani uchun
+  // "type 'double' is not a subtype of type 'int?'" bilan YIQILARDI va bitta
+  // shunday nomzod butun "Mos nomzodlar" ro'yxatini o'ldirardi.
+  test("kasrli tajriba (decimal) fromJson ni yiqitmaydi", () {
+    final c = CandidateModel.fromJson({
+      'id': 1,
+      'experience_year': 0.5,
+      'expected_salary': 3000000.0,
+    });
+    expect(c.rawExperienceYear, 0.5);
+    expect(c.experienceYear, 0.5);
+    expect(c.experienceDisplay, '0.5');
+    expect(c.expectedSalary, 3000000);
+  });
+
+  test("kasblardagi tajriba yig'indisi kasrni saqlaydi, butun son chiroyli chiqadi",
+      () {
+    final c = CandidateModel.fromJson({
+      'id': 2,
+      'professions': [
+        {'job_type_id': 1, 'name': 'Oshpaz', 'experience_year': 1.5},
+        {'job_type_id': 2, 'name': 'Kassir', 'experience_year': 1.5},
+      ],
+    });
+    expect(c.experienceYear, 3.0);
+    expect(c.experienceDisplay, '3'); // "3.0 yil" deb chiqmasin
+    expect(c.professions.first.experienceDisplay, '1.5');
+  });
+
+  test("raqamlar MATN bo'lib kelsa ham o'qiladi (Sequelize DECIMAL)", () {
+    final c = CandidateModel.fromJson({
+      'id': 3,
+      'experience_year': '2.5',
+      'expected_salary': '4000000.00',
+    });
+    expect(c.experienceYear, 2.5);
+    expect(c.expectedSalary, 4000000);
+  });
 }

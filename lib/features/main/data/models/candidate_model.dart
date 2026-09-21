@@ -1,10 +1,14 @@
 import '../../../../core/constants/constants.dart';
+import '../../../../core/utils/json_num.dart';
 import 'contact_unlock_model.dart';
 
 class CandidateProfessionModel {
   final int jobTypeId;
   final String name;
-  final int experienceYear;
+
+  /// Tajriba yillari — bazada `decimal(4,1)`, ya'ni `0.5` (yarim yil) normal
+  /// qiymat. ⚠ `int` QILMANG: JSON'dan `double` kelib `fromJson` yiqiladi.
+  final double experienceYear;
 
   const CandidateProfessionModel({
     required this.jobTypeId,
@@ -14,10 +18,13 @@ class CandidateProfessionModel {
 
   factory CandidateProfessionModel.fromJson(Map<String, dynamic> json) =>
       CandidateProfessionModel(
-        jobTypeId: json['job_type_id'] as int? ?? 0,
+        jobTypeId: asInt(json['job_type_id']) ?? 0,
         name: json['name'] as String? ?? '',
-        experienceYear: json['experience_year'] as int? ?? 0,
+        experienceYear: asDouble(json['experience_year']) ?? 0,
       );
+
+  /// Ekran uchun: `3.0` emas `3`, lekin `0.5` saqlanadi.
+  String get experienceDisplay => formatNum(experienceYear);
 }
 
 class CandidateLocationModel {
@@ -52,8 +59,8 @@ class WorkHistoryModel {
       WorkHistoryModel(
         companyName: json['company_name'] as String?,
         position: json['position'] as String?,
-        startYear: json['start_year'] as int?,
-        endYear: json['end_year'] as int?,
+        startYear: asInt(json['start_year']),
+        endYear: asInt(json['end_year']),
       );
 }
 
@@ -72,7 +79,7 @@ class CandidateAssignmentModel {
 
   factory CandidateAssignmentModel.fromJson(Map<String, dynamic> json) =>
       CandidateAssignmentModel(
-        id: json['id'] as int? ?? 0,
+        id: asInt(json['id']) ?? 0,
         status: json['status'] as String? ?? '',
         interviewDatetime: json['interview_datetime'] as String?,
         comment: json['comment'] as String?,
@@ -145,7 +152,9 @@ class CandidateModel {
   final String? professionText;
   final int? expectedSalary;
   final int? lastSalary;
-  final int? rawExperienceYear;
+
+  /// `anketas.experience_year` — `decimal(4,1)`, kasrli bo'lishi mumkin.
+  final double? rawExperienceYear;
   final String? information;
   final List<String> languages;
   final bool? hasLicense;
@@ -264,7 +273,7 @@ class CandidateModel {
       publicId: _asId(json['public_id']),
       fullname: json['fullname'] as String?,
       gender: json['gender'] as String?,
-      age: json['age'] as int?,
+      age: asInt(json['age']),
       birthday: json['birthday'] as String?,
       photo: json['photo'] as String?,
       region: locFrom('region'),
@@ -272,9 +281,9 @@ class CandidateModel {
       jobType: locFrom('job_type'),
       professions: professions,
       professionText: json['profession_text'] as String?,
-      expectedSalary: json['expected_salary'] as int?,
-      lastSalary: json['last_salary'] as int?,
-      rawExperienceYear: json['experience_year'] as int?,
+      expectedSalary: asInt(json['expected_salary']),
+      lastSalary: asInt(json['last_salary']),
+      rawExperienceYear: asDouble(json['experience_year']),
       information: json['information'] as String?,
       languages: langs,
       hasLicense: _asBool(json['has_license']),
@@ -287,14 +296,14 @@ class CandidateModel {
       workSchedule: schedule,
       candidateCategory: json['candidate_category'] as String?,
       isBlacklisted: _asBool(json['is_blacklisted']) ?? false,
-      matchScore: (json['match_score'] as num?)?.toDouble(),
+      matchScore: asDouble(json['match_score']),
       matchBucket: json['match_bucket'] as String?,
       isUnlocked: _asBool(json['is_unlocked']) ?? false,
       phoneRaw: json['phone'] as String? ?? json['phone_number'] as String?,
       additionalContact: json['additional_contact'] as String?,
       locked: _asBool(json['locked']) ?? false,
-      fee: (json['fee'] as num?)?.toInt(),
-      balance: (json['balance'] as num?)?.toInt(),
+      fee: asInt(json['fee']),
+      balance: asInt(json['balance']),
       canPayFromBalance: json['can_pay_from_balance'] as bool?,
       capabilities: json['capabilities'] is Map
           ? ContactCapabilitiesModel.fromJson(
@@ -324,13 +333,17 @@ class CandidateModel {
       (professions.isNotEmpty ? professions.first.jobTypeId : null);
 
   // Total experience from professions (more accurate); falls back to root field
-  int? get experienceYear {
+  double? get experienceYear {
     if (professions.isNotEmpty) {
-      final total = professions.fold<int>(0, (s, p) => s + p.experienceYear);
+      final total =
+          professions.fold<double>(0, (s, p) => s + p.experienceYear);
       return total;
     }
     return rawExperienceYear;
   }
+
+  /// Tajribani ekranga chiqarish uchun: `3` / `0.5` (bo'sh bo'lsa `''`).
+  String get experienceDisplay => formatNum(experienceYear);
 
   /// Rasm to'liq URL'i (PROMPT §6) — normalizatsiya [resolveMediaUrl] da.
   String? get photoUrl => resolveMediaUrl(photo);

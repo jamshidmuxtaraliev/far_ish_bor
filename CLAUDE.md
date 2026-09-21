@@ -104,6 +104,7 @@ The trailing reset-to-`initial` makes status changes behave like one-shot events
 - **Localization:** primary locales are Uzbek (`uz`) and Russian (`ru`). The persisted default is `uz` (`DEFAULT_LANG_KEY`). User-facing error strings are often hardcoded Uzbek in data sources.
 - **Constants:** API base/domain, SharedPreferences keys, and language keys are centralized in `lib/core/constants/constants.dart`. Colors live **only** in `lib/core/theme/jb_palette.dart` (the old `core/constants/colors.dart` with `SCREAMING_CASE` consts is gone); add a semantic token there with both a light and a dark value instead of introducing a literal.
 - **Models:** prefer `@JsonSerializable` + build_runner for new DTOs; regenerate `.g.dart` after edits.
+  - ⚠ **Raqamni `as int?` bilan O'QIMANG** — `lib/core/utils/json_num.dart` dagi `asInt` / `asDouble` / `asNum` bilan o'qing. Backendda bir qancha ustun `DECIMAL` (`anketas.experience_year` — `decimal(4,1)`, ya'ni `0.5` = yarim yil; `employer_requirements.min_experience`, koordinatalar, foizlar), JSON'ga esa ular kasr son yoki matn bo'lib chiqadi. `as int?` shunda `type 'double' is not a subtype of type 'int?'` bilan yiqiladi va **bitta yozuv butun ro'yxatning `fromJson` ini o'ldiradi** — ekran bo'sh yoki xato bo'lib qoladi (2026-09-20 da "Mos nomzodlar" aynan shundan ochilmagan). Ekranga chiqarishda `formatNum()` — `3.0` emas `3`, lekin `0.5` saqlanadi.
 - Roles are stored under `PREF_ROLE` and gate employer vs. seeker screens.
 
 ## Ish beruvchi oqimi (2026-09-17 redizayn)

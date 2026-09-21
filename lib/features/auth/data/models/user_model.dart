@@ -1,3 +1,5 @@
+import '../../../../core/utils/json_num.dart';
+
 class UserModel {
   final int? id;
   final String? phone;
@@ -6,7 +8,7 @@ class UserModel {
   // Seeker fields (from nested anketa)
   final String? fullname;
   final String? jobTypeName;
-  final int? experienceYear;
+  final double? experienceYear;
   final int? expectedSalary;
   final String? workStatus;
   // Employer fields (from nested employer)
@@ -31,14 +33,14 @@ class UserModel {
     final anketa = json['anketa'] as Map<String, dynamic>? ?? {};
     final employer = json['employer'] as Map<String, dynamic>? ?? {};
     return UserModel(
-      id: json['id'] as int?,
+      id: asInt(json['id']),
       phone: json['phone'] as String?,
       role: json['role'] as String?,
       token: json['token'] as String?,
       fullname: anketa['fullname'] as String?,
       jobTypeName: anketa['job_type_name'] as String?,
-      experienceYear: anketa['experience_year'] as int?,
-      expectedSalary: anketa['expected_salary'] as int?,
+      experienceYear: asDouble(anketa['experience_year']),
+      expectedSalary: asInt(anketa['expected_salary']),
       workStatus: anketa['work_status'] as String?,
       companyName: employer['name'] as String?,
       contactPerson: employer['contact_person'] as String?,

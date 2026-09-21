@@ -11,6 +11,7 @@ import '../widgets/anketa_steps/step3_job.dart';
 import '../widgets/anketa_steps/step4_skills.dart';
 import '../widgets/anketa_steps/step5_additional.dart';
 import '../../../../core/theme/jb_palette.dart';
+import '../../../../core/utils/json_num.dart';
 
 class AnketaScreen extends StatefulWidget {
   const AnketaScreen({super.key});
@@ -85,7 +86,7 @@ class _AnketaScreenState extends State<AnketaScreen> {
       } catch (_) {}
     }
     if (_experienceController.text.isEmpty && anketa.experienceYear != null) {
-      _experienceController.text = anketa.experienceYear.toString();
+      _experienceController.text = formatNum(anketa.experienceYear);
     }
     if (_expectedSalaryController.text.isEmpty && anketa.expectedSalary != null) {
       _expectedSalaryController.text = anketa.expectedSalary.toString();
@@ -152,7 +153,10 @@ class _AnketaScreenState extends State<AnketaScreen> {
     if (_selectedDistrict != null) data['district_id'] = _selectedDistrict!.id;
     if (_selectedJobType != null) data['job_type_id'] = _selectedJobType!.id;
     if (_experienceController.text.trim().isNotEmpty) {
-      data['experience_year'] = int.tryParse(_experienceController.text.trim()) ?? 0;
+      // ⚠ `int.tryParse` EMAS: baza `decimal(4,1)`, ya'ni `0.5` (yarim yil)
+      // haqiqiy qiymat — int bilan o'qilsa saqlashda 0 ga aylanib yo'qolardi.
+      data['experience_year'] =
+          num.tryParse(_experienceController.text.trim().replaceAll(',', '.')) ?? 0;
     }
     if (_expectedSalaryController.text.trim().isNotEmpty) {
       data['expected_salary'] = int.tryParse(_expectedSalaryController.text.trim()) ?? 0;

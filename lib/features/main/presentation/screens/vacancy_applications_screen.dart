@@ -603,7 +603,7 @@ class _ApplicationCard extends StatelessWidget {
                               '${candidate!.age} yosh'),
                         if ((candidate?.experienceYear ?? 0) > 0)
                           _meta(context, Icons.work_outline,
-                              '${candidate!.experienceYear} yil tajriba'),
+                              '${candidate!.experienceDisplay} yil tajriba'),
                         if (item.appliedDisplay.isNotEmpty)
                           _meta(context, Icons.schedule, item.appliedDisplay),
                         if (candidate?.isBlacklisted == true)

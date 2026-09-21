@@ -41,16 +41,29 @@ class _MainScreenState extends State<MainScreen> {
   /// saqlaydi, ya'ni holat (skroll, filtr) yo'qolmaydi.
   final Set<int> _built = {0};
 
-  void _selectTab(int index) => setState(() {
-        _selectedIndex = index;
-        _built.add(index);
-      });
+  void _selectTab(int index) {
+    // Tab ALLAQACHON qurilgan bo'lsa `initState` qayta ishlamaydi (IndexedStack
+    // uni tirik saqlaydi) — shuning uchun "Nomzodlar"ga qaytilganini alohida
+    // signal bilan bildiramiz, aks holda ro'yxat ilova ochilgandagi holida
+    // qotib qolardi (masalan yangi vakansiya boshqa qurilmada yaratilganda).
+    final revisit = index == 2 && _built.contains(2);
+    setState(() {
+      _selectedIndex = index;
+      _built.add(index);
+    });
+    if (revisit) _candidatesRevisit.value++;
+  }
 
   /// "Nomzodlar" tabini MA'LUM ichki bo'lim bilan ochish uchun kanal —
   /// bosh sahifadagi KPI karta/banner "otkliklar"ga, tezkor amal esa "mos
   /// nomzodlar"ga tushishi kerak, ikkalasi ham ayni 2-tab.
   final ValueNotifier<CandidatesTabRequest?> _candidatesTab =
       ValueNotifier(null);
+
+  /// "Nomzodlar" tabiga QAYTA kirilgani — har safar qiymati oshadi.
+  /// [CandidatesScreen] buni eshitib ro'yxatlarni yangilaydi (ichida throttle
+  /// bor, ketma-ket bosishda so'rov takrorlanmaydi).
+  final ValueNotifier<int> _candidatesRevisit = ValueNotifier(0);
 
   void _openCandidates(CandidatesTab tab) {
     _candidatesTab.value = CandidatesTabRequest(tab);
@@ -60,6 +73,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void dispose() {
     _candidatesTab.dispose();
+    _candidatesRevisit.dispose();
     super.dispose();
   }
 
@@ -104,7 +118,10 @@ class _MainScreenState extends State<MainScreen> {
           onOpenCandidates: _openCandidates,
         ),
         JobsScreen(isEmployer: widget.isEmployer),
-        CandidatesScreen(tabRequest: _candidatesTab),
+        CandidatesScreen(
+          tabRequest: _candidatesTab,
+          revisit: _candidatesRevisit,
+        ),
         const MessagesScreen(),
         ProfileScreen(isEmployer: widget.isEmployer, onSelectTab: _selectTab),
       ];

@@ -26,6 +26,7 @@ import 'employer_interviews_screen.dart';
 import 'my_applications_screen.dart';
 import 'settings_screen.dart';
 import '../../../../core/theme/jb_palette.dart';
+import '../../../../core/utils/json_num.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isEmployer;
@@ -451,7 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: Icons.history_outlined,
         value:
             user.experienceYear != null
-                ? '${user.experienceYear} yil staj'
+                ? '${formatNum(user.experienceYear)} yil staj'
                 : "Staj ko'rsatilmagan",
       ),
       if (user.expectedSalary != null)

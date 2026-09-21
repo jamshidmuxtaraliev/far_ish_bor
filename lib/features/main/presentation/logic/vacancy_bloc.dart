@@ -154,8 +154,7 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
       (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success));
-        final refresh = await dataSource.getEmployerVacancies();
-        refresh.fold((_) {}, (list) => emit(state.copyWith(employerVacancies: list)));
+        await _refreshVacancySources(emit);
       },
     );
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.initial));
@@ -168,8 +167,7 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
       (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success));
-        final refresh = await dataSource.getEmployerVacancies();
-        refresh.fold((_) {}, (list) => emit(state.copyWith(employerVacancies: list)));
+        await _refreshVacancySources(emit);
       },
     );
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.initial));
@@ -223,11 +221,14 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
   Future<void> _onDeleteVacancy(DeleteVacancyEvent event, Emitter<VacancyState> emit) async {
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.inProgress));
     final result = await dataSource.deleteVacancy(event.id);
-    result.fold(
-      (failure) => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
-      (_) {
+    await result.fold(
+      (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
+      (_) async {
         final updated = state.employerVacancies.where((v) => v.id != event.id).toList();
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success, employerVacancies: updated));
+        // O'chirilgan vakansiyaning nomzodlari "Mos nomzodlar"da qolib
+        // ketmasin — pipeline serverdan qayta o'qiladi.
+        await _refreshVacancySources(emit);
       },
     );
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.initial));
@@ -243,8 +244,7 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
       (failure) async => emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.failure, error: failure)),
       (_) async {
         emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.success));
-        final refresh = await dataSource.getEmployerVacancies();
-        refresh.fold((_) {}, (list) => emit(state.copyWith(employerVacancies: list)));
+        await _refreshVacancySources(emit);
       },
     );
     emit(state.copyWith(manageVacancyStatus: FormzSubmissionStatus.initial));
@@ -447,6 +447,31 @@ class VacancyBloc extends Bloc<VacancyEvent, VacancyState> {
     final result = await dataSource.getPipeline();
     result.fold(
       (failure) => emit(state.copyWith(pipelineStatus: FormzSubmissionStatus.failure, error: failure)),
+      (data) => emit(state.copyWith(
+        pipelineStatus: FormzSubmissionStatus.success,
+        pipeline: data,
+        unlockedCapabilities: _mergeCapabilities(
+            data.candidatesByReq.expand((g) => g.candidates)),
+      )),
+    );
+  }
+
+  /// Vakansiya ro'yxati o'zgargach — dropdown BILAN BIRGA "Mos nomzodlar"
+  /// manbasi ham yangilanadi.
+  ///
+  /// ⚠ Ilgari bu yerda faqat `getEmployerVacancies()` chaqirilardi: yangi
+  /// vakansiya dropdownda darhol paydo bo'lardi, lekin `pipeline` eski holida
+  /// qolib "Mos nomzodlar" tabi BO'SH ko'rinardi (Yangi/Jarayonda/Suhbat — 0),
+  /// holbuki server o'nlab mos nomzod qaytarardi. `LoadPipelineEvent` faqat
+  /// [CandidatesScreen.initState] da yuboriladi, ekran esa `IndexedStack` da
+  /// tirik saqlanadi — ya'ni bir marta ochilgach o'zi qayta yuklanmaydi.
+  Future<void> _refreshVacancySources(Emitter<VacancyState> emit) async {
+    final vacancies = await dataSource.getEmployerVacancies();
+    vacancies.fold(
+        (_) {}, (list) => emit(state.copyWith(employerVacancies: list)));
+    final pipeline = await dataSource.getPipeline();
+    pipeline.fold(
+      (_) {},
       (data) => emit(state.copyWith(
         pipelineStatus: FormzSubmissionStatus.success,
         pipeline: data,

@@ -36,7 +36,12 @@ class CandidatesScreen extends StatefulWidget {
   /// yangi parametr yetib kelmaydi. Shuning uchun tirik kanal — notifier.
   final ValueListenable<CandidatesTabRequest?>? tabRequest;
 
-  const CandidatesScreen({super.key, this.tabRequest});
+  /// "Nomzodlar" tabiga qayta kirilgani (qiymat oshadi) — ro'yxatlar shu
+  /// signalda yangilanadi. Aks holda ekran `IndexedStack` da tirik qolgani
+  /// uchun ilova ochilgandagi ma'lumot bilan qotib turardi.
+  final ValueListenable<int>? revisit;
+
+  const CandidatesScreen({super.key, this.tabRequest, this.revisit});
 
   @override
   State<CandidatesScreen> createState() => _CandidatesScreenState();
@@ -74,12 +79,26 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
     super.initState();
     _loadAll();
     widget.tabRequest?.addListener(_applyTabRequest);
+    widget.revisit?.addListener(_onRevisit);
   }
 
   @override
   void dispose() {
     widget.tabRequest?.removeListener(_applyTabRequest);
+    widget.revisit?.removeListener(_onRevisit);
     super.dispose();
+  }
+
+  /// Oxirgi yuklash vaqti — tabni ketma-ket bosganda so'rovlar takrorlanmasin.
+  DateTime? _lastLoad;
+
+  void _onRevisit() {
+    if (!mounted) return;
+    final t = _lastLoad;
+    if (t != null && DateTime.now().difference(t) < const Duration(seconds: 10)) {
+      return;
+    }
+    _loadAll();
   }
 
   /// Tashqaridan so'ralgan ichki tabga o'tadi (arxiv rejimi ham tashlanadi —
@@ -96,6 +115,7 @@ class _CandidatesScreenState extends State<CandidatesScreen> {
   }
 
   void _loadAll() {
+    _lastLoad = DateTime.now();
     final vacancy = context.read<VacancyBloc>();
     vacancy.add(LoadEmployerApplicationsEvent()); // Tab 1
     vacancy.add(LoadRecommendedCandidatesEvent()); // Tab 2
