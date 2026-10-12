@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../../../../core/utils/utils.dart';
 import '../../../auth/data/models/anketa_models.dart';
@@ -22,6 +23,15 @@ class EditEmployerScreen extends StatefulWidget {
 /// Server cheklovi — bitta kompaniyada eng ko'pi 100 ta filial.
 const int _kMaxBranches = 100;
 
+/// Telefon maskasi — faqat 9 xonali lokal qism. '+998' maskaga KIRMAYDI, u
+/// maydonning o'zgarmas prefiksi (`prefixText`) bo'lib doim ko'rinib turadi,
+/// shuning uchun foydalanuvchi uni o'chirib yuborolmaydi.
+const String _kPhoneMask = '(##) ### ## ##';
+
+/// STIR (INN) — O'zbekistonda har doim 9 ta raqam (public sayt ham shu cheklov
+/// bilan ishlaydi: `public-site/src/views/employer/Company.vue`).
+const int _kTinLength = 9;
+
 class _EditEmployerScreenState extends State<EditEmployerScreen> {
   final _formKey = GlobalKey<FormState>();
 
@@ -30,6 +40,10 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   final _phone2Controller = TextEditingController();
   final _tinController = TextEditingController();
   final _addressController = TextEditingController();
+
+  /// Qo'shimcha telefon maskasi — kiritilgan raqam '(90) 123 45 67' ko'rinishiga
+  /// keltiriladi, '+998' esa maydon prefiksi sifatida doim turadi.
+  late final MaskTextInputFormatter _phone2Mask;
 
   /// Xaritadan tanlangan koordinata — API'ga `latitude` / `longitude` bo'lib
   /// yuboriladi.
@@ -50,6 +64,11 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
   @override
   void initState() {
     super.initState();
+    _phone2Mask = MaskTextInputFormatter(
+      mask: _kPhoneMask,
+      filter: {'#': RegExp(r'[0-9]')},
+      type: MaskAutoCompletionType.lazy,
+    );
     final bloc = context.read<AuthBloc>();
     bloc.add(LoadEmployerEvent());
     bloc.add(LoadRegionsEvent());
@@ -72,8 +91,11 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
 
     _nameController.text = employer.name;
     _contactPersonController.text = employer.contactPerson ?? '';
-    _phone2Controller.text = employer.phone2 ?? '';
-    _tinController.text = employer.tin ?? '';
+    _setPhone2(employer.phone2);
+    // Eski yozuvlarda STIR probel/tire bilan saqlangan bo'lishi mumkin —
+    // faqat raqamlarini qoldiramiz. Uzunligini KESMAYMIZ: 9 tadan uzun
+    // eski qiymat hisoblagich va validatorda ko'rinib tursin.
+    _tinController.text = (employer.tin ?? '').replaceAll(RegExp(r'\D'), '');
     _addressController.text = employer.address ?? '';
     _latitude = employer.latitude;
     _longitude = employer.longitude;
@@ -95,8 +117,36 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     }
   }
 
+  /// Serverdan kelgan raqamdan 9 xonali lokal qismni ajratadi:
+  /// `+998 (90) 778-87-69` · `998907788769` · `907788769` → `907788769`.
+  String _localPhoneDigits(String? raw) {
+    final d = (raw ?? '').replaceAll(RegExp(r'\D'), '');
+    if (d.length > 9) return d.substring(d.length - 9);
+    return d;
+  }
+
+  /// Maskani ham, kontrollerni ham bir vaqtda to'ldiradi — matnni kontrollerga
+  /// to'g'ridan-to'g'ri yozish maska ichki holatini eskirtirib qo'yadi.
+  void _setPhone2(String? raw) {
+    final local = _localPhoneDigits(raw);
+    if (local.isEmpty) {
+      _phone2Mask.clear();
+      _phone2Controller.text = '';
+      return;
+    }
+    // ⚠ `mask:` qayta berilishi SHART — `updateMask` uni har safar qaytadan
+    // o'rnatadi va berilmasa maska `null` bo'lib qoladi.
+    final v = _phone2Mask.updateMask(
+      mask: _kPhoneMask,
+      newValue: TextEditingValue(text: local),
+    );
+    _phone2Controller.text = v.text;
+  }
+
   void _save() {
     if (!_formKey.currentState!.validate()) return;
+
+    final phone2Digits = _localPhoneDigits(_phone2Controller.text);
 
     // ⚠ Maydonlar HAR DOIM yuboriladi (bo'sh bo'lsa ham): server bo'sh satrni
     // `null` deb yozadi. Ilgari bo'sh maydon umuman yuborilmasdi — foydalanuvchi
@@ -104,7 +154,9 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     final data = <String, dynamic>{
       'name': _nameController.text.trim(),
       'contact_person': _contactPersonController.text.trim(),
-      'phone2': _phone2Controller.text.trim(),
+      // Serverga har doim bir xil ko'rinishda ketadi: `+998901234567`
+      // (public sayt ham shunday yuboradi). Bo'sh bo'lsa — bo'sh satr.
+      'phone2': phone2Digits.isEmpty ? '' : '+998$phone2Digits',
       'tin': _tinController.text.trim(),
       'address': _addressController.text.trim(),
       if (_latitude != null && _longitude != null) ...{
@@ -325,9 +377,27 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label) => InputDecoration(
+  InputDecoration _inputDecoration(
+    String label, {
+    String? prefixText,
+    String? hintText,
+    bool floatLabel = false,
+  }) =>
+      InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: jb.gray, fontSize: 14),
+        // Prefiks faqat yorliq "suzib" turganda ko'rinadi — '+998' doim
+        // ko'rinishi uchun yorliqni majburan suzdiramiz.
+        floatingLabelBehavior:
+            floatLabel ? FloatingLabelBehavior.always : null,
+        prefixText: prefixText,
+        prefixStyle: TextStyle(
+          color: jb.ink,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        hintText: hintText,
+        hintStyle: TextStyle(color: jb.gray, fontSize: 15),
         filled: true,
         fillColor: jb.cardAlt,
         border: OutlineInputBorder(
@@ -458,18 +528,47 @@ class _EditEmployerScreenState extends State<EditEmployerScreen> {
                                 const SizedBox(height: 12),
                                 TextFormField(
                                   controller: _phone2Controller,
-                                  decoration:
-                                      _inputDecoration('Qo\'shimcha telefon'),
+                                  decoration: _inputDecoration(
+                                    'Qo\'shimcha telefon',
+                                    prefixText: '+998 ',
+                                    hintText: '(90) 123 45 67',
+                                    floatLabel: true,
+                                  ),
                                   keyboardType: TextInputType.phone,
+                                  inputFormatters: [_phone2Mask],
+                                  // Ixtiyoriy maydon: bo'sh bo'lsa xato
+                                  // yo'q, lekin boshlangan raqam to'liq
+                                  // bo'lishi shart.
+                                  validator: (v) {
+                                    final d = _localPhoneDigits(v);
+                                    if (d.isEmpty) return null;
+                                    return d.length == 9
+                                        ? null
+                                        : 'Raqamni to\'liq kiriting';
+                                  },
                                 ),
                                 const SizedBox(height: 12),
                                 TextFormField(
                                   controller: _tinController,
-                                  decoration: _inputDecoration('STIR (INN)'),
+                                  decoration: _inputDecoration(
+                                    'STIR (INN)',
+                                    hintText: '123456789',
+                                  ),
                                   keyboardType: TextInputType.number,
+                                  maxLength: _kTinLength,
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(
+                                      _kTinLength,
+                                    ),
                                   ],
+                                  validator: (v) {
+                                    final d = (v ?? '').trim();
+                                    if (d.isEmpty) return null;
+                                    return d.length == _kTinLength
+                                        ? null
+                                        : 'STIR $_kTinLength ta raqamdan iborat';
+                                  },
                                 ),
                                 const SizedBox(height: 12),
                                 TextFormField(
